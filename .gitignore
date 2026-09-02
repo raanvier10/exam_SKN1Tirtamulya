@@ -1,0 +1,18 @@
+# Root Gitignore
+
+# IDE & OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+*.log
+
+# Mobile build artifacts
+**/build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Backend
+exambro-backend/.env
+exambro-backend/vendor/
