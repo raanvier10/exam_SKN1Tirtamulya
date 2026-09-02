@@ -335,7 +335,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     SizedBox(width: 8),
                     Text(
-                      'Protected by Exambro Engine',
+                      'Protected by ExaSatria Engine',
                       style: TextStyle(
                         fontSize: 12,
                         color: Color(0xFFA1A1AA),

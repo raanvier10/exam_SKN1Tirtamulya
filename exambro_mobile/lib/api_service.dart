@@ -3,7 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = 'https://caution-triceps-getaway.ngrok-free.dev/api'; // Changed for Physical Device Testing via ngrok
+  static const String baseUrl =
+      'https://cement-chevy-exec-pam.trycloudflare.com/api'; // Changed for Physical Device Testing via ngrok
 
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -29,10 +30,16 @@ class ApiService {
     };
   }
 
-  static Future<Map<String, dynamic>> login(String username, String password) async {
+  static Future<Map<String, dynamic>> login(
+    String username,
+    String password,
+  ) async {
     final response = await http.post(
       Uri.parse('$baseUrl/login'),
-      headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
       body: jsonEncode({'username': username, 'password': password}),
     );
     return jsonDecode(response.body);
@@ -40,11 +47,17 @@ class ApiService {
 
   static Future<Map<String, dynamic>> getExamsToday() async {
     final headers = await getHeaders();
-    final response = await http.get(Uri.parse('$baseUrl/student/exams/today'), headers: headers);
+    final response = await http.get(
+      Uri.parse('$baseUrl/student/exams/today'),
+      headers: headers,
+    );
     return jsonDecode(response.body);
   }
 
-  static Future<Map<String, dynamic>> startExamSession(int examId, String deviceId) async {
+  static Future<Map<String, dynamic>> startExamSession(
+    int examId,
+    String deviceId,
+  ) async {
     final headers = await getHeaders();
     final response = await http.post(
       Uri.parse('$baseUrl/exams/$examId/start'),
@@ -69,7 +82,10 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
-  static Future<Map<String, dynamic>> updateGoogleStatus(bool connected, {String? email}) async {
+  static Future<Map<String, dynamic>> updateGoogleStatus(
+    bool connected, {
+    String? email,
+  }) async {
     final headers = await getHeaders();
     final Map<String, dynamic> payload = {'connected': connected};
     if (email != null) payload['email'] = email;
@@ -82,7 +98,12 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
-  static Future<void> reportViolation(int examId, int sessionId, String type, String description) async {
+  static Future<void> reportViolation(
+    int examId,
+    int sessionId,
+    String type,
+    String description,
+  ) async {
     final headers = await getHeaders();
     await http.post(
       Uri.parse('$baseUrl/violations'),

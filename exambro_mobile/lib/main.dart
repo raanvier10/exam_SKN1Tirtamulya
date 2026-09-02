@@ -1,33 +1,24 @@
 import 'package:flutter/material.dart';
-import 'screens/login_screen.dart';
-import 'screens/dashboard_screen.dart';
-import 'api_service.dart';
+import 'screens/splash_screen.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Check if token exists to skip login
-  final token = await ApiService.getToken();
-  final Widget initialScreen = token != null ? const DashboardScreen() : const LoginScreen();
-
-  runApp(ExambroApp(initialScreen: initialScreen));
+  runApp(const ExambroApp());
 }
 
 class ExambroApp extends StatelessWidget {
-  final Widget initialScreen;
-
-  const ExambroApp({super.key, required this.initialScreen});
+  const ExambroApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Exambro Mobile',
+      title: 'ExaSatria',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: initialScreen,
+      home: const SplashScreen(),
     );
   }
 }
