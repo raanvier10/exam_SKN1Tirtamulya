@@ -18,23 +18,40 @@ class ApiExamController extends Controller
         $now = Carbon::now();
         $today = Carbon::today();
         
-        $exams = Exam::where(function ($query) use ($user) {
-            $query->whereHas('participants', function ($q) use ($user) {
-                $q->where('user_id', $user->id);
-            })->orDoesntHave('participants');
-        })
-        ->where('status', 'active')
-        ->where(function ($q) use ($today, $now) {
-            $q->whereDate('start_at', $today)
-              ->orWhere(function ($sub) use ($now) {
-                  $sub->where('start_at', '<=', $now)
-                      ->where(function ($endSub) use ($now) {
-                          $endSub->where('end_at', '>=', $now)
-                                 ->orWhereNull('end_at');
-                      });
-              });
-        })
-        ->get();
+        $exams = Exam::where('status', 'active')
+            ->where(function ($q) use ($user) {
+                if ($user->is_pkl) {
+                    $q->whereIn('pkl_filter', ['all', 'pkl_only']);
+                } else {
+                    $q->whereIn('pkl_filter', ['all', 'regular_only']);
+                }
+            })
+            ->where(function ($query) use ($user) {
+                $query->whereHas('participants', function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                })
+                ->orWhere(function ($q) use ($user) {
+                    if ($user->class_id) {
+                        $q->whereHas('classes', function ($sub) use ($user) {
+                            $sub->where('class_id', $user->class_id);
+                        });
+                    }
+                })
+                ->orWhere(function ($q) {
+                    $q->doesntHave('classes');
+                });
+            })
+            ->where(function ($q) use ($today, $now) {
+                $q->whereDate('start_at', $today)
+                  ->orWhere(function ($sub) use ($now) {
+                      $sub->where('start_at', '<=', $now)
+                          ->where(function ($endSub) use ($now) {
+                              $endSub->where('end_at', '>=', $now)
+                                     ->orWhereNull('end_at');
+                          });
+                  });
+            })
+            ->get();
 
         // Pastikan record participant terdaftar & lampirkan status pengerjaan siswa
         foreach ($exams as $exam) {
@@ -57,6 +74,23 @@ class ApiExamController extends Controller
     {
         $exam = Exam::findOrFail($id);
         $user = $request->user();
+
+        $isPklMatch = ($exam->pkl_filter === 'all')
+            || ($exam->pkl_filter === 'regular_only' && !$user->is_pkl)
+            || ($exam->pkl_filter === 'pkl_only' && $user->is_pkl);
+
+        $isEligible = $isPklMatch && (
+            $exam->participants()->where('user_id', $user->id)->exists()
+            || ($user->class_id && $exam->classes()->where('class_id', $user->class_id)->exists())
+            || ($exam->classes()->count() === 0)
+        );
+
+        if (!$isEligible) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak terdaftar sebagai peserta ujian ini.'
+            ], 403);
+        }
         
         // Pastikan participant terdaftar
         \App\Models\ExamParticipant::firstOrCreate([
@@ -81,10 +115,30 @@ class ApiExamController extends Controller
         $exam = Exam::findOrFail($id);
         $user = $request->user();
 
+        $isPklMatch = ($exam->pkl_filter === 'all')
+            || ($exam->pkl_filter === 'regular_only' && !$user->is_pkl)
+            || ($exam->pkl_filter === 'pkl_only' && $user->is_pkl);
+
+        $isEligible = $isPklMatch && (
+            $exam->participants()->where('user_id', $user->id)->exists()
+            || ($user->class_id && $exam->classes()->where('class_id', $user->class_id)->exists())
+            || ($exam->classes()->count() === 0)
+        );
+
+        if (!$isEligible) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda tidak terdaftar sebagai peserta ujian ini.'
+            ], 403);
+        }
+
         // Check if participant is locked
-        $participant = \App\Models\ExamParticipant::where('exam_id', $exam->id)
-            ->where('user_id', $user->id)
-            ->first();
+        $participant = \App\Models\ExamParticipant::firstOrCreate([
+            'exam_id' => $exam->id,
+            'user_id' => $user->id,
+        ], [
+            'status' => 'registered'
+        ]);
 
         if ($participant && $participant->status === 'locked') {
             return response()->json([

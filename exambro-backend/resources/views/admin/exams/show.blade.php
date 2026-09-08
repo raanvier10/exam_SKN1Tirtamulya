@@ -28,7 +28,21 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-2.5">
+        <div class="flex flex-wrap items-center gap-2.5">
+            <!-- Tombol Auto Refresh -->
+            <button id="autoRefreshBtn" onclick="toggleAutoRefresh()" class="inline-flex items-center gap-2 px-3.5 py-2.5 bg-white border border-slate-200/80 text-slate-700 rounded-xl text-sm font-medium hover:bg-indigo-50 hover:text-indigo-600 shadow-xs transition-all active:scale-[0.98]">
+                <span class="w-2 h-2 rounded-full bg-slate-400" id="autoRefreshIndicator"></span>
+                <span id="autoRefreshText">Auto Refresh: OFF</span>
+            </button>
+
+            <!-- Tombol Export Pelanggaran -->
+            <a href="{{ route('admin.exams.export-violations', $exam->id) }}" class="inline-flex items-center gap-2 px-3.5 py-2.5 bg-white border border-slate-200/80 text-slate-700 rounded-xl text-sm font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 shadow-xs transition-all active:scale-[0.98]" title="Download Rekap Riwayat Pelanggaran Siswa (CSV)">
+                <svg class="w-4 h-4 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Export Pelanggaran (CSV)
+            </a>
+
             <button onclick="window.location.reload();" class="inline-flex items-center gap-2 px-3.5 py-2.5 bg-white border border-slate-200/80 text-slate-700 rounded-xl text-sm font-medium hover:bg-slate-50 hover:text-indigo-600 shadow-xs transition-all active:scale-[0.98]">
                 <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -88,6 +102,31 @@
         <!-- Kolom Kiri: Informasi Utama & Link -->
         <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 lg:col-span-2 flex flex-col justify-between space-y-4">
             <div>
+                <div class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">Target Kelas & Status Siswa</div>
+                <div class="flex flex-wrap items-center gap-1.5 mb-3">
+                    @if($exam->classes->count() > 0)
+                        @foreach($exam->classes as $cls)
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                {{ $cls->name }}
+                            </span>
+                        @endforeach
+                    @else
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                            Semua Kelas Aktif
+                        </span>
+                    @endif
+
+                    @if($exam->pkl_filter === 'regular_only')
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                            Khusus Reguler (Non-PKL)
+                        </span>
+                    @elseif($exam->pkl_filter === 'pkl_only')
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+                            Khusus Siswa PKL
+                        </span>
+                    @endif
+                </div>
+
                 <div class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">Deskripsi Ujian</div>
                 <div class="text-slate-700 text-sm leading-relaxed bg-slate-50/50 p-3.5 rounded-xl border border-slate-100">{{ $exam->description ?: 'Tidak ada deskripsi tambahan untuk ujian ini.' }}</div>
             </div>
@@ -379,5 +418,76 @@ function filterStudents() {
         }
     });
 }
+
+// Auto Refresh Feature (10 seconds timer)
+const AUTO_REFRESH_KEY = 'exam_auto_refresh_{{ $exam->id }}';
+let autoRefreshTimer = null;
+let countdownTimer = null;
+let countdownSecs = 10;
+
+function updateAutoRefreshUI(isActive) {
+    const btn = document.getElementById('autoRefreshBtn');
+    const indicator = document.getElementById('autoRefreshIndicator');
+    const text = document.getElementById('autoRefreshText');
+
+    if (isActive) {
+        btn.classList.remove('bg-white', 'text-slate-700');
+        btn.classList.add('bg-indigo-50', 'text-indigo-600', 'border-indigo-200');
+        indicator.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+        text.textContent = `Auto Refresh: ${countdownSecs}s`;
+    } else {
+        btn.classList.remove('bg-indigo-50', 'text-indigo-600', 'border-indigo-200');
+        btn.classList.add('bg-white', 'text-slate-700');
+        indicator.className = 'w-2 h-2 rounded-full bg-slate-400';
+        text.textContent = 'Auto Refresh: OFF';
+    }
+}
+
+function startAutoRefresh() {
+    countdownSecs = 10;
+    updateAutoRefreshUI(true);
+
+    if (countdownTimer) clearInterval(countdownTimer);
+    countdownTimer = setInterval(() => {
+        countdownSecs--;
+        if (countdownSecs > 0) {
+            document.getElementById('autoRefreshText').textContent = `Auto Refresh: ${countdownSecs}s`;
+        } else {
+            document.getElementById('autoRefreshText').textContent = 'Memuat data...';
+        }
+    }, 1000);
+
+    if (autoRefreshTimer) clearTimeout(autoRefreshTimer);
+    autoRefreshTimer = setTimeout(() => {
+        window.location.reload();
+    }, 10000);
+}
+
+function stopAutoRefresh() {
+    if (countdownTimer) clearInterval(countdownTimer);
+    if (autoRefreshTimer) clearTimeout(autoRefreshTimer);
+    updateAutoRefreshUI(false);
+}
+
+function toggleAutoRefresh() {
+    const currentState = localStorage.getItem(AUTO_REFRESH_KEY) === 'true';
+    const newState = !currentState;
+    localStorage.setItem(AUTO_REFRESH_KEY, newState ? 'true' : 'false');
+    
+    if (newState) {
+        startAutoRefresh();
+    } else {
+        stopAutoRefresh();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const isAutoRefreshOn = localStorage.getItem(AUTO_REFRESH_KEY) === 'true';
+    if (isAutoRefreshOn) {
+        startAutoRefresh();
+    } else {
+        stopAutoRefresh();
+    }
+});
 </script>
 @endsection

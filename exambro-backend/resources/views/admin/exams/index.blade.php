@@ -38,7 +38,7 @@
             </div>
             <div>
                 <h4 class="text-sm font-semibold text-slate-900">Format Wajib Sesuai!</h4>
-                <p class="text-xs text-slate-500 mt-0.5 mb-2">Pastikan kolom tanggal dan durasi terisi dengan benar.</p>
+                <p class="text-xs text-slate-500 mt-0.5 mb-2">Kolom <code>target_kelas</code> bisa diisi nama kelas (misal: <em>11 TJKT 1, 11 TJKT 2</em>) atau kosongkan untuk Semua Kelas.</p>
                 <a href="{{ route('admin.exams.template') }}" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline">
                     Download Template CSV &rarr;
                 </a>
@@ -75,6 +75,7 @@
             <thead class="bg-slate-50/80 border-b border-slate-200/80 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                 <tr>
                     <th class="px-6 py-4">Judul Ujian</th>
+                    <th class="px-6 py-4">Target Kelas</th>
                     <th class="px-6 py-4">Waktu</th>
                     <th class="px-6 py-4">Durasi</th>
                     <th class="px-6 py-4">Toleransi</th>
@@ -86,6 +87,31 @@
                 @forelse($exams as $e)
                 <tr class="hover:bg-indigo-50/20 transition-colors duration-150 group">
                     <td class="px-6 py-4 text-slate-900 font-semibold">{{ $e->title }}</td>
+                    <td class="px-6 py-4">
+                        @if($e->classes->count() > 0)
+                            <div class="flex flex-wrap gap-1 max-w-xs">
+                                @foreach($e->classes as $cls)
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                        {{ $cls->name }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @else
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                                Semua Kelas
+                            </span>
+                        @endif
+
+                        @if($e->pkl_filter === 'regular_only')
+                            <div class="mt-1">
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">Non-PKL</span>
+                            </div>
+                        @elseif($e->pkl_filter === 'pkl_only')
+                            <div class="mt-1">
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">Khusus PKL</span>
+                            </div>
+                        @endif
+                    </td>
                     <td class="px-6 py-4">
                         <div class="text-slate-900 font-medium">{{ \Carbon\Carbon::parse($e->start_at)->format('d M Y') }}</div>
                         <div class="text-slate-400 text-xs mt-0.5 font-mono">
@@ -123,7 +149,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="px-6 py-12 text-center text-slate-400">
+                    <td colspan="7" class="px-6 py-12 text-center text-slate-400">
                         Belum ada jadwal ujian terdaftar.
                     </td>
                 </tr>

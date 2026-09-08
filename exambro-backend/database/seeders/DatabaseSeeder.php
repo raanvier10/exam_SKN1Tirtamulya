@@ -15,7 +15,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $class = \App\Models\StudentClass::firstOrCreate(
+        $class1 = \App\Models\StudentClass::firstOrCreate(
+            ['name' => '11 TJKT 1'],
+            ['description' => 'Kelas 11 TJKT 1']
+        );
+
+        $class2 = \App\Models\StudentClass::firstOrCreate(
+            ['name' => '11 TJKT 2'],
+            ['description' => 'Kelas 11 TJKT 2']
+        );
+
+        $class3 = \App\Models\StudentClass::firstOrCreate(
             ['name' => '12 IPA 1'],
             ['description' => 'Kelas 12 IPA 1']
         );
@@ -40,7 +50,7 @@ class DatabaseSeeder extends Seeder
                 'email' => 'dimas@example.com',
                 'password' => \Illuminate\Support\Facades\Hash::make('password'),
                 'role' => 'siswa',
-                'class_id' => $class->id,
+                'class_id' => $class1->id,
                 'status' => 'active'
             ]
         );
@@ -57,6 +67,8 @@ class DatabaseSeeder extends Seeder
                 'status' => 'active'
             ]
         );
+
+        $exam->classes()->syncWithoutDetaching([$class1->id]);
 
         \App\Models\ExamParticipant::firstOrCreate(
             [

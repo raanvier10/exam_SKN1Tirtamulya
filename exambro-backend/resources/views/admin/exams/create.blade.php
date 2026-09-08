@@ -50,6 +50,70 @@
         </div>
 
         <div>
+            <div class="flex items-center justify-between mb-2">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-800">Target Kelas / Peserta</label>
+                    <p class="text-xs text-slate-500">Pilih kelas yang wajib mengikuti ujian ini. Jika tidak ada yang dipilih, ujian berlaku untuk <strong>Semua Kelas</strong>.</p>
+                </div>
+                <button type="button" id="toggle-all-classes" class="text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100/80 px-2.5 py-1 rounded-lg transition-colors">
+                    Pilih Semua
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 p-3.5 bg-slate-50/70 border border-slate-200/80 rounded-xl max-h-48 overflow-y-auto">
+                @forelse($classes as $c)
+                <label class="flex items-center gap-2.5 p-2 bg-white border border-slate-200/70 rounded-lg hover:border-indigo-300 hover:bg-indigo-50/20 cursor-pointer transition-all">
+                    <input type="checkbox" name="classes[]" value="{{ $c->id }}" class="class-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300">
+                    <span class="text-xs font-medium text-slate-700 select-none">{{ $c->name }}</span>
+                </label>
+                @empty
+                <div class="col-span-full text-xs text-slate-400 py-2 text-center">Belum ada data kelas yang terdaftar.</div>
+                @endforelse
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const toggleBtn = document.getElementById('toggle-all-classes');
+                if (toggleBtn) {
+                    toggleBtn.addEventListener('click', function() {
+                        const checkboxes = document.querySelectorAll('.class-checkbox');
+                        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                        checkboxes.forEach(cb => cb.checked = !allChecked);
+                        toggleBtn.textContent = allChecked ? 'Pilih Semua' : 'Batal Pilih Semua';
+                    });
+                }
+            });
+        </script>
+
+        <div>
+            <label class="block text-sm font-semibold text-slate-800 mb-2">Filter Keikutsertaan Siswa PKL</label>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <label class="flex items-center gap-3 p-3.5 bg-white border border-slate-200/80 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/10 cursor-pointer transition-all">
+                    <input type="radio" name="pkl_filter" value="all" checked class="text-indigo-600 focus:ring-indigo-500/20 border-slate-300">
+                    <div>
+                        <div class="text-xs font-semibold text-slate-900">Semua Siswa</div>
+                        <div class="text-[11px] text-slate-400">Reguler & PKL ikut</div>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 p-3.5 bg-white border border-slate-200/80 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/10 cursor-pointer transition-all">
+                    <input type="radio" name="pkl_filter" value="regular_only" class="text-indigo-600 focus:ring-indigo-500/20 border-slate-300">
+                    <div>
+                        <div class="text-xs font-semibold text-slate-900">Reguler Saja</div>
+                        <div class="text-[11px] text-slate-400">Kecualikan siswa PKL</div>
+                    </div>
+                </label>
+                <label class="flex items-center gap-3 p-3.5 bg-white border border-slate-200/80 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/10 cursor-pointer transition-all">
+                    <input type="radio" name="pkl_filter" value="pkl_only" class="text-indigo-600 focus:ring-indigo-500/20 border-slate-300">
+                    <div>
+                        <div class="text-xs font-semibold text-slate-900">Khusus Siswa PKL</div>
+                        <div class="text-[11px] text-slate-400">Hanya siswa status PKL</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <div>
             <label class="block text-sm font-semibold text-slate-800 mb-2">Status Ujian</label>
             <div class="relative custom-select">
                 <input type="hidden" name="status" value="{{ old('status', 'inactive') }}">
