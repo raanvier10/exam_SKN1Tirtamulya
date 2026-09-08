@@ -15,47 +15,57 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $class = \App\Models\StudentClass::create([
-            'name' => '12 IPA 1',
-            'description' => 'Kelas 12 IPA 1'
-        ]);
+        $class = \App\Models\StudentClass::firstOrCreate(
+            ['name' => '12 IPA 1'],
+            ['description' => 'Kelas 12 IPA 1']
+        );
 
         // Admin User
-        \App\Models\User::create([
-            'name' => 'Administrator',
-            'username' => 'admin',
-            'email' => 'admin@example.com',
-            'password' => \Illuminate\Support\Facades\Hash::make('password'),
-            'role' => 'admin',
-            'status' => 'active'
-        ]);
+        \App\Models\User::updateOrCreate(
+            ['username' => 'admin'],
+            [
+                'name' => 'Administrator',
+                'email' => 'admin@example.com',
+                'password' => \Illuminate\Support\Facades\Hash::make('password'),
+                'role' => 'admin',
+                'status' => 'active'
+            ]
+        );
 
         // Siswa User
-        $user = \App\Models\User::create([
-            'name' => 'Dimas',
-            'username' => 'dimas123',
-            'email' => 'dimas@example.com',
-            'password' => \Illuminate\Support\Facades\Hash::make('password'),
-            'role' => 'siswa',
-            'class_id' => $class->id,
-            'status' => 'active'
-        ]);
+        $user = \App\Models\User::updateOrCreate(
+            ['username' => 'dimas123'],
+            [
+                'name' => 'Dimas',
+                'email' => 'dimas@example.com',
+                'password' => \Illuminate\Support\Facades\Hash::make('password'),
+                'role' => 'siswa',
+                'class_id' => $class->id,
+                'status' => 'active'
+            ]
+        );
 
-        $exam = \App\Models\Exam::create([
-            'title' => 'UAS Basis Data',
-            'description' => 'Ujian Akhir Semester Genap',
-            'google_form_url' => 'https://docs.google.com/forms/d/e/1FAIpQLSeQ0f_VvG1nF_QW__.../viewform', // Replace with real one if testing
-            'start_at' => \Carbon\Carbon::now()->subMinutes(10), // already started
-            'end_at' => \Carbon\Carbon::now()->addHours(2),
-            'duration' => 90,
-            'max_violation' => 3,
-            'status' => 'active'
-        ]);
+        $exam = \App\Models\Exam::firstOrCreate(
+            ['title' => 'UAS Basis Data'],
+            [
+                'description' => 'Ujian Akhir Semester Genap',
+                'google_form_url' => 'https://docs.google.com/forms/d/e/1FAIpQLSeQ0f_VvG1nF_QW__.../viewform',
+                'start_at' => \Carbon\Carbon::now()->subMinutes(10),
+                'end_at' => \Carbon\Carbon::now()->addHours(2),
+                'duration' => 90,
+                'max_violation' => 3,
+                'status' => 'active'
+            ]
+        );
 
-        \App\Models\ExamParticipant::create([
-            'exam_id' => $exam->id,
-            'user_id' => $user->id,
-            'status' => 'registered'
-        ]);
+        \App\Models\ExamParticipant::firstOrCreate(
+            [
+                'exam_id' => $exam->id,
+                'user_id' => $user->id,
+            ],
+            [
+                'status' => 'registered'
+            ]
+        );
     }
 }
