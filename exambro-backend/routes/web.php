@@ -8,7 +8,7 @@ use App\Http\Controllers\ExamController;
 use App\Http\Controllers\AdminAuthController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('admin.login');
 });
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -18,7 +18,28 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::middleware('auth')->group(function () {
         Route::get('/dashboard', function () {
-            return view('admin.dashboard');
+            $now = \Carbon\Carbon::now();
+            $ongoingExams = \App\Models\Exam::where('status', 'active')
+                ->where('start_at', '<=', $now)
+                ->where(function ($query) use ($now) {
+                    $query->where('end_at', '>=', $now)
+                          ->orWhereNull('end_at');
+                })
+                ->withCount([
+                    'participants',
+                    'participants as working_count' => function ($q) {
+                        $q->where('status', 'working');
+                    },
+                    'participants as locked_count' => function ($q) {
+                        $q->where('status', 'locked');
+                    },
+                    'participants as finished_count' => function ($q) {
+                        $q->where('status', 'finished');
+                    }
+                ])
+                ->get();
+
+            return view('admin.dashboard', compact('ongoingExams'));
         })->name('dashboard');
 
         Route::get('/classes/template', function () {

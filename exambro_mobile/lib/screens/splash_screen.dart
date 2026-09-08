@@ -139,7 +139,7 @@ class _SplashScreenState extends State<SplashScreen>
 
                       // App Name
                       const Text(
-                        'ExaSatria',
+                        'ExaSatrya',
                         style: TextStyle(
                           fontSize: 34,
                           fontWeight: FontWeight.w900,
@@ -206,7 +206,7 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
                     const SizedBox(height: 20),
                     Text(
-                      'v1.0.0 • Protected by ExaSatria Guard',
+                      'v1.0.0 • Protected by ExaSatrya Guard',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,

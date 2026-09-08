@@ -4,7 +4,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   static const String baseUrl =
-      'https://cement-chevy-exec-pam.trycloudflare.com/api'; // Changed for Physical Device Testing via ngrok
+      'https://beyond-emily-rating-cameras.trycloudflare.com/api';
+
+  static Future<String> getBaseUrl() async {
+    return baseUrl;
+  }
 
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
@@ -34,6 +38,7 @@ class ApiService {
     String username,
     String password,
   ) async {
+    final baseUrl = await getBaseUrl();
     final response = await http.post(
       Uri.parse('$baseUrl/login'),
       headers: {
@@ -46,6 +51,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> getExamsToday() async {
+    final baseUrl = await getBaseUrl();
     final headers = await getHeaders();
     final response = await http.get(
       Uri.parse('$baseUrl/student/exams/today'),
@@ -58,6 +64,7 @@ class ApiService {
     int examId,
     String deviceId,
   ) async {
+    final baseUrl = await getBaseUrl();
     final headers = await getHeaders();
     final response = await http.post(
       Uri.parse('$baseUrl/exams/$examId/start'),
@@ -68,6 +75,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> finishExamSession(int examId) async {
+    final baseUrl = await getBaseUrl();
     final headers = await getHeaders();
     final response = await http.post(
       Uri.parse('$baseUrl/exams/$examId/finish'),
@@ -77,6 +85,7 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> getMe() async {
+    final baseUrl = await getBaseUrl();
     final headers = await getHeaders();
     final response = await http.get(Uri.parse('$baseUrl/me'), headers: headers);
     return jsonDecode(response.body);
@@ -86,6 +95,7 @@ class ApiService {
     bool connected, {
     String? email,
   }) async {
+    final baseUrl = await getBaseUrl();
     final headers = await getHeaders();
     final Map<String, dynamic> payload = {'connected': connected};
     if (email != null) payload['email'] = email;
@@ -104,6 +114,7 @@ class ApiService {
     String type,
     String description,
   ) async {
+    final baseUrl = await getBaseUrl();
     final headers = await getHeaders();
     await http.post(
       Uri.parse('$baseUrl/violations'),

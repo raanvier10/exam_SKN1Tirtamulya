@@ -66,17 +66,72 @@
             <h3 class="text-base font-semibold text-slate-900">Ujian Sedang Berlangsung</h3>
         </div>
         <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
-            Live Monitor
+            Live Monitor ({{ $ongoingExams->count() }} Aktif)
         </span>
     </div>
-    <div class="p-12 flex flex-col items-center justify-center text-center">
-        <div class="w-14 h-14 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center mb-4">
-            <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+
+    @if($ongoingExams->isNotEmpty())
+        <div class="divide-y divide-slate-100">
+            @foreach($ongoingExams as $exam)
+            <div class="p-6 hover:bg-slate-50/50 transition-colors flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="space-y-1.5 max-w-xl">
+                    <div class="flex items-center gap-2">
+                        <h4 class="text-base font-bold text-slate-900">{{ $exam->title }}</h4>
+                        <span class="px-2 py-0.5 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                            {{ $exam->duration }} Menit
+                        </span>
+                    </div>
+                    @if($exam->description)
+                        <p class="text-xs text-slate-500 line-clamp-1">{{ $exam->description }}</p>
+                    @endif
+                    <div class="flex items-center gap-4 text-xs text-slate-400 pt-1">
+                        <span class="flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Mulai: {{ \Carbon\Carbon::parse($exam->start_at)->format('H:i, d M Y') }}
+                        </span>
+                        <span>•</span>
+                        <span>Selesai: {{ \Carbon\Carbon::parse($exam->end_at)->format('H:i, d M Y') }}</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100 text-xs">
+                        <span class="px-2 py-1 bg-amber-50 text-amber-700 font-semibold rounded-lg" title="Sedang Mengerjakan">
+                            ✍️ {{ $exam->working_count }} Mengerjakan
+                        </span>
+                        @if($exam->locked_count > 0)
+                        <span class="px-2 py-1 bg-rose-50 text-rose-700 font-semibold rounded-lg animate-pulse" title="Terkunci">
+                            🔒 {{ $exam->locked_count }} Dikunci
+                        </span>
+                        @endif
+                        <span class="px-2 py-1 bg-emerald-50 text-emerald-700 font-semibold rounded-lg" title="Selesai">
+                            ✅ {{ $exam->finished_count }} Selesai
+                        </span>
+                    </div>
+
+                    <a href="{{ route('admin.exams.show', $exam->id) }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all shrink-0">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        Pantau Live
+                    </a>
+                </div>
+            </div>
+            @endforeach
         </div>
-        <h4 class="text-sm font-semibold text-slate-800">Tidak ada ujian aktif saat ini</h4>
-        <p class="text-xs text-slate-400 mt-1 max-w-sm">Jadwal ujian yang sedang berjalan pada jam ini akan tampil secara otomatis di sini.</p>
-    </div>
+    @else
+        <div class="p-12 flex flex-col items-center justify-center text-center">
+            <div class="w-14 h-14 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center mb-4">
+                <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <h4 class="text-sm font-semibold text-slate-800">Tidak ada ujian aktif saat ini</h4>
+            <p class="text-xs text-slate-400 mt-1 max-w-sm">Jadwal ujian yang sedang berjalan pada jam ini akan tampil secara otomatis di sini.</p>
+        </div>
+    @endif
 </div>
 @endsection

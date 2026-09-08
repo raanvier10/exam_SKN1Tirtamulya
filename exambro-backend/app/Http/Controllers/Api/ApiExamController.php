@@ -15,6 +15,7 @@ class ApiExamController extends Controller
     public function todayExams(Request $request)
     {
         $user = $request->user();
+        $now = Carbon::now();
         $today = Carbon::today();
         
         $exams = Exam::where(function ($query) use ($user) {
@@ -22,8 +23,17 @@ class ApiExamController extends Controller
                 $q->where('user_id', $user->id);
             })->orDoesntHave('participants');
         })
-        ->whereDate('start_at', $today)
         ->where('status', 'active')
+        ->where(function ($q) use ($today, $now) {
+            $q->whereDate('start_at', $today)
+              ->orWhere(function ($sub) use ($now) {
+                  $sub->where('start_at', '<=', $now)
+                      ->where(function ($endSub) use ($now) {
+                          $endSub->where('end_at', '>=', $now)
+                                 ->orWhereNull('end_at');
+                      });
+              });
+        })
         ->get();
 
         // Pastikan record participant terdaftar & lampirkan status pengerjaan siswa

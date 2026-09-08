@@ -13,6 +13,9 @@ Thumbs.db
 .flutter-plugins
 .flutter-plugins-dependencies
 
+# Tools
+cloudflared.exe
+
 # Backend
 exambro-backend/.env
 exambro-backend/vendor/

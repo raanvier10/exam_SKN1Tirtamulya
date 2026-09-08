@@ -187,14 +187,15 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
         return;
       }
 
+      final userPos = position;
       final distance = Geolocator.distanceBetween(
         schoolLatitude,
         schoolLongitude,
-        position.latitude,
-        position.longitude,
+        userPos.latitude,
+        userPos.longitude,
       );
 
-      debugPrint('📍 Posisi User: ${position.latitude}, ${position.longitude}');
+      debugPrint('📍 Posisi User: ${userPos.latitude}, ${userPos.longitude}');
       debugPrint('🏫 Titik Sekolah: $schoolLatitude, $schoolLongitude');
       debugPrint('📏 Jarak Terhitung: ${distance.round()} meter');
 
@@ -204,7 +205,7 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
             _isChecking = false;
             _isSecure = false;
             _statusMessage =
-                'Di luar area sekolah (${distance.round()}m dari target, maks: ${maxRadiusMeters.round()}m).\nPosisi Anda: ${position!.latitude.toStringAsFixed(6)}, ${position!.longitude.toStringAsFixed(6)}';
+                'Di luar area sekolah (${distance.round()}m dari target, maks: ${maxRadiusMeters.round()}m).\nPosisi Anda: ${userPos.latitude.toStringAsFixed(6)}, ${userPos.longitude.toStringAsFixed(6)}';
           });
           _controller.forward();
         }
