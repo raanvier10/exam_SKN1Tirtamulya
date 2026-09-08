@@ -27,6 +27,8 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
   bool _isChecking = true;
   bool _isSecure = false;
   String _statusMessage = 'Memverifikasi profil & lingkungan ujian...';
+  double? _detectedLat;
+  double? _detectedLng;
 
   @override
   void initState() {
@@ -213,6 +215,8 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
       }
 
       // Lolos Verifikasi Lokasi Siswa Reguler
+      _detectedLat = userPos.latitude;
+      _detectedLng = userPos.longitude;
       if (mounted) {
         setState(() {
           _isChecking = false;
@@ -351,8 +355,11 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
                           final nav = Navigator.of(context);
                           final result = await nav.push(
                             MaterialPageRoute(
-                              builder: (context) =>
-                                  ExamScreen(exam: widget.exam),
+                              builder: (context) => ExamScreen(
+                                exam: widget.exam,
+                                latitude: _detectedLat,
+                                longitude: _detectedLng,
+                              ),
                             ),
                           );
                           if (mounted) {

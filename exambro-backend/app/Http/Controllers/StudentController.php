@@ -9,10 +9,33 @@ use Illuminate\Support\Facades\Hash;
 
 class StudentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $students = User::where('role', 'siswa')->with('class')->get();
-        return view('admin.students.index', compact('students'));
+        $query = User::where('role', 'siswa')->with('class')->latest('id');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('username', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('class_id')) {
+            $query->where('class_id', $request->class_id);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('is_pkl')) {
+            $query->where('is_pkl', $request->boolean('is_pkl'));
+        }
+
+        $students = $query->paginate(25)->withQueryString();
+        $classes = StudentClass::orderBy('name')->get();
+        return view('admin.students.index', compact('students', 'classes'));
     }
 
     public function create()
@@ -102,65 +125,69 @@ class StudentController extends Controller
         $request->validate(['file' => 'required|file']);
         $rows = \App\Helpers\SimpleSpreadsheetReader::read($request->file('file'));
         $count = 0;
-        foreach ($rows as $row) {
-            $name = $row['nama_lengkap'] ?? $row['nama'] ?? $row['name'] ?? null;
-            $username = (string)($row['nis_username'] ?? $row['nis'] ?? $row['username'] ?? '');
 
-            if (!empty($username) && !empty($name)) {
-                $existingUser = \App\Models\User::where('username', $username)->first();
+        \Illuminate\Support\Facades\DB::transaction(function () use ($rows, &$count) {
+            foreach ($rows as $row) {
+                $name = $row['nama_lengkap'] ?? $row['nama'] ?? $row['name'] ?? null;
+                $username = (string)($row['nis_username'] ?? $row['nis'] ?? $row['username'] ?? '');
 
-                // Resolusi Kelas (Bisa nama kelas misal 'XII RPL 1' atau ID kelas angka)
-                $classId = $existingUser?->class_id ?? null;
-                $classInput = trim((string)($row['nama_kelas'] ?? $row['kelas'] ?? $row['id_kelas'] ?? $row['class_id'] ?? $row['class'] ?? ''));
-                if (!empty($classInput)) {
-                    if (is_numeric($classInput) && StudentClass::find($classInput)) {
-                        $classId = (int)$classInput;
-                    } else {
-                        $foundClass = StudentClass::whereRaw('LOWER(name) = ?', [strtolower($classInput)])->first();
-                        if ($foundClass) {
-                            $classId = $foundClass->id;
+                if (!empty($username) && !empty($name)) {
+                    $existingUser = \App\Models\User::where('username', $username)->first();
+
+                    // Resolusi Kelas (Bisa nama kelas misal 'XII RPL 1' atau ID kelas angka)
+                    $classId = $existingUser?->class_id ?? null;
+                    $classInput = trim((string)($row['nama_kelas'] ?? $row['kelas'] ?? $row['id_kelas'] ?? $row['class_id'] ?? $row['class'] ?? ''));
+                    if (!empty($classInput)) {
+                        if (is_numeric($classInput) && StudentClass::find($classInput)) {
+                            $classId = (int)$classInput;
                         } else {
-                            $newClass = StudentClass::create(['name' => $classInput]);
-                            $classId = $newClass->id;
+                            $foundClass = StudentClass::whereRaw('LOWER(name) = ?', [strtolower($classInput)])->first();
+                            if ($foundClass) {
+                                $classId = $foundClass->id;
+                            } else {
+                                $newClass = StudentClass::create(['name' => $classInput]);
+                                $classId = $newClass->id;
+                            }
                         }
                     }
+
+                    // Resolusi Status (aktif / active vs nonaktif / inactive)
+                    $status = $existingUser?->status ?? 'active';
+                    if (isset($row['status'])) {
+                        $statusVal = strtolower(trim((string)$row['status']));
+                        $status = in_array($statusVal, ['inactive', 'nonaktif', '0', 'disabled']) ? 'inactive' : 'active';
+                    }
+
+                    $updateData = [
+                        'name' => $name,
+                        'role' => 'siswa',
+                        'class_id' => $classId,
+                        'status' => $status,
+                    ];
+
+                    // Update password jika diisi atau jika user baru (default NIS)
+                    $passInput = $row['password'] ?? $row['kata_sandi'] ?? null;
+                    if (!empty($passInput)) {
+                        $updateData['password'] = \Illuminate\Support\Facades\Hash::make((string)$passInput);
+                    } elseif (!$existingUser) {
+                        $updateData['password'] = \Illuminate\Support\Facades\Hash::make($username);
+                    }
+
+                    // Update status is_pkl (1 / 0 / ya / tidak / pkl / reguler)
+                    if (isset($row['is_pkl']) || isset($row['status_pkl']) || isset($row['pkl'])) {
+                        $val = strtolower(trim((string)($row['is_pkl'] ?? $row['status_pkl'] ?? $row['pkl'])));
+                        $updateData['is_pkl'] = in_array($val, ['1', 'true', 'ya', 'yes', 'pkl', 'aktif']);
+                    }
+
+                    \App\Models\User::updateOrCreate(
+                        ['username' => $username],
+                        $updateData
+                    );
+                    $count++;
                 }
-
-                // Resolusi Status (aktif / active vs nonaktif / inactive)
-                $status = $existingUser?->status ?? 'active';
-                if (isset($row['status'])) {
-                    $statusVal = strtolower(trim((string)$row['status']));
-                    $status = in_array($statusVal, ['inactive', 'nonaktif', '0', 'disabled']) ? 'inactive' : 'active';
-                }
-
-                $updateData = [
-                    'name' => $name,
-                    'role' => 'siswa',
-                    'class_id' => $classId,
-                    'status' => $status,
-                ];
-
-                // Update password jika diisi atau jika user baru (default NIS)
-                $passInput = $row['password'] ?? $row['kata_sandi'] ?? null;
-                if (!empty($passInput)) {
-                    $updateData['password'] = \Illuminate\Support\Facades\Hash::make((string)$passInput);
-                } elseif (!$existingUser) {
-                    $updateData['password'] = \Illuminate\Support\Facades\Hash::make($username);
-                }
-
-                // Update status is_pkl (1 / 0 / ya / tidak / pkl / reguler)
-                if (isset($row['is_pkl']) || isset($row['status_pkl']) || isset($row['pkl'])) {
-                    $val = strtolower(trim((string)($row['is_pkl'] ?? $row['status_pkl'] ?? $row['pkl'])));
-                    $updateData['is_pkl'] = in_array($val, ['1', 'true', 'ya', 'yes', 'pkl', 'aktif']);
-                }
-
-                \App\Models\User::updateOrCreate(
-                    ['username' => $username],
-                    $updateData
-                );
-                $count++;
             }
-        }
+        });
+
         return back()->with('success', "Berhasil memproses & menyinkronkan {$count} data siswa.");
     }
 }

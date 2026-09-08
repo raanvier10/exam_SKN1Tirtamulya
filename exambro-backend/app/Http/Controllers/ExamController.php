@@ -268,14 +268,22 @@ class ExamController extends Controller
                 'Keterangan'
             ]);
 
+            $sanitizeCsv = function ($value) {
+                $str = (string)$value;
+                if (!empty($str) && in_array($str[0], ['=', '+', '-', '@', "\t", "\r"])) {
+                    return "'" . $str;
+                }
+                return $str;
+            };
+
             foreach ($violations as $v) {
                 fputcsv($file, [
                     $v->created_at ? $v->created_at->format('Y-m-d H:i:s') : '-',
-                    $v->user?->username ?? '-',
-                    $v->user?->name ?? '-',
-                    $v->user?->class?->name ?? 'Tanpa Kelas',
-                    $v->type ?? 'EXIT_APP',
-                    $v->description ?? '-',
+                    $sanitizeCsv($v->user?->username ?? '-'),
+                    $sanitizeCsv($v->user?->name ?? '-'),
+                    $sanitizeCsv($v->user?->class?->name ?? 'Tanpa Kelas'),
+                    $sanitizeCsv($v->type ?? 'EXIT_APP'),
+                    $sanitizeCsv($v->description ?? '-'),
                 ]);
             }
 
@@ -297,59 +305,62 @@ class ExamController extends Controller
         $rows = \App\Helpers\SimpleSpreadsheetReader::read($request->file('file'));
         $count = 0;
 
-        foreach ($rows as $row) {
-            if (!empty($row['judul_ujian']) && !empty($row['url_google_form'])) {
-                $start_at = !empty($row['waktu_mulai']) ? \Carbon\Carbon::parse($row['waktu_mulai']) : now();
-                $duration = (int)($row['durasi_menit'] ?? 60);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($rows, &$count) {
+            foreach ($rows as $row) {
+                if (!empty($row['judul_ujian']) && !empty($row['url_google_form'])) {
+                    $start_at = !empty($row['waktu_mulai']) ? \Carbon\Carbon::parse($row['waktu_mulai']) : now();
+                    $duration = (int)($row['durasi_menit'] ?? 60);
 
-                $exam = \App\Models\Exam::create([
-                    'title' => $row['judul_ujian'],
-                    'description' => $row['deskripsi'] ?? null,
-                    'google_form_url' => $row['url_google_form'],
-                    'start_at' => $start_at,
-                    'end_at' => $start_at->copy()->addMinutes($duration),
-                    'duration' => $duration,
-                    'max_violation' => (int)($row['maksimal_pelanggaran'] ?? 3),
-                    'status' => strtolower($row['status'] ?? 'active'),
-                ]);
+                    $exam = \App\Models\Exam::create([
+                        'title' => $row['judul_ujian'],
+                        'description' => $row['deskripsi'] ?? null,
+                        'google_form_url' => $row['url_google_form'],
+                        'start_at' => $start_at,
+                        'end_at' => $start_at->copy()->addMinutes($duration),
+                        'duration' => $duration,
+                        'max_violation' => (int)($row['maksimal_pelanggaran'] ?? 3),
+                        'status' => strtolower($row['status'] ?? 'active'),
+                    ]);
 
-                // Cek apakah ada target_kelas / kelas di kolom import
-                $targetClassNames = !empty($row['target_kelas']) ? $row['target_kelas'] : (!empty($row['kelas']) ? $row['kelas'] : null);
-                
-                if ($targetClassNames) {
-                    $classNamesArray = array_filter(array_map('trim', explode(',', $targetClassNames)));
-                    $classIds = [];
-                    foreach ($classNamesArray as $cName) {
-                        $classModel = \App\Models\StudentClass::firstOrCreate(['name' => $cName]);
-                        $classIds[] = $classModel->id;
-                    }
+                    // Cek apakah ada target_kelas / kelas di kolom import
+                    $targetClassNames = !empty($row['target_kelas']) ? $row['target_kelas'] : (!empty($row['kelas']) ? $row['kelas'] : null);
                     
-                    if (!empty($classIds)) {
-                        $exam->classes()->sync($classIds);
-                        $students = \App\Models\User::where('role', 'siswa')
-                            ->where('status', 'active')
-                            ->whereIn('class_id', $classIds)
-                            ->get();
+                    if ($targetClassNames) {
+                        $classNamesArray = array_filter(array_map('trim', explode(',', $targetClassNames)));
+                        $classIds = [];
+                        foreach ($classNamesArray as $cName) {
+                            $classModel = \App\Models\StudentClass::firstOrCreate(['name' => $cName]);
+                            $classIds[] = $classModel->id;
+                        }
+                        
+                        if (!empty($classIds)) {
+                            $exam->classes()->sync($classIds);
+                            $students = \App\Models\User::where('role', 'siswa')
+                                ->where('status', 'active')
+                                ->whereIn('class_id', $classIds)
+                                ->get();
+                        } else {
+                            $students = \App\Models\User::where('role', 'siswa')->where('status', 'active')->get();
+                        }
                     } else {
                         $students = \App\Models\User::where('role', 'siswa')->where('status', 'active')->get();
                     }
-                } else {
-                    $students = \App\Models\User::where('role', 'siswa')->where('status', 'active')->get();
-                }
 
-                // Register peserta ujian
-                foreach ($students as $student) {
-                    \App\Models\ExamParticipant::firstOrCreate([
-                        'exam_id' => $exam->id,
-                        'user_id' => $student->id,
-                    ], [
-                        'status' => 'registered'
-                    ]);
-                }
+                    // Register peserta ujian
+                    foreach ($students as $student) {
+                        \App\Models\ExamParticipant::firstOrCreate([
+                            'exam_id' => $exam->id,
+                            'user_id' => $student->id,
+                        ], [
+                            'status' => 'registered'
+                        ]);
+                    }
 
-                $count++;
+                    $count++;
+                }
             }
-        }
+        });
+
         return back()->with('success', "Berhasil mengimpor {$count} jadwal ujian.");
     }
 }

@@ -13,7 +13,7 @@ Route::get('/', function () {
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [AdminAuthController::class, 'login'])->name('login.post');
+    Route::post('/login', [AdminAuthController::class, 'login'])->middleware('throttle:10,1')->name('login.post');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
 
     Route::middleware('auth')->group(function () {
@@ -66,5 +66,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/exams/{exam}/students/{user}/unlock', [ExamController::class, 'unlockStudent'])->name('exams.students.unlock');
         Route::post('/exams/{exam}/students/{user}/reset', [ExamController::class, 'resetStudentSession'])->name('exams.students.reset');
         Route::resource('exams', ExamController::class);
+
+        Route::get('/change-password', [AdminAuthController::class, 'showChangePasswordForm'])->name('change-password');
+        Route::put('/change-password', [AdminAuthController::class, 'updatePassword'])->name('change-password.update');
     });
 });

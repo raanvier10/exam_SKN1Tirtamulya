@@ -69,6 +69,44 @@
     </form>
 </dialog>
 
+<div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden mb-6 p-4">
+    <form method="GET" action="{{ route('admin.students.index') }}" class="flex flex-wrap items-center gap-3">
+        <div class="flex-1 min-w-[200px]">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau NIS siswa..." class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15">
+        </div>
+        <div class="w-44">
+            <select name="class_id" onchange="this.form.submit()" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-indigo-500">
+                <option value="">Semua Kelas</option>
+                @foreach($classes as $c)
+                    <option value="{{ $c->id }}" {{ request('class_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="w-36">
+            <select name="status" onchange="this.form.submit()" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-indigo-500">
+                <option value="">Semua Status</option>
+                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Aktif</option>
+                <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Nonaktif</option>
+            </select>
+        </div>
+        <div class="w-40">
+            <select name="is_pkl" onchange="this.form.submit()" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-indigo-500">
+                <option value="">Semua Mode GPS</option>
+                <option value="0" {{ request('is_pkl') === '0' ? 'selected' : '' }}>Reguler (Wajib GPS)</option>
+                <option value="1" {{ request('is_pkl') === '1' ? 'selected' : '' }}>PKL (Bebas GPS)</option>
+            </select>
+        </div>
+        <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-colors shadow-2xs">
+            Filter
+        </button>
+        @if(request()->hasAny(['search', 'class_id', 'status', 'is_pkl']))
+            <a href="{{ route('admin.students.index') }}" class="px-3 py-2 text-sm text-slate-500 hover:text-rose-600 transition-colors">
+                Reset
+            </a>
+        @endif
+    </form>
+</div>
+
 <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
     <div class="overflow-x-auto">
         <table class="w-full text-left text-sm text-slate-600">
@@ -133,12 +171,18 @@
                 @empty
                 <tr>
                     <td colspan="6" class="px-6 py-12 text-center text-slate-400">
-                        Belum ada data siswa yang terdaftar.
+                        Belum ada data siswa yang sesuai filter.
                     </td>
                 </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
+
+    @if($students->hasPages())
+    <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50">
+        {{ $students->links() }}
+    </div>
+    @endif
 </div>
 @endsection

@@ -20,13 +20,16 @@ class StudentClassController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:classes,name',
+            'description' => 'nullable|string|max:500',
+        ], [
+            'name.required' => 'Nama kelas wajib diisi.',
+            'name.unique' => 'Nama kelas sudah terdaftar.',
         ]);
 
-        StudentClass::create($request->all());
-        return redirect()->route('admin.classes.index')->with('success', 'Kelas berhasil ditambahkan');
+        StudentClass::create($validated);
+        return redirect()->route('admin.classes.index')->with('success', 'Kelas berhasil ditambahkan.');
     }
 
     public function edit(StudentClass $class)
@@ -36,19 +39,27 @@ class StudentClassController extends Controller
 
     public function update(Request $request, StudentClass $class)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:classes,name,' . $class->id,
+            'description' => 'nullable|string|max:500',
+        ], [
+            'name.required' => 'Nama kelas wajib diisi.',
+            'name.unique' => 'Nama kelas sudah terdaftar.',
         ]);
 
-        $class->update($request->all());
-        return redirect()->route('admin.classes.index')->with('success', 'Kelas berhasil diupdate');
+        $class->update($validated);
+        return redirect()->route('admin.classes.index')->with('success', 'Kelas berhasil diperbarui.');
     }
 
     public function destroy(StudentClass $class)
     {
-        $class->delete();
-        return redirect()->route('admin.classes.index')->with('success', 'Kelas berhasil dihapus');
+        \Illuminate\Support\Facades\DB::transaction(function () use ($class) {
+            $class->exams()->detach();
+            $class->users()->update(['class_id' => null]);
+            $class->delete();
+        });
+
+        return redirect()->route('admin.classes.index')->with('success', 'Kelas berhasil dihapus.');
     }
 
     public function import(Request $request)
@@ -56,15 +67,20 @@ class StudentClassController extends Controller
         $request->validate(['file' => 'required|file']);
         $rows = \App\Helpers\SimpleSpreadsheetReader::read($request->file('file'));
         $count = 0;
-        foreach ($rows as $row) {
-            if (!empty($row['nama_kelas'])) {
-                StudentClass::create([
-                    'name' => $row['nama_kelas'],
-                    'description' => $row['deskripsi'] ?? null,
-                ]);
-                $count++;
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($rows, &$count) {
+            foreach ($rows as $row) {
+                $className = trim((string)($row['nama_kelas'] ?? $row['kelas'] ?? $row['name'] ?? ''));
+                if (!empty($className)) {
+                    StudentClass::firstOrCreate(
+                        ['name' => $className],
+                        ['description' => $row['deskripsi'] ?? $row['description'] ?? null]
+                    );
+                    $count++;
+                }
             }
-        }
+        });
+
         return back()->with('success', "Berhasil mengimpor {$count} data kelas.");
     }
 }

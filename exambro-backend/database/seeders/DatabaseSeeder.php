@@ -32,10 +32,10 @@ class DatabaseSeeder extends Seeder
 
         // Admin User
         \App\Models\User::updateOrCreate(
-            ['username' => 'admin'],
+            ['username' => 'adminexasatrya@smkn1tirtamulya.online'],
             [
                 'name' => 'Administrator',
-                'email' => 'admin@example.com',
+                'email' => 'adminexasatrya@smkn1tirtamulya.online',
                 'password' => \Illuminate\Support\Facades\Hash::make('password'),
                 'role' => 'admin',
                 'status' => 'active'

@@ -55,6 +55,7 @@ class ApiExamController extends Controller
                 'status' => 'registered'
             ]);
             $exam->student_status = $participant->status;
+            $exam->makeHidden(['google_form_url']);
         }
 
         return response()->json([
@@ -87,6 +88,8 @@ class ApiExamController extends Controller
             'status' => 'registered'
         ]);
 
+        $exam->makeHidden(['google_form_url']);
+
         return response()->json([
             'success' => true,
             'data' => $exam
@@ -113,6 +116,40 @@ class ApiExamController extends Controller
             ], 403);
         }
 
+        // Validasi GPS untuk Siswa Reguler (Bukan PKL)
+        if (!$user->is_pkl) {
+            $request->validate([
+                'latitude' => 'required|numeric',
+                'longitude' => 'required|numeric',
+            ], [
+                'latitude.required' => 'Koordinat lokasi (latitude) wajib disertakan untuk verifikasi lokasi ujian.',
+                'longitude.required' => 'Koordinat lokasi (longitude) wajib disertakan untuk verifikasi lokasi ujian.',
+            ]);
+
+            $schoolLat = -6.3400545;
+            $schoolLng = 107.4686982;
+            $maxRadius = 250; // meter
+
+            $earthRadius = 6371000;
+            $latFrom = deg2rad($schoolLat);
+            $lonFrom = deg2rad($schoolLng);
+            $latTo = deg2rad((float)$request->latitude);
+            $lonTo = deg2rad((float)$request->longitude);
+            $latDelta = $latTo - $latFrom;
+            $lonDelta = $lonTo - $lonFrom;
+            $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) + cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
+            $distance = $angle * $earthRadius;
+
+            if ($distance > $maxRadius) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Anda berada di luar area sekolah (' . round($distance) . ' meter dari titik sekolah, batas maks ' . $maxRadius . ' meter). Ujian hanya dapat diakses di area sekolah.',
+                    'distance' => round($distance),
+                    'max_radius' => $maxRadius,
+                ], 403);
+            }
+        }
+
         // Check if participant is locked
         $participant = \App\Models\ExamParticipant::firstOrCreate([
             'exam_id' => $exam->id,
@@ -130,9 +167,14 @@ class ApiExamController extends Controller
         }
 
         // Validate Schedule
-        if (Carbon::now()->lt($exam->start_at)) {
+        $now = Carbon::now();
+        if ($now->lt($exam->start_at)) {
             return response()->json(['success' => false, 'message' => 'Ujian belum dimulai'], 400);
         }
+
+        // Perhitungan waktu kedaluwarsa sesi (tidak boleh melebihi end_at ujian)
+        $calculatedExpiry = $now->copy()->addMinutes((int)$exam->duration);
+        $expiredAt = ($exam->end_at && $calculatedExpiry->gt($exam->end_at)) ? $exam->end_at : $calculatedExpiry;
 
         // Create Session
         $session = ExamSession::create([
@@ -140,20 +182,24 @@ class ApiExamController extends Controller
             'user_id' => $user->id,
             'device_id' => $request->device_id,
             'session_token' => Str::random(40),
-            'started_at' => Carbon::now(),
-            'expired_at' => Carbon::now()->addMinutes((int)$exam->duration),
+            'started_at' => $now,
+            'expired_at' => $expiredAt,
             'status' => 'ACTIVE'
         ]);
 
         // Update Participant Status
         $exam->participants()->where('user_id', $user->id)->update([
             'status' => 'working',
-            'started_at' => Carbon::now(),
+            'started_at' => $now,
         ]);
+
+        $sessionData = $session->toArray();
+        $sessionData['google_form_url'] = $exam->google_form_url;
+        $sessionData['server_time'] = $now->toIso8601String();
 
         return response()->json([
             'success' => true,
-            'data' => $session
+            'data' => $sessionData
         ]);
     }
 

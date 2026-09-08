@@ -13,7 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->trustProxies(at: '*');
-        $middleware->redirectGuestsTo(fn () => route('admin.login'));
+        $middleware->redirectGuestsTo(fn (\Illuminate\Http\Request $request) => $request->expectsJson() ? null : route('admin.login'));
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

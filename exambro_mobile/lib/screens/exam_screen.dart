@@ -6,8 +6,15 @@ import '../api_service.dart';
 
 class ExamScreen extends StatefulWidget {
   final dynamic exam;
+  final double? latitude;
+  final double? longitude;
 
-  const ExamScreen({super.key, required this.exam});
+  const ExamScreen({
+    super.key,
+    required this.exam,
+    this.latitude,
+    this.longitude,
+  });
 
   @override
   State<ExamScreen> createState() => _ExamScreenState();
@@ -62,8 +69,6 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
       }
     });
 
-    _startExamSession();
-
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
@@ -78,13 +83,23 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
           onNavigationRequest: (NavigationRequest request) {
             final uri = Uri.tryParse(request.url);
             final host = uri?.host.toLowerCase() ?? '';
+            final path = uri?.path.toLowerCase() ?? '';
 
-            // Whitelist Google Forms, Google Auth, and Google Assets
-            bool isAllowed = host.endsWith('google.com') ||
+            // Explicitly block YouTube and Google Search
+            if (host.contains('youtube.com') ||
+                host.contains('youtu.be') ||
+                path.startsWith('/search')) {
+              return NavigationDecision.prevent;
+            }
+
+            // Whitelist Google Forms, Google Auth, Google Drive assets, and static assets
+            bool isAllowed = (host == 'docs.google.com' &&
+                    (path.contains('/forms') || path.contains('/document'))) ||
+                host == 'accounts.google.com' ||
+                host == 'drive.google.com' ||
                 host.endsWith('gstatic.com') ||
                 host.endsWith('googleusercontent.com') ||
-                host.endsWith('googleapis.com') ||
-                host.endsWith('youtube.com');
+                host.endsWith('googleapis.com');
 
             if (!isAllowed) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -100,8 +115,9 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
             return NavigationDecision.navigate;
           },
         ),
-      )
-      ..loadRequest(Uri.parse(widget.exam['google_form_url']));
+      );
+
+    _startExamSession();
   }
 
   Future<void> _secureScreen() async {
@@ -208,17 +224,41 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
   Future<void> _startExamSession() async {
     try {
       final examId = int.tryParse(widget.exam['id']?.toString() ?? '0') ?? 0;
-      final response = await ApiService.startExamSession(examId, 'device_dummy_id');
+      final response = await ApiService.startExamSession(
+        examId,
+        'device_dummy_id',
+        latitude: widget.latitude,
+        longitude: widget.longitude,
+      );
       if (response['success'] == true) {
         _sessionId = response['data']?['id'] != null
             ? int.tryParse(response['data']['id'].toString())
             : null;
+        final formUrl = response['data']?['google_form_url']?.toString() ??
+            widget.exam['google_form_url']?.toString();
+        if (formUrl != null && formUrl.isNotEmpty) {
+          _controller.loadRequest(Uri.parse(formUrl));
+        }
       } else if (response['locked'] == true) {
         if (!mounted) return;
         _lockExamPermanently();
+      } else {
+        if (!mounted) return;
+        final errorMsg = response['message'] ?? 'Gagal memulai sesi ujian.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMsg),
+            backgroundColor: const Color(0xFFEF4444),
+            duration: const Duration(seconds: 4),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        Navigator.pop(context);
       }
     } catch (e) {
-      // Ignored
+      if (widget.exam['google_form_url'] != null) {
+        _controller.loadRequest(Uri.parse(widget.exam['google_form_url']));
+      }
     }
   }
 

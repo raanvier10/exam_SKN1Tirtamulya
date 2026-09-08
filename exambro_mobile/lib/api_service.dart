@@ -61,14 +61,20 @@ class ApiService {
 
   static Future<Map<String, dynamic>> startExamSession(
     int examId,
-    String deviceId,
-  ) async {
+    String deviceId, {
+    double? latitude,
+    double? longitude,
+  }) async {
     final baseUrl = await getBaseUrl();
     final headers = await getHeaders();
+    final Map<String, dynamic> body = {'device_id': deviceId};
+    if (latitude != null) body['latitude'] = latitude;
+    if (longitude != null) body['longitude'] = longitude;
+
     final response = await http.post(
       Uri.parse('$baseUrl/exams/$examId/start'),
       headers: headers,
-      body: jsonEncode({'device_id': deviceId}),
+      body: jsonEncode(body),
     );
     return jsonDecode(response.body);
   }
