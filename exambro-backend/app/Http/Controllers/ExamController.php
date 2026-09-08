@@ -28,31 +28,26 @@ class ExamController extends Controller
             'start_at' => 'required|date',
             'duration' => 'required|integer|min:1',
             'max_violation' => 'required|integer|min:1',
-            'pkl_filter' => 'nullable|in:all,regular_only,pkl_only',
             'status' => 'required|in:active,inactive',
             'classes' => 'nullable|array',
             'classes.*' => 'exists:classes,id',
         ]);
 
-        $validated['pkl_filter'] = $validated['pkl_filter'] ?? 'all';
         $validated['end_at'] = \Carbon\Carbon::parse($validated['start_at'])->addMinutes((int)$validated['duration']);
 
         $exam = Exam::create($validated);
 
-        $studentsQuery = \App\Models\User::where('role', 'siswa')->where('status', 'active');
-
         if (!empty($request->classes)) {
             $exam->classes()->sync($request->classes);
-            $studentsQuery->whereIn('class_id', $request->classes);
+            $students = \App\Models\User::where('role', 'siswa')
+                ->where('status', 'active')
+                ->whereIn('class_id', $request->classes)
+                ->get();
+        } else {
+            $students = \App\Models\User::where('role', 'siswa')
+                ->where('status', 'active')
+                ->get();
         }
-
-        if ($validated['pkl_filter'] === 'regular_only') {
-            $studentsQuery->where('is_pkl', false);
-        } elseif ($validated['pkl_filter'] === 'pkl_only') {
-            $studentsQuery->where('is_pkl', true);
-        }
-
-        $students = $studentsQuery->get();
 
         foreach ($students as $student) {
             \App\Models\ExamParticipant::firstOrCreate([
@@ -78,12 +73,20 @@ class ExamController extends Controller
                     ->latest('id')
                     ->first();
 
-                $violationCount = \App\Models\Violation::where('exam_id', $exam->id)
+                $totalViolations = \App\Models\Violation::where('exam_id', $exam->id)
                     ->where('user_id', $participant->user_id)
                     ->count();
 
+                $activeViolationQuery = \App\Models\Violation::where('exam_id', $exam->id)
+                    ->where('user_id', $participant->user_id);
+                if ($latestSession && $latestSession->unlocked_at) {
+                    $activeViolationQuery->where('created_at', '>=', $latestSession->unlocked_at);
+                }
+                $activeViolationCount = $activeViolationQuery->count();
+
                 $participant->session = $latestSession;
-                $participant->violation_count = $violationCount;
+                $participant->violation_count = $activeViolationCount;
+                $participant->total_violation_count = $totalViolations;
                 return $participant;
             });
 
@@ -111,18 +114,18 @@ class ExamController extends Controller
             ->where('user_id', $user->id)
             ->update(['status' => 'working']);
 
-        // Update active/locked sessions back to ACTIVE
+        // Update active/locked sessions back to ACTIVE and record unlock timestamp
         \App\Models\ExamSession::where('exam_id', $exam->id)
             ->where('user_id', $user->id)
             ->where('status', 'LOCKED')
-            ->update(['status' => 'ACTIVE']);
+            ->update([
+                'status' => 'ACTIVE',
+                'unlocked_at' => \Carbon\Carbon::now(),
+            ]);
 
-        // Reset violation records so counter is cleared
-        \App\Models\Violation::where('exam_id', $exam->id)
-            ->where('user_id', $user->id)
-            ->delete();
+        // Catatan riwayat pelanggaran TIDAK dihapus agar tetap tersimpan untuk export / rekap
 
-        return back()->with('success', "Kunci ujian untuk siswa {$user->name} berhasil dibuka.");
+        return back()->with('success', "Kunci ujian untuk siswa {$user->name} berhasil dibuka. Riwayat pelanggaran tetap tersimpan.");
     }
 
     public function resetStudentSession(Exam $exam, \App\Models\User $user)
@@ -164,50 +167,51 @@ class ExamController extends Controller
             'start_at' => 'required|date',
             'duration' => 'required|integer|min:1',
             'max_violation' => 'required|integer|min:1',
-            'pkl_filter' => 'nullable|in:all,regular_only,pkl_only',
             'status' => 'required|in:active,inactive',
             'classes' => 'nullable|array',
             'classes.*' => 'exists:classes,id',
         ]);
 
-        $validated['pkl_filter'] = $validated['pkl_filter'] ?? 'all';
         $validated['end_at'] = \Carbon\Carbon::parse($validated['start_at'])->addMinutes((int)$validated['duration']);
 
         $exam->update($validated);
 
-        $studentsQuery = \App\Models\User::where('role', 'siswa')->where('status', 'active');
-
         if (!empty($request->classes)) {
             $exam->classes()->sync($request->classes);
-            $studentsQuery->whereIn('class_id', $request->classes);
+            $targetStudents = \App\Models\User::where('role', 'siswa')
+                ->where('status', 'active')
+                ->whereIn('class_id', $request->classes)
+                ->get();
+            
+            $targetStudentIds = $targetStudents->pluck('id')->toArray();
+
+            // Daftarkan siswa baru yang belum terdaftar
+            foreach ($targetStudents as $student) {
+                \App\Models\ExamParticipant::firstOrCreate([
+                    'exam_id' => $exam->id,
+                    'user_id' => $student->id,
+                ], [
+                    'status' => 'registered'
+                ]);
+            }
+
+            // Hapus peserta yang kelasnya tidak lagi terpilih HANYA jika statusnya masih 'registered'
+            \App\Models\ExamParticipant::where('exam_id', $exam->id)
+                ->whereNotIn('user_id', $targetStudentIds)
+                ->where('status', 'registered')
+                ->delete();
         } else {
             $exam->classes()->detach();
+            $allStudents = \App\Models\User::where('role', 'siswa')->where('status', 'active')->get();
+            foreach ($allStudents as $student) {
+                \App\Models\ExamParticipant::firstOrCreate([
+                    'exam_id' => $exam->id,
+                    'user_id' => $student->id,
+                ], [
+                    'status' => 'registered'
+                ]);
+            }
         }
-
-        if ($validated['pkl_filter'] === 'regular_only') {
-            $studentsQuery->where('is_pkl', false);
-        } elseif ($validated['pkl_filter'] === 'pkl_only') {
-            $studentsQuery->where('is_pkl', true);
-        }
-
-        $targetStudents = $studentsQuery->get();
-        $targetStudentIds = $targetStudents->pluck('id')->toArray();
-
-        // Daftarkan siswa baru yang belum terdaftar
-        foreach ($targetStudents as $student) {
-            \App\Models\ExamParticipant::firstOrCreate([
-                'exam_id' => $exam->id,
-                'user_id' => $student->id,
-            ], [
-                'status' => 'registered'
-            ]);
-        }
-
-        // Hapus peserta yang tidak lagi memenuhi kriteria HANYA jika statusnya masih 'registered'
-        \App\Models\ExamParticipant::where('exam_id', $exam->id)
-            ->whereNotIn('user_id', $targetStudentIds)
-            ->where('status', 'registered')
-            ->delete();
 
         return redirect()->route('admin.exams.index')->with('success', 'Ujian berhasil diupdate');
     }
@@ -238,7 +242,6 @@ class ExamController extends Controller
                 'NIS / Username',
                 'Nama Siswa',
                 'Kelas',
-                'Status Siswa',
                 'Jenis Pelanggaran',
                 'Keterangan'
             ]);
@@ -249,7 +252,6 @@ class ExamController extends Controller
                     $v->user?->username ?? '-',
                     $v->user?->name ?? '-',
                     $v->user?->class?->name ?? 'Tanpa Kelas',
-                    $v->user?->is_pkl ? 'Siswa PKL' : 'Reguler',
                     $v->type ?? 'EXIT_APP',
                     $v->description ?? '-',
                 ]);
@@ -278,17 +280,6 @@ class ExamController extends Controller
                 $start_at = !empty($row['waktu_mulai']) ? \Carbon\Carbon::parse($row['waktu_mulai']) : now();
                 $duration = (int)($row['durasi_menit'] ?? 60);
 
-                // Resolusi filter PKL (all / regular_only / pkl_only)
-                $pklFilter = 'all';
-                if (!empty($row['filter_pkl']) || !empty($row['status_pkl'])) {
-                    $val = strtolower(trim((string)($row['filter_pkl'] ?? $row['status_pkl'])));
-                    if (in_array($val, ['regular_only', 'reguler', 'non_pkl', 'bukan_pkl'])) {
-                        $pklFilter = 'regular_only';
-                    } elseif (in_array($val, ['pkl_only', 'pkl', 'hanya_pkl'])) {
-                        $pklFilter = 'pkl_only';
-                    }
-                }
-
                 $exam = \App\Models\Exam::create([
                     'title' => $row['judul_ujian'],
                     'description' => $row['deskripsi'] ?? null,
@@ -297,15 +288,12 @@ class ExamController extends Controller
                     'end_at' => $start_at->copy()->addMinutes($duration),
                     'duration' => $duration,
                     'max_violation' => (int)($row['maksimal_pelanggaran'] ?? 3),
-                    'pkl_filter' => $pklFilter,
                     'status' => strtolower($row['status'] ?? 'active'),
                 ]);
 
                 // Cek apakah ada target_kelas / kelas di kolom import
                 $targetClassNames = !empty($row['target_kelas']) ? $row['target_kelas'] : (!empty($row['kelas']) ? $row['kelas'] : null);
                 
-                $studentsQuery = \App\Models\User::where('role', 'siswa')->where('status', 'active');
-
                 if ($targetClassNames) {
                     $classNamesArray = array_filter(array_map('trim', explode(',', $targetClassNames)));
                     $classIds = [];
@@ -316,17 +304,16 @@ class ExamController extends Controller
                     
                     if (!empty($classIds)) {
                         $exam->classes()->sync($classIds);
-                        $studentsQuery->whereIn('class_id', $classIds);
+                        $students = \App\Models\User::where('role', 'siswa')
+                            ->where('status', 'active')
+                            ->whereIn('class_id', $classIds)
+                            ->get();
+                    } else {
+                        $students = \App\Models\User::where('role', 'siswa')->where('status', 'active')->get();
                     }
+                } else {
+                    $students = \App\Models\User::where('role', 'siswa')->where('status', 'active')->get();
                 }
-
-                if ($pklFilter === 'regular_only') {
-                    $studentsQuery->where('is_pkl', false);
-                } elseif ($pklFilter === 'pkl_only') {
-                    $studentsQuery->where('is_pkl', true);
-                }
-
-                $students = $studentsQuery->get();
 
                 // Register peserta ujian
                 foreach ($students as $student) {

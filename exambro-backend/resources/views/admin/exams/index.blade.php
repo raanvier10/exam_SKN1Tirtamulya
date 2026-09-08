@@ -101,16 +101,6 @@
                                 Semua Kelas
                             </span>
                         @endif
-
-                        @if($e->pkl_filter === 'regular_only')
-                            <div class="mt-1">
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">Non-PKL</span>
-                            </div>
-                        @elseif($e->pkl_filter === 'pkl_only')
-                            <div class="mt-1">
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">Khusus PKL</span>
-                            </div>
-                        @endif
                     </td>
                     <td class="px-6 py-4">
                         <div class="text-slate-900 font-medium">{{ \Carbon\Carbon::parse($e->start_at)->format('d M Y') }}</div>

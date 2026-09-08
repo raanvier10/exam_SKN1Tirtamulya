@@ -8,15 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('exams', function (Blueprint $table) {
-            $table->string('pkl_filter')->default('all')->after('max_violation'); // all, regular_only, pkl_only
+        Schema::table('exam_sessions', function (Blueprint $table) {
+            $table->dateTime('unlocked_at')->nullable()->after('status');
         });
     }
 
     public function down(): void
     {
-        Schema::table('exams', function (Blueprint $table) {
-            $table->dropColumn('pkl_filter');
+        Schema::table('exam_sessions', function (Blueprint $table) {
+            $table->dropColumn('unlocked_at');
         });
     }
 };

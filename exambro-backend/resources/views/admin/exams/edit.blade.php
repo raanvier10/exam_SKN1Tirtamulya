@@ -88,33 +88,6 @@
         </script>
 
         <div>
-            <label class="block text-sm font-semibold text-slate-800 mb-2">Filter Keikutsertaan Siswa PKL</label>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <label class="flex items-center gap-3 p-3.5 bg-white border border-slate-200/80 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/10 cursor-pointer transition-all">
-                    <input type="radio" name="pkl_filter" value="all" {{ old('pkl_filter', $exam->pkl_filter ?? 'all') === 'all' ? 'checked' : '' }} class="text-indigo-600 focus:ring-indigo-500/20 border-slate-300">
-                    <div>
-                        <div class="text-xs font-semibold text-slate-900">Semua Siswa</div>
-                        <div class="text-[11px] text-slate-400">Reguler & PKL ikut</div>
-                    </div>
-                </label>
-                <label class="flex items-center gap-3 p-3.5 bg-white border border-slate-200/80 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/10 cursor-pointer transition-all">
-                    <input type="radio" name="pkl_filter" value="regular_only" {{ old('pkl_filter', $exam->pkl_filter ?? 'all') === 'regular_only' ? 'checked' : '' }} class="text-indigo-600 focus:ring-indigo-500/20 border-slate-300">
-                    <div>
-                        <div class="text-xs font-semibold text-slate-900">Reguler Saja</div>
-                        <div class="text-[11px] text-slate-400">Kecualikan siswa PKL</div>
-                    </div>
-                </label>
-                <label class="flex items-center gap-3 p-3.5 bg-white border border-slate-200/80 rounded-xl hover:border-indigo-300 hover:bg-indigo-50/10 cursor-pointer transition-all">
-                    <input type="radio" name="pkl_filter" value="pkl_only" {{ old('pkl_filter', $exam->pkl_filter ?? 'all') === 'pkl_only' ? 'checked' : '' }} class="text-indigo-600 focus:ring-indigo-500/20 border-slate-300">
-                    <div>
-                        <div class="text-xs font-semibold text-slate-900">Khusus Siswa PKL</div>
-                        <div class="text-[11px] text-slate-400">Hanya siswa status PKL</div>
-                    </div>
-                </label>
-            </div>
-        </div>
-
-        <div>
             <label class="block text-sm font-semibold text-slate-800 mb-2">Status Ujian</label>
             <div class="relative custom-select">
                 <input type="hidden" name="status" value="{{ old('status', $exam->status) }}">

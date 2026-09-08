@@ -19,13 +19,6 @@ class ApiExamController extends Controller
         $today = Carbon::today();
         
         $exams = Exam::where('status', 'active')
-            ->where(function ($q) use ($user) {
-                if ($user->is_pkl) {
-                    $q->whereIn('pkl_filter', ['all', 'pkl_only']);
-                } else {
-                    $q->whereIn('pkl_filter', ['all', 'regular_only']);
-                }
-            })
             ->where(function ($query) use ($user) {
                 $query->whereHas('participants', function ($q) use ($user) {
                     $q->where('user_id', $user->id);
@@ -75,15 +68,9 @@ class ApiExamController extends Controller
         $exam = Exam::findOrFail($id);
         $user = $request->user();
 
-        $isPklMatch = ($exam->pkl_filter === 'all')
-            || ($exam->pkl_filter === 'regular_only' && !$user->is_pkl)
-            || ($exam->pkl_filter === 'pkl_only' && $user->is_pkl);
-
-        $isEligible = $isPklMatch && (
-            $exam->participants()->where('user_id', $user->id)->exists()
+        $isEligible = $exam->participants()->where('user_id', $user->id)->exists()
             || ($user->class_id && $exam->classes()->where('class_id', $user->class_id)->exists())
-            || ($exam->classes()->count() === 0)
-        );
+            || ($exam->classes()->count() === 0);
 
         if (!$isEligible) {
             return response()->json([
@@ -115,15 +102,9 @@ class ApiExamController extends Controller
         $exam = Exam::findOrFail($id);
         $user = $request->user();
 
-        $isPklMatch = ($exam->pkl_filter === 'all')
-            || ($exam->pkl_filter === 'regular_only' && !$user->is_pkl)
-            || ($exam->pkl_filter === 'pkl_only' && $user->is_pkl);
-
-        $isEligible = $isPklMatch && (
-            $exam->participants()->where('user_id', $user->id)->exists()
+        $isEligible = $exam->participants()->where('user_id', $user->id)->exists()
             || ($user->class_id && $exam->classes()->where('class_id', $user->class_id)->exists())
-            || ($exam->classes()->count() === 0)
-        );
+            || ($exam->classes()->count() === 0);
 
         if (!$isEligible) {
             return response()->json([
@@ -219,10 +200,18 @@ class ApiExamController extends Controller
         ]);
 
         $exam = Exam::find($request->exam_id);
-        $violationCount = Violation::where('session_id', $request->session_id)->count();
+        $session = ExamSession::find($request->session_id);
+        
+        $violationQuery = Violation::where('session_id', $request->session_id);
+        if ($session && $session->unlocked_at) {
+            $violationQuery->where('created_at', '>=', $session->unlocked_at);
+        }
+        $violationCount = $violationQuery->count();
 
         if ($violationCount >= $exam->max_violation) {
-            ExamSession::where('id', $request->session_id)->update(['status' => 'LOCKED']);
+            if ($session) {
+                $session->update(['status' => 'LOCKED']);
+            }
             $exam->participants()->where('user_id', $request->user()->id)->update(['status' => 'locked']);
 
             return response()->json([

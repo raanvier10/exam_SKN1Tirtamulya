@@ -58,7 +58,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('students', StudentController::class);
         
         Route::get('/exams/template', function () {
-            $csv = "judul_ujian,target_kelas,filter_pkl,deskripsi,url_google_form,waktu_mulai,durasi_menit,maksimal_pelanggaran,status\nUjian Matematika,\"11 TJKT 1, 11 TJKT 2\",all,Tutup buku,https://forms.gle/...,2026-08-18 09:00,90,3,active\n";
+            $csv = "judul_ujian,target_kelas,deskripsi,url_google_form,waktu_mulai,durasi_menit,maksimal_pelanggaran,status\nUjian Matematika,\"11 TJKT 1, 11 TJKT 2\",Tutup buku,https://forms.gle/...,2026-08-18 09:00,90,3,active\n";
             return response($csv)->header('Content-Type', 'text/csv')->header('Content-Disposition', 'attachment; filename="template_ujian.csv"');
         })->name('exams.template');
         Route::post('/exams/import', [ExamController::class, 'import'])->name('exams.import');

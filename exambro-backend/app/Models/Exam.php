@@ -12,7 +12,7 @@ class Exam extends Model
     use HasFactory;
 
     protected $fillable = [
-        'title', 'description', 'google_form_url', 'start_at', 'end_at', 'duration', 'max_violation', 'pkl_filter', 'status'
+        'title', 'description', 'google_form_url', 'start_at', 'end_at', 'duration', 'max_violation', 'status'
     ];
 
     protected function casts(): array

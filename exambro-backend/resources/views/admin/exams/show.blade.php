@@ -102,7 +102,7 @@
         <!-- Kolom Kiri: Informasi Utama & Link -->
         <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 lg:col-span-2 flex flex-col justify-between space-y-4">
             <div>
-                <div class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">Target Kelas & Status Siswa</div>
+                <div class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">Target Kelas / Peserta</div>
                 <div class="flex flex-wrap items-center gap-1.5 mb-3">
                     @if($exam->classes->count() > 0)
                         @foreach($exam->classes as $cls)
@@ -113,16 +113,6 @@
                     @else
                         <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
                             Semua Kelas Aktif
-                        </span>
-                    @endif
-
-                    @if($exam->pkl_filter === 'regular_only')
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                            Khusus Reguler (Non-PKL)
-                        </span>
-                    @elseif($exam->pkl_filter === 'pkl_only')
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
-                            Khusus Siswa PKL
                         </span>
                     @endif
                 </div>
@@ -268,10 +258,15 @@
                                 @endif
                             </td>
                             <td class="py-4 px-6">
-                                @if($p->violation_count > 0)
-                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold {{ $p->violation_count >= $exam->max_violation ? 'bg-rose-50 text-rose-700 ring-1 ring-rose-300' : 'bg-amber-50 text-amber-700 ring-1 ring-amber-300' }}">
-                                        ⚠️ {{ $p->violation_count }} / {{ $exam->max_violation }}
-                                    </span>
+                                @if($p->total_violation_count > 0)
+                                    <div>
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold {{ $p->violation_count >= $exam->max_violation ? 'bg-rose-50 text-rose-700 ring-1 ring-rose-300' : ($p->violation_count > 0 ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-300' : 'bg-slate-100 text-slate-700') }}">
+                                            ⚠️ {{ $p->violation_count }} / {{ $exam->max_violation }}
+                                        </span>
+                                        @if($p->total_violation_count > $p->violation_count)
+                                            <div class="text-[10px] text-slate-400 mt-0.5 font-medium">({{ $p->total_violation_count }} total riwayat)</div>
+                                        @endif
+                                    </div>
                                 @else
                                     <span class="text-xs text-slate-400 font-medium">0 / {{ $exam->max_violation }}</span>
                                 @endif

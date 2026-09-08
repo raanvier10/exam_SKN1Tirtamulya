@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['exam_id', 'user_id', 'device_id', 'session_token', 'started_at', 'expired_at', 'status'])]
+#[Fillable(['exam_id', 'user_id', 'device_id', 'session_token', 'started_at', 'expired_at', 'status', 'unlocked_at'])]
 class ExamSession extends Model
 {
     use HasFactory;
@@ -18,6 +18,7 @@ class ExamSession extends Model
         return [
             'started_at' => 'datetime',
             'expired_at' => 'datetime',
+            'unlocked_at' => 'datetime',
         ];
     }
 
