@@ -7,10 +7,32 @@ use Illuminate\Http\Request;
 
 class ExamController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $exams = Exam::with(['classes', 'participants'])->latest('start_at')->get();
-        return view('admin.exams.index', compact('exams'));
+        $query = Exam::with(['classes', 'participants'])->latest('start_at');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('class_id')) {
+            $query->whereHas('classes', function($q) use ($request) {
+                $q->where('classes.id', $request->class_id);
+            });
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $exams = $query->get();
+        $classes = \App\Models\StudentClass::orderBy('name')->get();
+
+        return view('admin.exams.index', compact('exams', 'classes'));
     }
 
     public function create()

@@ -69,6 +69,70 @@
     </form>
 </dialog>
 
+<div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs mb-6 p-4">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+        <!-- Search Input -->
+        <div class="relative w-full md:w-80">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+            </div>
+            <input 
+                type="text" 
+                id="searchExam" 
+                placeholder="Cari judul ujian..." 
+                value="{{ request('search') }}"
+                class="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+            >
+            <button id="clearSearch" class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+            <!-- Filter Target Kelas -->
+            <div class="relative min-w-[150px]">
+                <select id="filterClass" class="w-full appearance-none pl-3 pr-8 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer">
+                    <option value="">Semua Kelas</option>
+                    @foreach($classes as $c)
+                        <option value="{{ strtolower($c->name) }}" {{ request('class_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                    @endforeach
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Filter Status -->
+            <div class="relative min-w-[130px]">
+                <select id="filterStatus" class="w-full appearance-none pl-3 pr-8 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer">
+                    <option value="">Semua Status</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Aktif</option>
+                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Nonaktif</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Reset Filters -->
+            <button id="resetFilters" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl border border-transparent hover:border-indigo-100 transition-all" title="Reset Filter">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+
 <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
     <div class="overflow-x-auto">
         <table class="w-full text-left text-sm text-slate-600">
@@ -83,9 +147,15 @@
                     <th class="px-6 py-4 text-right">Aksi</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100">
+            <tbody id="examTableBody" class="divide-y divide-slate-100">
                 @forelse($exams as $e)
-                <tr class="hover:bg-indigo-50/20 transition-colors duration-150 group">
+                @php
+                    $classList = $e->classes->pluck('name')->implode(' ');
+                @endphp
+                <tr class="exam-row hover:bg-indigo-50/20 transition-colors duration-150 group" 
+                    data-title="{{ strtolower($e->title) }}" 
+                    data-classes="{{ strtolower($classList ?: 'semua kelas') }}" 
+                    data-status="{{ $e->status }}">
                     <td class="px-6 py-4 text-slate-900 font-semibold">{{ $e->title }}</td>
                     <td class="px-6 py-4">
                         @if($e->classes->count() > 0)
@@ -138,14 +208,87 @@
                     </td>
                 </tr>
                 @empty
-                <tr>
+                <tr id="emptyStaticRow">
                     <td colspan="7" class="px-6 py-12 text-center text-slate-400">
                         Belum ada jadwal ujian terdaftar.
                     </td>
                 </tr>
                 @endforelse
+                <tr id="noMatchRow" class="hidden">
+                    <td colspan="7" class="px-6 py-12 text-center text-slate-400">
+                        Tidak ada jadwal ujian yang cocok dengan pencarian / filter.
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchExam');
+        const clearBtn = document.getElementById('clearSearch');
+        const classFilter = document.getElementById('filterClass');
+        const statusFilter = document.getElementById('filterStatus');
+        const resetBtn = document.getElementById('resetFilters');
+        const rows = document.querySelectorAll('.exam-row');
+        const noMatchRow = document.getElementById('noMatchRow');
+        const emptyStaticRow = document.getElementById('emptyStaticRow');
+
+        function filterExams() {
+            const query = searchInput.value.toLowerCase().trim();
+            const selectedClass = classFilter.value.toLowerCase().trim();
+            const selectedStatus = statusFilter.value.toLowerCase().trim();
+
+            clearBtn.classList.toggle('hidden', query === '');
+
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const title = row.getAttribute('data-title') || '';
+                const classes = row.getAttribute('data-classes') || '';
+                const status = row.getAttribute('data-status') || '';
+
+                const matchesQuery = query === '' || title.includes(query) || classes.includes(query);
+                const matchesClass = selectedClass === '' || classes.includes(selectedClass) || classes.includes('semua kelas');
+                const matchesStatus = selectedStatus === '' || status === selectedStatus;
+
+                if (matchesQuery && matchesClass && matchesStatus) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            if (noMatchRow) {
+                if (rows.length > 0 && visibleCount === 0) {
+                    noMatchRow.classList.remove('hidden');
+                } else {
+                    noMatchRow.classList.add('hidden');
+                }
+            }
+        }
+
+        searchInput.addEventListener('input', filterExams);
+        classFilter.addEventListener('change', filterExams);
+        statusFilter.addEventListener('change', filterExams);
+
+        clearBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            filterExams();
+            searchInput.focus();
+        });
+
+        resetBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            classFilter.value = '';
+            statusFilter.value = '';
+            filterExams();
+        });
+
+        // Run initial filter in case inputs have values
+        filterExams();
+    });
+</script>
 @endsection
