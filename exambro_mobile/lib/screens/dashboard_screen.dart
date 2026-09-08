@@ -846,8 +846,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       countdown = "$hours : $minutes : $seconds";
     }
 
-    final duration = exam['duration'] ?? 60;
-    final maxViolation = exam['max_violation'] ?? 3;
+    final duration = int.tryParse(exam['duration']?.toString() ?? '60') ?? 60;
+    final maxViolation = int.tryParse(exam['max_violation']?.toString() ?? '3') ?? 3;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),

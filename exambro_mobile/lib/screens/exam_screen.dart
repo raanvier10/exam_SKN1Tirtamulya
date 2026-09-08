@@ -207,82 +207,118 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
 
   Future<void> _startExamSession() async {
     try {
-      final response = await ApiService.startExamSession(widget.exam['id'], 'device_dummy_id');
+      final examId = int.tryParse(widget.exam['id']?.toString() ?? '0') ?? 0;
+      final response = await ApiService.startExamSession(examId, 'device_dummy_id');
       if (response['success'] == true) {
-        _sessionId = response['data']['id'];
+        _sessionId = response['data']?['id'] != null
+            ? int.tryParse(response['data']['id'].toString())
+            : null;
       } else if (response['locked'] == true) {
         if (!mounted) return;
-        setState(() {
-          _isLocked = true;
-        });
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (dialogContext) => Dialog(
-            backgroundColor: const Color(0xFF0B132B),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24),
-              side: const BorderSide(color: Color(0xFFEF4444), width: 1.5),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 70,
-                    height: 70,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEF4444).withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.4), width: 2),
-                    ),
-                    child: const Icon(Icons.lock_rounded, color: Color(0xFFF87171), size: 36),
-                  ),
-                  const SizedBox(height: 18),
-                  const Text(
-                    'UJIAN TELAH DIKUNCI',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Color(0xFFFCA5A5),
-                      fontWeight: FontWeight.w900,
-                      fontSize: 18,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Sesi ujian Anda telah dikunci karena pelanggaran keamanan. Hubungi pengawas / guru IT di ruangan untuk membuka kunci.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13, height: 1.45),
-                  ),
-                  const SizedBox(height: 22),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(dialogContext);
-                        Navigator.pop(context, 'locked');
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFEF4444),
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text('KEMBALI KE PORTAL', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
+        _lockExamPermanently();
       }
     } catch (e) {
       // Ignored
     }
+  }
+
+  void _lockExamPermanently() {
+    if (!mounted || _isLocked) return;
+    setState(() {
+      _isLocked = true;
+    });
+
+    final int maxViolations = int.tryParse(widget.exam['max_violation']?.toString() ?? '3') ?? 3;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => PopScope(
+        canPop: false,
+        child: Dialog(
+          backgroundColor: const Color(0xFF0B132B),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: const BorderSide(color: Color(0xFFEF4444), width: 1.5),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEF4444).withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.4), width: 2),
+                  ),
+                  child: const Icon(Icons.lock_rounded, color: Color(0xFFF87171), size: 36),
+                ),
+                const SizedBox(height: 18),
+                const Text(
+                  'UJIAN TELAH DIKUNCI',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFFFCA5A5),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 18,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Anda telah mencapai batas maksimum ($maxViolations/$maxViolations) pelanggaran keamanan. Sistem telah mengunci sesi ujian Anda.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13, height: 1.45),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1C2541),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFF3A506B)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFF38BDF8)),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Hubungi Pengawas / Guru IT untuk membuka kunci.',
+                          style: TextStyle(color: Color(0xFFE2E8F0), fontSize: 12, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 22),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(dialogContext);
+                      Navigator.pop(context, 'locked');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFEF4444),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('KEMBALI KE PORTAL', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -393,112 +429,30 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
 
     HapticFeedback.heavyImpact();
 
+    final int maxViolations = int.tryParse(widget.exam['max_violation']?.toString() ?? '3') ?? 3;
+    final int examId = int.tryParse(widget.exam['id']?.toString() ?? '0') ?? 0;
+
     setState(() {
       _violationCount++;
     });
 
     if (_sessionId != null) {
-      ApiService.reportViolation(widget.exam['id'], _sessionId!, type, desc);
+      ApiService.reportViolation(examId, _sessionId!, type, desc).then((res) {
+        if (res['locked'] == true && !_isLocked) {
+          _lockExamPermanently();
+        }
+      }).catchError((_) {});
     }
-
-    int maxViolations = widget.exam['max_violation'] ?? 3;
-    int remainingChances = maxViolations - _violationCount;
 
     if (!mounted) return;
 
     if (_violationCount >= maxViolations) {
-      setState(() {
-        _isLocked = true;
-      });
+      _lockExamPermanently();
+    } else {
+      final int remainingChances = maxViolations - _violationCount;
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (dialogContext) => Dialog(
-          backgroundColor: const Color(0xFF0B132B),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-            side: const BorderSide(color: Color(0xFFEF4444), width: 1.5),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 70,
-                  height: 70,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEF4444).withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.4), width: 2),
-                  ),
-                  child: const Icon(Icons.lock_rounded, color: Color(0xFFF87171), size: 36),
-                ),
-                const SizedBox(height: 18),
-                const Text(
-                  'UJIAN TELAH DIKUNCI',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Color(0xFFFCA5A5),
-                    fontWeight: FontWeight.w900,
-                    fontSize: 18,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Anda telah mencapai batas maksimum ($maxViolations/$maxViolations) pelanggaran keamanan. Sistem telah menonaktifkan sesi ujian Anda.',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13, height: 1.45),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1C2541),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFF3A506B)),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFF38BDF8)),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'Hubungi Pengawas / Guru IT untuk membuka kunci.',
-                          style: TextStyle(color: Color(0xFFE2E8F0), fontSize: 12, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 22),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(dialogContext);
-                      Navigator.pop(context, 'locked');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFEF4444),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: const Text('KEMBALI KE PORTAL', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    } else {
-      showDialog(
-        context: context,
         builder: (dialogContext) => Dialog(
           backgroundColor: const Color(0xFF0F172A),
           shape: RoundedRectangleBorder(
@@ -857,7 +811,8 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
     );
 
     if (confirm == true && mounted) {
-      await ApiService.finishExamSession(widget.exam['id']);
+      final int examId = int.tryParse(widget.exam['id']?.toString() ?? '0') ?? 0;
+      await ApiService.finishExamSession(examId);
       if (!mounted) return;
       Navigator.pop(context);
     }
@@ -882,11 +837,11 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    int maxViolations = widget.exam['max_violation'] ?? 3;
+    final int maxViolations = int.tryParse(widget.exam['max_violation']?.toString() ?? '3') ?? 3;
     final now = DateTime.now();
     final remainingDiff = _endTime.difference(now);
     final isLowTime = remainingDiff.inMinutes < 5 && !now.isAfter(_endTime);
-    final duration = widget.exam['duration'] ?? 60;
+    final int duration = int.tryParse(widget.exam['duration']?.toString() ?? '60') ?? 60;
     final bool canFinish = (duration <= 10) || (remainingDiff.inMinutes < 10) || (remainingDiff.inSeconds <= 600);
 
     return PopScope(

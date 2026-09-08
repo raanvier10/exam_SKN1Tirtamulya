@@ -20,6 +20,8 @@ class Exam extends Model
         return [
             'start_at' => 'datetime',
             'end_at' => 'datetime',
+            'duration' => 'integer',
+            'max_violation' => 'integer',
         ];
     }
 

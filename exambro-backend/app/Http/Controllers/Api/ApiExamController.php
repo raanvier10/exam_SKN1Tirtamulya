@@ -207,8 +207,9 @@ class ApiExamController extends Controller
             $violationQuery->where('created_at', '>=', $session->unlocked_at);
         }
         $violationCount = $violationQuery->count();
+        $maxViolation = (int)($exam->max_violation ?? 3);
 
-        if ($violationCount >= $exam->max_violation) {
+        if ($violationCount >= $maxViolation) {
             if ($session) {
                 $session->update(['status' => 'LOCKED']);
             }
@@ -217,14 +218,18 @@ class ApiExamController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Ujian dikunci karena melanggar batas maksimal',
-                'locked' => true
+                'locked' => true,
+                'violation_count' => $violationCount,
+                'max_violation' => $maxViolation,
             ]);
         }
 
         return response()->json([
             'success' => true,
             'message' => 'Pelanggaran dicatat',
-            'locked' => false
+            'locked' => false,
+            'violation_count' => $violationCount,
+            'max_violation' => $maxViolation,
         ]);
     }
 }

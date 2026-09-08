@@ -107,23 +107,28 @@ class ApiService {
     return jsonDecode(response.body);
   }
 
-  static Future<void> reportViolation(
-    int examId,
-    int sessionId,
+  static Future<Map<String, dynamic>> reportViolation(
+    dynamic examId,
+    dynamic sessionId,
     String type,
     String description,
   ) async {
-    final baseUrl = await getBaseUrl();
-    final headers = await getHeaders();
-    await http.post(
-      Uri.parse('$baseUrl/violations'),
-      headers: headers,
-      body: jsonEncode({
-        'exam_id': examId,
-        'session_id': sessionId,
-        'type': type,
-        'description': description,
-      }),
-    );
+    try {
+      final baseUrl = await getBaseUrl();
+      final headers = await getHeaders();
+      final response = await http.post(
+        Uri.parse('$baseUrl/violations'),
+        headers: headers,
+        body: jsonEncode({
+          'exam_id': int.tryParse(examId.toString()) ?? examId,
+          'session_id': int.tryParse(sessionId.toString()) ?? sessionId,
+          'type': type,
+          'description': description,
+        }),
+      );
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {'success': false, 'error': e.toString()};
+    }
   }
 }
