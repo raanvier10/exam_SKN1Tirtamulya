@@ -97,17 +97,26 @@
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-100 text-xs">
-                        <span class="px-2 py-1 bg-amber-50 text-amber-700 font-semibold rounded-lg" title="Sedang Mengerjakan">
-                            ✍️ {{ $exam->working_count }} Mengerjakan
+                    <div class="flex flex-wrap items-center gap-1.5 p-1 bg-slate-50 rounded-xl border border-slate-200/60 text-xs">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-semibold bg-white border border-amber-200/80 text-amber-700 shadow-2xs" title="Siswa Sedang Mengerjakan">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                            <span class="font-bold text-slate-900">{{ $exam->working_count }}</span> Mengerjakan
                         </span>
+
                         @if($exam->locked_count > 0)
-                        <span class="px-2 py-1 bg-rose-50 text-rose-700 font-semibold rounded-lg animate-pulse" title="Terkunci">
-                            🔒 {{ $exam->locked_count }} Dikunci
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-semibold bg-rose-50 border border-rose-200 text-rose-700 shadow-2xs animate-pulse" title="Sesi Terkunci">
+                            <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            <span class="font-bold">{{ $exam->locked_count }}</span> Dikunci
                         </span>
                         @endif
-                        <span class="px-2 py-1 bg-emerald-50 text-emerald-700 font-semibold rounded-lg" title="Selesai">
-                            ✅ {{ $exam->finished_count }} Selesai
+
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg font-semibold bg-white border border-emerald-200/80 text-emerald-700 shadow-2xs" title="Selesai Mengerjakan">
+                            <svg class="w-3.5 h-3.5 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span class="font-bold text-slate-900">{{ $exam->finished_count }}</span> Selesai
                         </span>
                     </div>
 

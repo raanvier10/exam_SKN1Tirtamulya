@@ -260,8 +260,11 @@
                             <td class="py-4 px-6">
                                 @if($p->total_violation_count > 0)
                                     <div>
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold {{ $p->violation_count >= $exam->max_violation ? 'bg-rose-50 text-rose-700 ring-1 ring-rose-300' : ($p->violation_count > 0 ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-300' : 'bg-slate-100 text-slate-700') }}">
-                                            ⚠️ {{ $p->violation_count }} / {{ $exam->max_violation }}
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold {{ $p->violation_count >= $exam->max_violation ? 'bg-rose-50 text-rose-700 ring-1 ring-rose-300' : ($p->violation_count > 0 ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-300' : 'bg-slate-100 text-slate-700') }}">
+                                            <svg class="w-3.5 h-3.5 {{ $p->violation_count >= $exam->max_violation ? 'text-rose-500' : 'text-amber-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                            {{ $p->violation_count }} / {{ $exam->max_violation }}
                                         </span>
                                         @if($p->total_violation_count > $p->violation_count)
                                             <div class="text-[10px] text-slate-400 mt-0.5 font-medium">({{ $p->total_violation_count }} total riwayat)</div>
