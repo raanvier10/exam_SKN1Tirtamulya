@@ -138,73 +138,89 @@
         <table class="w-full text-left text-sm text-slate-600">
             <thead class="bg-slate-50/80 border-b border-slate-200/80 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                 <tr>
-                    <th class="px-6 py-4">Judul Ujian</th>
-                    <th class="px-6 py-4">Target Kelas</th>
-                    <th class="px-6 py-4">Waktu</th>
-                    <th class="px-6 py-4">Durasi</th>
-                    <th class="px-6 py-4">Toleransi</th>
-                    <th class="px-6 py-4">Status</th>
-                    <th class="px-6 py-4 text-right">Aksi</th>
+                    <th class="px-6 py-4 min-w-[200px]">Judul Ujian</th>
+                    <th class="px-6 py-4 whitespace-nowrap min-w-[170px]">Target Kelas</th>
+                    <th class="px-6 py-4 whitespace-nowrap min-w-[150px]">Waktu</th>
+                    <th class="px-6 py-4 whitespace-nowrap min-w-[90px]">Durasi</th>
+                    <th class="px-6 py-4 whitespace-nowrap min-w-[130px]">Toleransi</th>
+                    <th class="px-6 py-4 whitespace-nowrap min-w-[100px]">Status</th>
+                    <th class="px-6 py-4 whitespace-nowrap text-right min-w-[180px]">Aksi</th>
                 </tr>
             </thead>
             <tbody id="examTableBody" class="divide-y divide-slate-100">
                 @forelse($exams as $e)
                 @php
-                    $classList = $e->classes->pluck('name')->implode(' ');
+                    $classList = $e->classes->pluck('name')->implode(', ');
+                    $classCount = $e->classes->count();
                 @endphp
                 <tr class="exam-row hover:bg-indigo-50/20 transition-colors duration-150 group" 
                     data-title="{{ strtolower($e->title) }}" 
                     data-classes="{{ strtolower($classList ?: 'semua kelas') }}" 
                     data-status="{{ $e->status }}">
-                    <td class="px-6 py-4 text-slate-900 font-semibold">{{ $e->title }}</td>
-                    <td class="px-6 py-4">
-                        @if($e->classes->count() > 0)
-                            <div class="flex flex-wrap gap-1 max-w-xs">
+                    <td class="px-6 py-4 font-semibold text-slate-900 align-middle">
+                        <div class="line-clamp-2 max-w-sm">{{ $e->title }}</div>
+                    </td>
+                    <td class="px-6 py-4 align-middle whitespace-nowrap">
+                        @if($classCount === 0)
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200/80">
+                                Semua Kelas
+                            </span>
+                        @elseif($classCount <= 2)
+                            <div class="inline-flex items-center gap-1.5 flex-wrap">
                                 @foreach($e->classes as $cls)
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
                                         {{ $cls->name }}
                                     </span>
                                 @endforeach
                             </div>
                         @else
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                                Semua Kelas
-                            </span>
+                            <div class="inline-flex items-center gap-1.5">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                    {{ $e->classes->first()->name }}
+                                </span>
+                                <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-indigo-100 text-slate-700 hover:text-indigo-800 border border-slate-200/80 transition-colors cursor-help" title="{{ $classList }}">
+                                    +{{ $classCount - 1 }} Kelas
+                                </span>
+                            </div>
                         @endif
                     </td>
-                    <td class="px-6 py-4">
-                        <div class="text-slate-900 font-medium">{{ \Carbon\Carbon::parse($e->start_at)->format('d M Y') }}</div>
+                    <td class="px-6 py-4 align-middle whitespace-nowrap">
+                        <div class="text-slate-900 font-semibold text-xs">{{ \Carbon\Carbon::parse($e->start_at)->format('d M Y') }}</div>
                         <div class="text-slate-400 text-xs mt-0.5 font-mono">
                             {{ \Carbon\Carbon::parse($e->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($e->end_at)->format('H:i') }} WIB
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-slate-700 font-medium">{{ $e->duration }} mnt</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-rose-50 text-rose-700 ring-1 ring-rose-600/20">
-                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <td class="px-6 py-4 align-middle whitespace-nowrap font-medium text-slate-700">
+                        {{ $e->duration }} mnt
+                    </td>
+                    <td class="px-6 py-4 align-middle whitespace-nowrap">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-rose-50 text-rose-700 ring-1 ring-rose-600/20">
+                            <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                             </svg>
                             Max {{ $e->max_violation }}x Keluar
                         </span>
                     </td>
-                    <td class="px-6 py-4">
+                    <td class="px-6 py-4 align-middle whitespace-nowrap">
                         @if($e->status === 'active')
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Aktif
                             </span>
                         @else
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 ring-1 ring-slate-400/20">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 ring-1 ring-slate-400/20">
                                 <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Nonaktif
                             </span>
                         @endif
                     </td>
-                    <td class="px-6 py-4 text-right space-x-1.5">
-                        <a href="{{ route('admin.exams.show', $e->id) }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 shadow-2xs transition-all duration-150">Detail</a>
-                        <a href="{{ route('admin.exams.edit', $e->id) }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 shadow-2xs transition-all duration-150">Edit</a>
-                        <form action="{{ route('admin.exams.destroy', $e->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus ujian ini?');">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 shadow-2xs transition-all duration-150">Hapus</button>
-                        </form>
+                    <td class="px-6 py-4 align-middle whitespace-nowrap text-right">
+                        <div class="inline-flex items-center justify-end gap-1.5">
+                            <a href="{{ route('admin.exams.show', $e->id) }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 shadow-2xs transition-all duration-150">Detail</a>
+                            <a href="{{ route('admin.exams.edit', $e->id) }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 shadow-2xs transition-all duration-150">Edit</a>
+                            <form action="{{ route('admin.exams.destroy', $e->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus ujian ini?');">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 shadow-2xs transition-all duration-150">Hapus</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 @empty
