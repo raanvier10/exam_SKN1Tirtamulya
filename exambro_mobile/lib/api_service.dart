@@ -3,8 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl =
-      'https://beyond-emily-rating-cameras.trycloudflare.com/api';
+  static const String baseUrl = 'https://smkn1tirtamulya.online/api';
 
   static Future<String> getBaseUrl() async {
     return baseUrl;

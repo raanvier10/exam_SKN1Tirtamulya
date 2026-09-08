@@ -20,6 +20,17 @@ class DatabaseSeeder extends Seeder
             'description' => 'Kelas 12 IPA 1'
         ]);
 
+        // Admin User
+        \App\Models\User::create([
+            'name' => 'Administrator',
+            'username' => 'admin',
+            'email' => 'admin@example.com',
+            'password' => \Illuminate\Support\Facades\Hash::make('password'),
+            'role' => 'admin',
+            'status' => 'active'
+        ]);
+
+        // Siswa User
         $user = \App\Models\User::create([
             'name' => 'Dimas',
             'username' => 'dimas123',
