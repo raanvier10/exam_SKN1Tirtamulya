@@ -35,4 +35,19 @@ class User extends Authenticatable
     {
         return $this->belongsTo(StudentClass::class, 'class_id');
     }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
+    public function isTeacher(): bool
+    {
+        return $this->role === 'guru';
+    }
+
+    public function createdExams()
+    {
+        return $this->hasMany(Exam::class, 'created_by');
+    }
 }

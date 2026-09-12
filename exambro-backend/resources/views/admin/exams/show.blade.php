@@ -49,12 +49,14 @@
                 </svg>
                 Refresh Data
             </button>
+            @if(auth()->user()->isAdmin() || ($exam->created_by === auth()->id()))
             <a href="{{ route('admin.exams.edit', $exam->id) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200/80 text-slate-700 rounded-xl text-sm font-medium hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 shadow-xs transition-all active:scale-[0.98]">
                 <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
                 Edit Ujian
             </a>
+            @endif
         </div>
     </div>
 
@@ -121,19 +123,31 @@
                 <div class="text-slate-700 text-sm leading-relaxed bg-slate-50/50 p-3.5 rounded-xl border border-slate-100">{{ $exam->description ?: 'Tidak ada deskripsi tambahan untuk ujian ini.' }}</div>
             </div>
             
-            <div class="p-3.5 rounded-xl bg-indigo-50/50 border border-indigo-100">
-                <div class="text-indigo-900 text-xs font-semibold uppercase tracking-wider mb-1 flex items-center gap-2">
-                    <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                    </svg>
-                    Google Form URL (Secure Gateway)
+            <div class="p-4 rounded-xl bg-indigo-50/60 border border-indigo-100/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="overflow-hidden">
+                    <div class="text-indigo-900 text-xs font-semibold uppercase tracking-wider mb-1 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-indigo-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                        Google Form URL (Secure Gateway)
+                    </div>
+                    <a href="{{ $exam->google_form_url }}" target="_blank" class="text-indigo-600 text-xs hover:underline font-mono break-all font-medium flex items-center gap-1 mt-0.5">
+                        {{ $exam->google_form_url }}
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                    </a>
                 </div>
-                <a href="{{ $exam->google_form_url }}" target="_blank" class="text-indigo-600 text-xs hover:underline font-mono break-all font-medium flex items-center gap-1 mt-0.5">
-                    {{ $exam->google_form_url }}
-                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                
+                @if(auth()->user()->isAdmin() || ($exam->created_by === auth()->id()))
+                <!-- Tombol Ubah Link Google Form Cepat -->
+                <button type="button" onclick="document.getElementById('quickEditFormModal').showModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 hover:border-indigo-600 rounded-xl text-xs font-bold shadow-2xs transition-all shrink-0 active:scale-[0.98]">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                     </svg>
-                </a>
+                    Ubah Link Form
+                </button>
+                @endif
             </div>
 
             <div class="grid grid-cols-2 gap-4 pt-3 border-t border-slate-100 text-xs">
@@ -211,10 +225,11 @@
                 <tbody class="divide-y divide-slate-100 text-sm">
                     @forelse($participants as $index => $p)
                         @php
-                            $user = $p->user;
-                            $isLocked = ($p->status === 'locked' || (isset($p->session) && $p->session->status === 'LOCKED'));
-                        @endphp
-                        <tr class="hover:bg-slate-50/70 transition-colors {{ $isLocked ? 'bg-rose-50/30' : '' }}">
+                        $user = $p->user;
+                        $isLocked = ($p->status === 'locked' || (isset($p->session) && $p->session->status === 'LOCKED'));
+                        $canUnlockAndReset = auth()->user()->isAdmin() || ($exam->created_by === auth()->id());
+                    @endphp
+                    <tr class="hover:bg-slate-50/70 transition-colors {{ $isLocked ? 'bg-rose-50/30' : '' }}">
                             <td class="py-4 px-6 text-xs text-slate-400 font-medium">{{ $index + 1 }}</td>
                             <td class="py-4 px-6">
                                 <div class="flex items-center gap-3">
@@ -278,31 +293,44 @@
                                 {{ $p->started_at ? \Carbon\Carbon::parse($p->started_at)->format('H:i:s') : '-' }}
                             </td>
                             <td class="py-4 px-6 text-right">
-                                <div class="inline-flex items-center gap-2">
-                                    @if($isLocked)
-                                        <!-- Tombol Buka Kunci (Unlock) -->
-                                        <form action="{{ route('admin.exams.students.unlock', [$exam->id, $p->user_id]) }}" method="POST" onsubmit="return confirm('Buka kunci ujian untuk {{ $user->name }}? Siswa akan dapat melanjutkan ujian kembali.');">
+                                @if($canUnlockAndReset)
+                                    <div class="inline-flex items-center gap-2">
+                                        @if($isLocked)
+                                            <!-- Tombol Buka Kunci (Unlock) -->
+                                            <form action="{{ route('admin.exams.students.unlock', [$exam->id, $p->user_id]) }}" method="POST" onsubmit="return confirm('Buka kunci ujian untuk {{ $user->name }}? Siswa akan dapat melanjutkan ujian kembali.');">
+                                                @csrf
+                                                <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow transition-all active:scale-[0.98]">
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                                    </svg>
+                                                    Buka Kunci
+                                                </button>
+                                            </form>
+                                        @endif
+
+                                        <!-- Tombol Reset Sesi -->
+                                        <form action="{{ route('admin.exams.students.reset', [$exam->id, $p->user_id]) }}" method="POST" onsubmit="return confirm('Reset sesi ujian {{ $user->name }} dari awal? Semua waktu pengerjaan dan pelanggaran akan direset.');">
                                             @csrf
-                                            <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow transition-all active:scale-[0.98]">
+                                            <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-rose-600 rounded-xl text-xs font-medium transition-colors" title="Reset Sesi Siswa">
                                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                                 </svg>
-                                                Buka Kunci
+                                                Reset
                                             </button>
                                         </form>
-                                    @endif
-
-                                    <!-- Tombol Reset Sesi -->
-                                    <form action="{{ route('admin.exams.students.reset', [$exam->id, $p->user_id]) }}" method="POST" onsubmit="return confirm('Reset sesi ujian {{ $user->name }} dari awal? Semua waktu pengerjaan dan pelanggaran akan direset.');">
-                                        @csrf
-                                        <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 hover:text-rose-600 rounded-xl text-xs font-medium transition-colors" title="Reset Sesi Siswa">
-                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </div>
+                                @else
+                                    @if($isLocked)
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200" title="Buka kunci ujian UAS ditangani langsung oleh Kurikulum">
+                                            <svg class="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                             </svg>
-                                            Reset
-                                        </button>
-                                    </form>
-                                </div>
+                                            Buka Kunci: Kurikulum
+                                        </span>
+                                    @else
+                                        <span class="text-xs text-slate-400 font-mono">-</span>
+                                    @endif
+                                @endif
                             </td>
                         </tr>
                     @empty
@@ -488,4 +516,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 </script>
+<!-- Modal Dialog Cepat Ubah Link Google Form -->
+<dialog id="quickEditFormModal" class="backdrop:bg-slate-900/40 backdrop:backdrop-blur-xs p-0 rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-100 bg-white flex items-center justify-between">
+        <div>
+            <h3 class="text-base font-bold text-slate-900">Ubah Link Google Form</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Perbarui tautan kuesioner/soal ujian ini secara instan.</p>
+        </div>
+        <button type="button" onclick="document.getElementById('quickEditFormModal').close()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
+    
+    <form action="{{ route('admin.exams.quick-form-url', $exam->id) }}" method="POST" class="p-6 bg-white space-y-4">
+        @csrf
+        @method('PATCH')
+        
+        <div class="space-y-1.5">
+            <label for="google_form_url" class="block text-xs font-semibold uppercase tracking-wider text-slate-700">Link Google Form Baru</label>
+            <input 
+                type="url" 
+                id="google_form_url" 
+                name="google_form_url" 
+                value="{{ $exam->google_form_url }}" 
+                placeholder="https://docs.google.com/forms/d/e/.../viewform"
+                required
+                class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+            >
+            <p class="text-[11px] text-slate-400">Pastikan link dapat dibuka tanpa izin edit (hanya responden).</p>
+        </div>
+
+        <div class="flex justify-end items-center gap-2.5 pt-2">
+            <button type="button" onclick="document.getElementById('quickEditFormModal').close()" class="px-4 py-2 text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl transition-colors shadow-2xs">Batal</button>
+            <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-xs transition-all active:scale-[0.98]">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Simpan Link
+            </button>
+        </div>
+    </form>
+</dialog>
 @endsection

@@ -159,6 +159,21 @@
                     data-status="{{ $e->status }}">
                     <td class="px-6 py-4 font-semibold text-slate-900 align-middle">
                         <div class="line-clamp-2 max-w-sm">{{ $e->title }}</div>
+                        <div class="mt-1 flex items-center gap-1.5 text-[11px]">
+                            @if($e->created_by === auth()->id())
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200/80">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1"></span> Ujian Anda
+                                </span>
+                            @elseif($e->creator)
+                                <span class="text-slate-400">
+                                    Oleh: <span class="text-slate-600 font-medium">{{ $e->creator->name }}</span>
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-medium border border-slate-200/60">
+                                    UAS Umum
+                                </span>
+                            @endif
+                        </div>
                     </td>
                     <td class="px-6 py-4 align-middle whitespace-nowrap">
                         @if($classCount === 0)
@@ -213,13 +228,20 @@
                         @endif
                     </td>
                     <td class="px-6 py-4 align-middle whitespace-nowrap text-right">
+                        @php
+                            $canManage = auth()->user()->isAdmin() || ($e->created_by === auth()->id());
+                        @endphp
                         <div class="inline-flex items-center justify-end gap-1.5">
-                            <a href="{{ route('admin.exams.show', $e->id) }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 shadow-2xs transition-all duration-150">Detail</a>
-                            <a href="{{ route('admin.exams.edit', $e->id) }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 shadow-2xs transition-all duration-150">Edit</a>
-                            <form action="{{ route('admin.exams.destroy', $e->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus ujian ini?');">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 shadow-2xs transition-all duration-150">Hapus</button>
-                            </form>
+                            <a href="{{ route('admin.exams.show', $e->id) }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-600 hover:text-white shadow-2xs transition-all duration-150" title="Monitor & Buka Kunci Siswa">
+                                Monitor
+                            </a>
+                            @if($canManage)
+                                <a href="{{ route('admin.exams.edit', $e->id) }}" class="inline-flex items-center justify-center px-2.5 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 shadow-2xs transition-all duration-150">Edit</a>
+                                <form action="{{ route('admin.exams.destroy', $e->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus ujian ini?');">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="inline-flex items-center justify-center px-2.5 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 shadow-2xs transition-all duration-150">Hapus</button>
+                                </form>
+                            @endif
                         </div>
                     </td>
                 </tr>

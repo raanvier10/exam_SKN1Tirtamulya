@@ -8,53 +8,109 @@
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-    <!-- Siswa Card -->
-    <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs hover:shadow-lg hover:shadow-indigo-500/5 hover:border-indigo-300/80 transition-all duration-200 group">
-        <div class="flex items-center justify-between mb-4">
-            <span class="text-sm font-semibold text-slate-500 group-hover:text-indigo-600 transition-colors">Total Siswa</span>
-            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center ring-1 ring-indigo-500/10 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-200">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
+    @if(auth()->user()->isAdmin())
+        <!-- Siswa Card (Admin) -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs hover:shadow-lg hover:shadow-indigo-500/5 hover:border-indigo-300/80 transition-all duration-200 group">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-semibold text-slate-500 group-hover:text-indigo-600 transition-colors">Total Siswa</span>
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center ring-1 ring-indigo-500/10 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-200">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                </div>
+            </div>
+            <div class="text-3xl font-bold text-slate-900 tracking-tight">{{ \App\Models\User::where('role', 'siswa')->count() }}</div>
+            <div class="text-xs text-slate-400 mt-2 flex items-center gap-1.5">
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Terdaftar di sistem
             </div>
         </div>
-        <div class="text-3xl font-bold text-slate-900 tracking-tight">{{ \App\Models\User::where('role', 'siswa')->count() }}</div>
-        <div class="text-xs text-slate-400 mt-2 flex items-center gap-1.5">
-            <span class="inline-block w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Terdaftar di sistem
-        </div>
-    </div>
-    
-    <!-- Kelas Card -->
-    <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs hover:shadow-lg hover:shadow-sky-500/5 hover:border-sky-300/80 transition-all duration-200 group">
-        <div class="flex items-center justify-between mb-4">
-            <span class="text-sm font-semibold text-slate-500 group-hover:text-sky-600 transition-colors">Total Kelas</span>
-            <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center ring-1 ring-sky-500/10 group-hover:bg-sky-600 group-hover:text-white transition-all duration-200">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
+        
+        <!-- Kelas Card (Admin) -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs hover:shadow-lg hover:shadow-sky-500/5 hover:border-sky-300/80 transition-all duration-200 group">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-semibold text-slate-500 group-hover:text-sky-600 transition-colors">Total Kelas</span>
+                <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center ring-1 ring-sky-500/10 group-hover:bg-sky-600 group-hover:text-white transition-all duration-200">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                </div>
+            </div>
+            <div class="text-3xl font-bold text-slate-900 tracking-tight">{{ \App\Models\StudentClass::count() }}</div>
+            <div class="text-xs text-slate-400 mt-2 flex items-center gap-1.5">
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-sky-500"></span> Ruang kelas aktif
             </div>
         </div>
-        <div class="text-3xl font-bold text-slate-900 tracking-tight">{{ \App\Models\StudentClass::count() }}</div>
-        <div class="text-xs text-slate-400 mt-2 flex items-center gap-1.5">
-            <span class="inline-block w-1.5 h-1.5 rounded-full bg-sky-500"></span> Ruang kelas aktif
-        </div>
-    </div>
-    
-    <!-- Ujian Card -->
-    <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs hover:shadow-lg hover:shadow-violet-500/5 hover:border-violet-300/80 transition-all duration-200 group">
-        <div class="flex items-center justify-between mb-4">
-            <span class="text-sm font-semibold text-slate-500 group-hover:text-violet-600 transition-colors">Total Jadwal Ujian</span>
-            <div class="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center ring-1 ring-violet-500/10 group-hover:bg-violet-600 group-hover:text-white transition-all duration-200">
-                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                </svg>
+        
+        <!-- Ujian Card (Admin) -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs hover:shadow-lg hover:shadow-violet-500/5 hover:border-violet-300/80 transition-all duration-200 group">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-semibold text-slate-500 group-hover:text-violet-600 transition-colors">Total Jadwal Ujian</span>
+                <div class="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center ring-1 ring-violet-500/10 group-hover:bg-violet-600 group-hover:text-white transition-all duration-200">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                </div>
+            </div>
+            <div class="text-3xl font-bold text-slate-900 tracking-tight">{{ \App\Models\Exam::count() }}</div>
+            <div class="text-xs text-slate-400 mt-2 flex items-center gap-1.5">
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-violet-500"></span> Jadwal terdaftar
             </div>
         </div>
-        <div class="text-3xl font-bold text-slate-900 tracking-tight">{{ \App\Models\Exam::count() }}</div>
-        <div class="text-xs text-slate-400 mt-2 flex items-center gap-1.5">
-            <span class="inline-block w-1.5 h-1.5 rounded-full bg-violet-500"></span> Jadwal terdaftar
+    @else
+        @php
+            $myExamsCount = \App\Models\Exam::where('created_by', auth()->id())->count();
+            $totalWorking = $ongoingExams->sum('working_count');
+            $totalLocked = $ongoingExams->sum('locked_count');
+        @endphp
+        <!-- Ujian Saya (Guru) -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs hover:shadow-lg hover:shadow-indigo-500/5 hover:border-indigo-300/80 transition-all duration-200 group">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-semibold text-slate-500 group-hover:text-indigo-600 transition-colors">Ujian Buatan Saya</span>
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center ring-1 ring-indigo-500/10 group-hover:bg-indigo-600 group-hover:text-white transition-all duration-200">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                </div>
+            </div>
+            <div class="text-3xl font-bold text-slate-900 tracking-tight">{{ $myExamsCount }}</div>
+            <div class="text-xs text-slate-400 mt-2 flex items-center gap-1.5">
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Ujian mapel mandiri
+            </div>
         </div>
-    </div>
+        
+        <!-- Siswa Mengerjakan (Guru) -->
+        <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs hover:shadow-lg hover:shadow-emerald-500/5 hover:border-emerald-300/80 transition-all duration-200 group">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-semibold text-slate-500 group-hover:text-emerald-600 transition-colors">Sedang Mengerjakan</span>
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center ring-1 ring-emerald-500/10 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-200">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+            <div class="text-3xl font-bold text-emerald-600 tracking-tight">{{ $totalWorking }}</div>
+            <div class="text-xs text-slate-400 mt-2 flex items-center gap-1.5">
+                <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Sesi aktif saat ini
+            </div>
+        </div>
+        
+        <!-- Siswa Terkunci (Guru) -->
+        <div class="bg-white rounded-2xl p-6 border {{ $totalLocked > 0 ? 'border-rose-300 bg-rose-50/20' : 'border-slate-200/80' }} shadow-xs hover:shadow-lg hover:shadow-rose-500/5 transition-all duration-200 group">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-sm font-semibold {{ $totalLocked > 0 ? 'text-rose-600 font-bold' : 'text-slate-500' }} transition-colors">Siswa Terkunci</span>
+                <div class="w-10 h-10 rounded-xl {{ $totalLocked > 0 ? 'bg-rose-100 text-rose-600 ring-rose-400' : 'bg-slate-100 text-slate-500' }} flex items-center justify-center ring-1 transition-all duration-200">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+            </div>
+            <div class="text-3xl font-bold {{ $totalLocked > 0 ? 'text-rose-600' : 'text-slate-900' }} tracking-tight">{{ $totalLocked }}</div>
+            <div class="text-xs {{ $totalLocked > 0 ? 'text-rose-500 font-medium' : 'text-slate-400' }} mt-2 flex items-center gap-1.5">
+                <span class="inline-block w-1.5 h-1.5 rounded-full {{ $totalLocked > 0 ? 'bg-rose-500 animate-ping' : 'bg-slate-400' }}"></span> 
+                {{ $totalLocked > 0 ? 'Perlu tindakan buka kunci' : 'Tidak ada sesi terkunci' }}
+            </div>
+        </div>
+    @endif
 </div>
 
 <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">

@@ -22,13 +22,13 @@ class AdminAuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
-            if ($user->role === 'admin') {
+            if (in_array($user->role, ['admin', 'guru'])) {
                 $request->session()->regenerate();
                 return redirect()->intended(route('admin.dashboard'));
             } else {
                 Auth::logout();
                 return back()->withErrors([
-                    'username' => 'Akses ditolak. Anda bukan admin.',
+                    'username' => 'Akses ditolak. Portal ini khusus Administrator dan Guru.',
                 ]);
             }
         }
@@ -70,6 +70,6 @@ class AdminAuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return back()->with('success', 'Password admin berhasil diperbarui.');
+        return back()->with('success', 'Password berhasil diperbarui.');
     }
 }

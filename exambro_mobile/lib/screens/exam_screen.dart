@@ -276,66 +276,165 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
       builder: (dialogContext) => PopScope(
         canPop: false,
         child: Dialog(
-          backgroundColor: const Color(0xFF0B132B),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-            side: const BorderSide(color: Color(0xFFEF4444), width: 1.5),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF0F172A), Color(0xFF0B1120)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: const Color(0xFFEF4444).withValues(alpha: 0.45),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  blurRadius: 36,
+                  offset: const Offset(0, 16),
+                ),
+                BoxShadow(
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.2),
+                  blurRadius: 28,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(26.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Glowing Lock Badge
                 Container(
-                  width: 70,
-                  height: 70,
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFEF4444), Color(0xFF991B1B)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFEF4444).withValues(alpha: 0.35),
+                        blurRadius: 20,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: const Center(
+                    child: Icon(Icons.lock_rounded, color: Colors.white, size: 40),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Pill Tag
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEF4444).withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.4), width: 2),
-                  ),
-                  child: const Icon(Icons.lock_rounded, color: Color(0xFFF87171), size: 36),
-                ),
-                const SizedBox(height: 18),
-                const Text(
-                  'UJIAN TELAH DIKUNCI',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Color(0xFFFCA5A5),
-                    fontWeight: FontWeight.w900,
-                    fontSize: 18,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Anda telah mencapai batas maksimum ($maxViolations/$maxViolations) pelanggaran keamanan. Sistem telah mengunci sesi ujian Anda.',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13, height: 1.45),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1C2541),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFF3A506B)),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: const Color(0xFFEF4444).withValues(alpha: 0.35),
+                      width: 1,
+                    ),
                   ),
                   child: const Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFF38BDF8)),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'Hubungi Pengawas / Guru IT untuk membuka kunci.',
-                          style: TextStyle(color: Color(0xFFE2E8F0), fontSize: 12, fontWeight: FontWeight.w600),
+                      Icon(Icons.gpp_bad_rounded, color: Color(0xFFF87171), size: 14),
+                      SizedBox(width: 6),
+                      Text(
+                        'AKSES UJIAN DITANGGUHKAN',
+                        style: TextStyle(
+                          color: Color(0xFFFCA5A5),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 11,
+                          letterSpacing: 0.8,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: 14),
+
+                const Text(
+                  'Ujian Telah Dikunci',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 22,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Anda telah mencapai batas maksimum ($maxViolations/$maxViolations) pelanggaran keamanan. Sesi pengerjaan Anda otomatis dinonaktifkan oleh sistem.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Color(0xFF94A3B8),
+                    fontSize: 13,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Instructor Contact Card
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1E293B).withValues(alpha: 0.8),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFF334155),
+                      width: 1,
+                    ),
+                  ),
+                  child: const Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.support_agent_rounded,
+                        size: 22,
+                        color: Color(0xFF38BDF8),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Langkah Selanjutnya:',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Segera temui Pengawas Ujian / Guru IT di ruangan untuk proses verifikasi dan pembukaan kunci ujian.',
+                              style: TextStyle(
+                                color: Color(0xFFCBD5E1),
+                                fontSize: 12,
+                                height: 1.4,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // Exit Button
                 SizedBox(
                   width: double.infinity,
                   height: 48,
@@ -348,9 +447,18 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                       backgroundColor: const Color(0xFFEF4444),
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
-                    child: const Text('KEMBALI KE PORTAL', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
+                    child: const Text(
+                      'KEMBALI KE PORTAL',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13.5,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -389,7 +497,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
             : 1;
         _handleViolation(
           'FLOATING_WINDOW',
-          'Terdeteksi membuka jendela mengambang / keluar aplikasi ($secondsAway detik)',
+          'Terdeteksi keluar aplikasi / beralih jendela ($secondsAway detik)',
         );
       }
     }
@@ -490,66 +598,170 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
       _lockExamPermanently();
     } else {
       final int remainingChances = maxViolations - _violationCount;
+      final bool isCritical = remainingChances == 1;
+
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (dialogContext) => Dialog(
-          backgroundColor: const Color(0xFF0F172A),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-            side: BorderSide(
-              color: const Color(0xFFEF4444).withValues(alpha: 0.4),
-              width: 1.5,
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFF0F172A), Color(0xFF0C1322)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: isCritical
+                    ? const Color(0xFFEF4444).withValues(alpha: 0.5)
+                    : const Color(0xFFF59E0B).withValues(alpha: 0.45),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  blurRadius: 36,
+                  offset: const Offset(0, 16),
+                ),
+                BoxShadow(
+                  color: isCritical
+                      ? const Color(0xFFEF4444).withValues(alpha: 0.2)
+                      : const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                  blurRadius: 24,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(22.0),
+            padding: const EdgeInsets.all(24.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Top Glowing Warning Icon
                 Container(
-                  width: 60,
-                  height: 60,
+                  width: 72,
+                  height: 72,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEF4444).withValues(alpha: 0.12),
+                    gradient: LinearGradient(
+                      colors: isCritical
+                          ? [const Color(0xFFEF4444), const Color(0xFFDC2626)]
+                          : [const Color(0xFFF59E0B), const Color(0xFFD97706)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.3), width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (isCritical
+                                ? const Color(0xFFEF4444)
+                                : const Color(0xFFF59E0B))
+                            .withValues(alpha: 0.35),
+                        blurRadius: 20,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
-                  child: const Icon(
-                    Icons.security_update_warning_rounded,
-                    color: Color(0xFFF87171),
-                    size: 30,
+                  child: Center(
+                    child: Icon(
+                      isCritical
+                          ? Icons.warning_rounded
+                          : Icons.security_update_warning_rounded,
+                      color: Colors.white,
+                      size: 38,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 18),
+
+                // Pill Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4.5),
+                  decoration: BoxDecoration(
+                    color: isCritical
+                        ? const Color(0xFFEF4444).withValues(alpha: 0.15)
+                        : const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isCritical
+                          ? const Color(0xFFEF4444).withValues(alpha: 0.35)
+                          : const Color(0xFFF59E0B).withValues(alpha: 0.35),
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    isCritical ? '⚠️ PERINGATAN TERAKHIR' : '⚠️ PELANGGARAN TERDETEKSI',
+                    style: TextStyle(
+                      color: isCritical
+                          ? const Color(0xFFFCA5A5)
+                          : const Color(0xFFFDE68A),
+                      fontWeight: FontWeight.w800,
+                      fontSize: 11,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Title
                 const Text(
-                  'PELANGGARAN TERDETEKSI',
+                  'Aktivitas Tidak Diizinkan',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 16.5,
-                    letterSpacing: 0.3,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 20,
+                    letterSpacing: -0.3,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  desc,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Color(0xFFFCA5A5),
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w600,
+                const SizedBox(height: 10),
+
+                // Description Box
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1E293B).withValues(alpha: 0.85),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFF334155)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline_rounded,
+                        size: 18,
+                        color: isCritical
+                            ? const Color(0xFFF87171)
+                            : const Color(0xFFFBBF24),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          desc,
+                          style: TextStyle(
+                            color: isCritical
+                                ? const Color(0xFFFECACA)
+                                : const Color(0xFFFEF3C7),
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w600,
+                            height: 1.35,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
+
+                // Tolerance & Segmented Progress Card
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E293B),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFF334155)),
+                    color: const Color(0xFF162032),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFF26354A)),
                   ),
                   child: Column(
                     children: [
@@ -557,25 +769,52 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            'Status Toleransi:',
-                            style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12, fontWeight: FontWeight.w600),
+                            'Batas Toleransi:',
+                            style: TextStyle(
+                              color: Color(0xFF94A3B8),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                          Text(
-                            '$_violationCount dari $maxViolations kali',
-                            style: const TextStyle(color: Color(0xFFF87171), fontSize: 12, fontWeight: FontWeight.w800),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: isCritical
+                                  ? const Color(0xFFEF4444).withValues(alpha: 0.2)
+                                  : const Color(0xFFF59E0B).withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '$_violationCount dari $maxViolations kali',
+                              style: TextStyle(
+                                color: isCritical
+                                    ? const Color(0xFFF87171)
+                                    : const Color(0xFFFBBF24),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 12),
                       Row(
                         children: List.generate(maxViolations, (index) {
                           bool isFilled = index < _violationCount;
+                          Color barColor = const Color(0xFF334155);
+                          if (isFilled) {
+                            barColor = isCritical
+                                ? const Color(0xFFEF4444)
+                                : (index == 0
+                                    ? const Color(0xFFF59E0B)
+                                    : const Color(0xFFF97316));
+                          }
                           return Expanded(
                             child: Container(
-                              height: 6,
+                              height: 7,
                               margin: EdgeInsets.only(right: index < maxViolations - 1 ? 6 : 0),
                               decoration: BoxDecoration(
-                                color: isFilled ? const Color(0xFFEF4444) : const Color(0xFF334155),
+                                color: barColor,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                             ),
@@ -586,30 +825,47 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                   ),
                 ),
                 const SizedBox(height: 14),
+
                 Text(
-                  'Tersisa $remainingChances kesempatan sebelum ujian otomatis dikunci oleh sistem.',
+                  isCritical
+                      ? '⚠️ PERINGATAN: 1 pelanggaran lagi akan langsung MENGUNCI ujian Anda!'
+                      : 'Tersisa $remainingChances kesempatan sebelum sistem mengunci ujian Anda.',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Color(0xFF94A3B8),
+                  style: TextStyle(
+                    color: isCritical
+                        ? const Color(0xFFFCA5A5)
+                        : const Color(0xFF94A3B8),
                     fontSize: 12,
+                    fontWeight: isCritical ? FontWeight.w700 : FontWeight.w500,
                     height: 1.35,
                   ),
                 ),
                 const SizedBox(height: 20),
+
+                // Continue Button
                 SizedBox(
                   width: double.infinity,
-                  height: 46,
+                  height: 48,
                   child: ElevatedButton(
                     onPressed: () => Navigator.pop(dialogContext),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFEF4444),
-                      foregroundColor: Colors.white,
+                      backgroundColor: isCritical
+                          ? const Color(0xFFEF4444)
+                          : const Color(0xFFF59E0B),
+                      foregroundColor: isCritical ? Colors.white : const Color(0xFF0F172A),
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
-                    child: const Text(
-                      'LANJUTKAN UJIAN',
-                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, letterSpacing: 0.3),
+                    child: Text(
+                      'SAYA PAHAM & LANJUTKAN',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                        letterSpacing: 0.4,
+                        color: isCritical ? Colors.white : const Color(0xFF0F172A),
+                      ),
                     ),
                   ),
                 ),

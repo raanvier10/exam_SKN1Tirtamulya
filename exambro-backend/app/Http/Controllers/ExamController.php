@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Exam;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ExamController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Exam::with(['classes', 'participants'])->latest('start_at');
+        $query = Exam::with(['classes', 'participants', 'creator'])->latest('start_at');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -27,6 +28,32 @@ class ExamController extends Controller
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
+        }
+
+        // ISOLASI KETAT ANTAR GURU:
+        // Guru hanya melihat ujian miliknya sendiri + ujian umum sekolah (UAS oleh Admin).
+        // Guru A TIDAK BISA melihat ujian buatan Guru B.
+        if (Auth::user()->isTeacher()) {
+            $query->where(function ($q) {
+                $q->where('created_by', Auth::id())
+                  ->orWhereNull('created_by')
+                  ->orWhereHas('creator', function ($sq) {
+                      $sq->where('role', 'admin');
+                  });
+            });
+        }
+
+        if ($request->filled('scope')) {
+            if ($request->scope === 'my') {
+                $query->where('created_by', Auth::id());
+            } elseif ($request->scope === 'school') {
+                $query->where(function ($q) {
+                    $q->whereNull('created_by')
+                      ->orWhereHas('creator', function ($sq) {
+                          $sq->where('role', 'admin');
+                      });
+                });
+            }
         }
 
         $exams = $query->get();
@@ -56,6 +83,7 @@ class ExamController extends Controller
         ]);
 
         $validated['end_at'] = \Carbon\Carbon::parse($validated['start_at'])->addMinutes((int)$validated['duration']);
+        $validated['created_by'] = Auth::id();
 
         $exam = Exam::create($validated);
 
@@ -85,6 +113,14 @@ class ExamController extends Controller
 
     public function show(Exam $exam)
     {
+        if (Auth::user()->isTeacher()) {
+            $isOwn = $exam->created_by === Auth::id();
+            $isSchoolExam = $exam->created_by === null || ($exam->creator && $exam->creator->isAdmin());
+            if (!$isOwn && !$isSchoolExam) {
+                return redirect()->route('admin.exams.index')->with('error', 'Akses ditolak. Anda tidak memiliki izin untuk memantau ujian milik guru lain.');
+            }
+        }
+
         $exam->load('classes');
         $participants = $exam->participants()
             ->with(['user.class'])
@@ -131,6 +167,12 @@ class ExamController extends Controller
 
     public function unlockStudent(Exam $exam, \App\Models\User $user)
     {
+        // Untuk UAS (dibuat kurikulum/admin), buka kunci HANYA bisa dilakukan oleh Kurikulum/Admin.
+        // Guru hanya bisa buka kunci pada ujian PTS yang dibuatnya sendiri.
+        if (Auth::user()->isTeacher() && $exam->created_by !== Auth::id()) {
+            return back()->with('error', 'Akses ditolak. Buka kunci untuk ujian sekolah (UAS) hanya dapat dilakukan langsung oleh Kurikulum / Administrator.');
+        }
+
         // Update participant status back to working
         \App\Models\ExamParticipant::where('exam_id', $exam->id)
             ->where('user_id', $user->id)
@@ -152,6 +194,11 @@ class ExamController extends Controller
 
     public function resetStudentSession(Exam $exam, \App\Models\User $user)
     {
+        // Untuk UAS, reset sesi HANYA bisa dilakukan oleh Kurikulum/Admin.
+        if (Auth::user()->isTeacher() && $exam->created_by !== Auth::id()) {
+            return back()->with('error', 'Akses ditolak. Reset sesi ujian sekolah (UAS) hanya dapat dilakukan langsung oleh Kurikulum / Administrator.');
+        }
+
         // Reset participant status
         \App\Models\ExamParticipant::where('exam_id', $exam->id)
             ->where('user_id', $user->id)
@@ -175,6 +222,10 @@ class ExamController extends Controller
 
     public function edit(Exam $exam)
     {
+        if (Auth::user()->isTeacher() && $exam->created_by && $exam->created_by !== Auth::id()) {
+            return redirect()->route('admin.exams.index')->with('error', 'Anda hanya dapat mengubah jadwal ujian yang Anda buat sendiri.');
+        }
+
         $classes = \App\Models\StudentClass::orderBy('name')->get();
         $selectedClasses = $exam->classes->pluck('id')->toArray();
         return view('admin.exams.edit', compact('exam', 'classes', 'selectedClasses'));
@@ -182,6 +233,10 @@ class ExamController extends Controller
 
     public function update(Request $request, Exam $exam)
     {
+        if (Auth::user()->isTeacher() && $exam->created_by && $exam->created_by !== Auth::id()) {
+            return redirect()->route('admin.exams.index')->with('error', 'Anda hanya dapat mengubah jadwal ujian yang Anda buat sendiri.');
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -293,8 +348,32 @@ class ExamController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
+    public function quickUpdateGoogleForm(Request $request, Exam $exam)
+    {
+        if (Auth::user()->isTeacher() && $exam->created_by !== Auth::id()) {
+            return back()->with('error', 'Anda hanya dapat mengubah link form ujian yang Anda buat sendiri.');
+        }
+
+        $request->validate([
+            'google_form_url' => 'required|url',
+        ], [
+            'google_form_url.required' => 'URL Google Form wajib diisi.',
+            'google_form_url.url' => 'Format URL Google Form tidak valid (harus diawali http:// atau https://).',
+        ]);
+
+        $exam->update([
+            'google_form_url' => $request->google_form_url,
+        ]);
+
+        return back()->with('success', 'Link Google Form ujian berhasil diperbarui.');
+    }
+
     public function destroy(Exam $exam)
     {
+        if (Auth::user()->isTeacher() && $exam->created_by && $exam->created_by !== Auth::id()) {
+            return redirect()->route('admin.exams.index')->with('error', 'Anda hanya dapat menghapus jadwal ujian yang Anda buat sendiri.');
+        }
+
         $exam->delete();
         return redirect()->route('admin.exams.index')->with('success', 'Ujian berhasil dihapus');
     }
@@ -320,6 +399,7 @@ class ExamController extends Controller
                         'duration' => $duration,
                         'max_violation' => (int)($row['maksimal_pelanggaran'] ?? 3),
                         'status' => strtolower($row['status'] ?? 'active'),
+                        'created_by' => Auth::id(),
                     ]);
 
                     // Cek apakah ada target_kelas / kelas di kolom import

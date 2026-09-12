@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->trustProxies(at: '*');
         $middleware->redirectGuestsTo(fn (\Illuminate\Http\Request $request) => $request->expectsJson() ? null : route('admin.login'));
+        $middleware->alias([
+            'role' => \App\Http\Middleware\EnsureUserRole::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

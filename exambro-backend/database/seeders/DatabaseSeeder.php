@@ -42,6 +42,18 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        // Guru User (Pengawas UAS / Pembuat PTS)
+        \App\Models\User::updateOrCreate(
+            ['username' => 'guru@smkn1tirtamulya.online'],
+            [
+                'name' => 'Budi Guru, S.Pd.',
+                'email' => 'guru@smkn1tirtamulya.online',
+                'password' => \Illuminate\Support\Facades\Hash::make('password'),
+                'role' => 'guru',
+                'status' => 'active'
+            ]
+        );
+
         // Siswa User
         $user = \App\Models\User::updateOrCreate(
             ['username' => 'dimas123'],

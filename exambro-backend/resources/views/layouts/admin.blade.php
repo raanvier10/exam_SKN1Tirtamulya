@@ -11,6 +11,23 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #0F172A; }
+
+        dialog[open] {
+            animation: modalScaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        dialog::backdrop {
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(4px);
+            animation: backdropFadeIn 0.2s ease-out forwards;
+        }
+        @keyframes modalScaleIn {
+            from { opacity: 0; transform: scale(0.96) translateY(4px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes backdropFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
     </style>
 </head>
 <body class="antialiased min-h-screen flex selection:bg-indigo-500 selection:text-white">
@@ -21,7 +38,7 @@
             <img src="{{ asset('images/logo.webp') }}" class="w-9 h-9 object-contain shrink-0" alt="Logo">
             <div>
                 <h1 class="text-base font-bold tracking-tight text-slate-900 leading-none">Exambro</h1>
-                <span class="text-[11px] font-medium text-slate-400">Admin Control</span>
+                <span class="text-[11px] font-medium text-slate-400">{{ auth()->user()->role === 'admin' ? 'Admin Kurikulum' : 'Portal Guru & Pengawas' }}</span>
             </div>
         </div>
         
@@ -34,6 +51,7 @@
                 Dashboard
             </a>
 
+            @if(auth()->user()->isAdmin())
             <a href="{{ route('admin.classes.index') }}" 
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.classes.*') ? 'bg-indigo-50 text-indigo-600 font-semibold shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}">
                 <svg class="w-5 h-5 {{ request()->routeIs('admin.classes.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -49,13 +67,14 @@
                 </svg>
                 Master Siswa
             </a>
+            @endif
 
             <a href="{{ route('admin.exams.index') }}" 
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.exams.*') ? 'bg-indigo-50 text-indigo-600 font-semibold shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}">
                 <svg class="w-5 h-5 {{ request()->routeIs('admin.exams.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
-                Manajemen Ujian
+                {{ auth()->user()->isAdmin() ? 'Manajemen Ujian' : 'Monitoring & Ujian' }}
             </a>
 
             <a href="{{ route('admin.change-password') }}" 
@@ -67,7 +86,23 @@
             </a>
         </nav>
 
-        <div class="p-4 border-t border-slate-100">
+        <div class="p-4 border-t border-slate-100 space-y-3">
+            <div class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0">
+                    {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 2)) }}
+                </div>
+                <div class="overflow-hidden">
+                    <div class="text-xs font-semibold text-slate-800 truncate">{{ auth()->user()->name }}</div>
+                    <div class="text-[10px] font-medium text-slate-400">
+                        @if(auth()->user()->isAdmin())
+                            <span class="text-indigo-600 font-semibold">Administrator</span>
+                        @else
+                            <span class="text-emerald-600 font-semibold">Guru Pengampu</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
             <form action="{{ route('admin.logout') }}" method="POST">
                 @csrf
                 <button type="submit" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all duration-150 group">
