@@ -4,23 +4,23 @@
 @section('content')
 <div class="max-w-2xl mx-auto">
     <!-- Header -->
-    <div class="mb-8">
-        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Ganti Password Admin</h2>
-        <p class="text-sm text-slate-500 mt-1">Perbarui kata sandi akun administrator untuk menjaga keamanan sistem.</p>
+    <div class="mb-6 sm:mb-8">
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">{{ auth()->user()->isAdmin() ? 'Ganti Password Admin' : 'Ganti Password Akun' }}</h2>
+        <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ auth()->user()->isAdmin() ? 'Perbarui kata sandi akun administrator untuk menjaga keamanan sistem.' : 'Perbarui kata sandi akun guru Anda untuk menjaga keamanan akses.' }}</p>
     </div>
 
-    <!-- Admin Account Card -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 mb-6">
+    <!-- Account Card -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 mb-6">
         <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-lg">
-                {{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }}
+            <div class="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-lg shrink-0">
+                {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
             </div>
-            <div>
-                <h3 class="text-base font-semibold text-slate-900 leading-snug">{{ auth()->user()->name }}</h3>
-                <div class="flex items-center gap-2 mt-0.5">
+            <div class="min-w-0">
+                <h3 class="text-base font-semibold text-slate-900 leading-snug truncate">{{ auth()->user()->name }}</h3>
+                <div class="flex items-center gap-2 mt-0.5 flex-wrap">
                     <span class="text-xs font-mono text-slate-500 font-medium">{{ auth()->user()->username }}</span>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
-                        Administrator
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold {{ auth()->user()->isAdmin() ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/60' : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' }}">
+                        {{ auth()->user()->isAdmin() ? 'Administrator' : 'Guru Pengampu' }}
                     </span>
                 </div>
             </div>
@@ -28,7 +28,7 @@
     </div>
 
     <!-- Form -->
-    <form action="{{ route('admin.change-password.update') }}" method="POST" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-8 space-y-6">
+    <form action="{{ route('admin.change-password.update') }}" method="POST" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-8 space-y-6">
         @csrf
         @method('PUT')
 
@@ -38,7 +38,7 @@
             <div class="relative">
                 <input type="password" name="current_password" id="current_password" required
                     class="w-full bg-white border @error('current_password') border-rose-300 ring-rose-500/10 @else border-slate-200 @enderror rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 shadow-2xs transition-all pr-10"
-                    placeholder="Masukkan password admin saat ini">
+                    placeholder="Masukkan password saat ini">
                 <button type="button" onclick="togglePassword('current_password', 'current_icon')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
                     <svg id="current_icon" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -98,8 +98,8 @@
             </div>
         </div>
 
-        <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
-            <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium shadow-sm shadow-indigo-500/20 hover:shadow-md hover:shadow-indigo-500/30 transition-all duration-150 active:scale-[0.98] flex items-center gap-2">
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-end">
+            <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium shadow-sm shadow-indigo-500/20 hover:shadow-md hover:shadow-indigo-500/30 transition-all duration-150 active:scale-[0.98] flex items-center justify-center gap-2">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>

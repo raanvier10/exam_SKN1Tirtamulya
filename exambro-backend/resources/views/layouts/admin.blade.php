@@ -30,16 +30,27 @@
         }
     </style>
 </head>
-<body class="antialiased min-h-screen flex selection:bg-indigo-500 selection:text-white">
+<body class="antialiased min-h-screen flex selection:bg-indigo-500 selection:text-white bg-slate-50">
+
+    <!-- Sidebar Backdrop for Mobile -->
+    <div id="sidebarBackdrop" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 lg:hidden hidden transition-opacity duration-300" onclick="toggleSidebar(false)"></div>
 
     <!-- Sidebar -->
-    <aside class="w-64 bg-white flex flex-col fixed h-full z-10 border-r border-slate-200/80 shadow-[1px_0_10px_rgba(0,0,0,0.02)]">
-        <div class="p-6 border-b border-slate-100 flex items-center gap-3.5">
-            <img src="{{ asset('images/logo.webp') }}" class="w-9 h-9 object-contain shrink-0" alt="Logo">
-            <div>
-                <h1 class="text-base font-bold tracking-tight text-slate-900 leading-none">Exambro</h1>
-                <span class="text-[11px] font-medium text-slate-400">{{ auth()->user()->role === 'admin' ? 'Admin Kurikulum' : 'Portal Guru & Pengawas' }}</span>
+    <aside id="adminSidebar" class="w-64 bg-white flex flex-col fixed inset-y-0 left-0 h-full z-50 border-r border-slate-200/80 shadow-[1px_0_10px_rgba(0,0,0,0.02)] transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0">
+        <div class="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="{{ asset('images/logo.webp') }}" class="w-9 h-9 object-contain shrink-0" alt="Logo">
+                <div>
+                    <h1 class="text-base font-bold tracking-tight text-slate-900 leading-none">Exambro</h1>
+                    <span class="text-[11px] font-medium text-slate-400">{{ auth()->user()->role === 'admin' ? 'Admin Kurikulum' : 'Portal Guru & Pengawas' }}</span>
+                </div>
             </div>
+            <!-- Mobile Close Button -->
+            <button type="button" onclick="toggleSidebar(false)" class="lg:hidden p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors" aria-label="Tutup Menu">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
         
         <nav class="flex-1 px-3 py-6 space-y-1.5 overflow-y-auto">
@@ -126,19 +137,42 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 ml-64 min-h-screen flex flex-col">
+    <main class="flex-1 lg:ml-64 min-h-screen flex flex-col w-full min-w-0">
+        <!-- Sticky Mobile Topbar Header -->
+        <header class="sticky top-0 z-30 flex items-center justify-between bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 lg:hidden shadow-xs">
+            <div class="flex items-center gap-2.5">
+                <button type="button" onclick="toggleSidebar(true)" class="p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors active:scale-95" aria-label="Buka Menu">
+                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                <div class="flex items-center gap-2">
+                    <img src="{{ asset('images/logo.webp') }}" class="w-7 h-7 object-contain shrink-0" alt="Logo">
+                    <span class="font-bold text-slate-900 text-sm tracking-tight">Exambro</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold {{ auth()->user()->isAdmin() ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100' }}">
+                    {{ auth()->user()->isAdmin() ? 'Admin' : 'Guru' }}
+                </span>
+                <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0">
+                    {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 2)) }}
+                </div>
+            </div>
+        </header>
+
         <!-- Content Area -->
-        <div class="p-8 lg:p-10 flex-1 max-w-7xl w-full mx-auto">
+        <div class="p-4 sm:p-6 lg:p-10 flex-1 max-w-7xl w-full mx-auto">
             @if(session('success'))
-                <div class="mb-8 p-4 rounded-xl bg-emerald-50/80 border border-emerald-200/80 text-emerald-900 text-sm flex items-center gap-3 shadow-xs animate-fade-in">
-                    <div class="w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-100"></div>
+                <div class="mb-6 sm:mb-8 p-4 rounded-xl bg-emerald-50/80 border border-emerald-200/80 text-emerald-900 text-sm flex items-center gap-3 shadow-xs animate-fade-in">
+                    <div class="w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-100 shrink-0"></div>
                     <span class="font-medium">{{ session('success') }}</span>
                 </div>
             @endif
 
             @if(session('error'))
-                <div class="mb-8 p-4 rounded-xl bg-rose-50/80 border border-rose-200/80 text-rose-900 text-sm flex items-center gap-3 shadow-xs animate-fade-in">
-                    <div class="w-2 h-2 rounded-full bg-rose-500 ring-4 ring-rose-100"></div>
+                <div class="mb-6 sm:mb-8 p-4 rounded-xl bg-rose-50/80 border border-rose-200/80 text-rose-900 text-sm flex items-center gap-3 shadow-xs animate-fade-in">
+                    <div class="w-2 h-2 rounded-full bg-rose-500 ring-4 ring-rose-100 shrink-0"></div>
                     <span class="font-medium">{{ session('error') }}</span>
                 </div>
             @endif
@@ -148,6 +182,29 @@
     </main>
 
     <script>
+        function toggleSidebar(open) {
+            const sidebar = document.getElementById('adminSidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (!sidebar || !backdrop) return;
+            
+            if (open) {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden', 'lg:overflow-auto');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden', 'lg:overflow-auto');
+            }
+        }
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                toggleSidebar(false);
+            }
+        });
+
         document.addEventListener('click', function(e) {
             // Close all custom selects if clicked outside
             document.querySelectorAll('.custom-select').forEach(function(el) {
