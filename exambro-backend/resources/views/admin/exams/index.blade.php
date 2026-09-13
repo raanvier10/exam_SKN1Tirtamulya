@@ -275,28 +275,36 @@
              data-title="{{ strtolower($e->title) }}" 
              data-classes="{{ strtolower($classList ?: 'semua kelas') }}" 
              data-status="{{ $e->status }}">
-            <div class="flex items-start justify-between gap-2">
-                <div class="space-y-1">
-                    <div class="flex items-center gap-1.5 flex-wrap">
-                        @if($e->status === 'active')
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Aktif
-                            </span>
-                        @else
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 ring-1 ring-slate-400/20">
-                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Nonaktif
-                            </span>
-                        @endif
-                        <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+            <div class="flex items-start justify-between gap-3">
+                <div class="space-y-1.5 min-w-0 flex-1">
+                    <h4 class="text-sm sm:text-base font-bold text-slate-900 leading-snug">{{ $e->title }}</h4>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg">
+                            <svg class="w-3 h-3 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
                             {{ $e->duration }} Menit
                         </span>
                         @if($e->created_by === auth()->id())
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-semibold border border-emerald-200/80">
+                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-lg">
+                                <svg class="w-3 h-3 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
                                 Ujian Anda
                             </span>
                         @endif
                     </div>
-                    <h4 class="text-sm font-bold text-slate-900 leading-snug">{{ $e->title }}</h4>
+                </div>
+                <div class="shrink-0 pt-0.5">
+                    @if($e->status === 'active')
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Aktif
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 ring-1 ring-slate-400/20">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Nonaktif
+                        </span>
+                    @endif
                 </div>
             </div>
 
