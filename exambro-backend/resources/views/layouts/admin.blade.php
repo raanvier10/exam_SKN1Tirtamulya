@@ -151,14 +151,6 @@
                     <span class="font-bold text-slate-900 text-sm tracking-tight">Exambro</span>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
-                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold {{ auth()->user()->isAdmin() ? 'bg-indigo-50 text-indigo-700 border border-indigo-100' : 'bg-emerald-50 text-emerald-700 border border-emerald-100' }}">
-                    {{ auth()->user()->isAdmin() ? 'Admin' : 'Guru' }}
-                </span>
-                <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0">
-                    {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 2)) }}
-                </div>
-            </div>
         </header>
 
         <!-- Content Area -->
