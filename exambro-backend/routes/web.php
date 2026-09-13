@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\StudentClassController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\AdminAuthController;
 
@@ -69,6 +70,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('/students/import', [StudentController::class, 'import'])->name('students.import');
             Route::post('/students/{student}/toggle-pkl', [StudentController::class, 'togglePkl'])->name('students.toggle-pkl');
             Route::resource('students', StudentController::class);
+
+            Route::resource('teachers', TeacherController::class);
         });
         
         // Akses Bersama: Admin (Kurikulum) & Guru (Pengawas UAS / Pembuat PTS)
