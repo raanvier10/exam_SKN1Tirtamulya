@@ -78,7 +78,7 @@
     <!-- Quick Stat Cards (Master Card on top for mobile, balanced 2x2 grid, 5-col on desktop) -->
     <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
         <!-- 1. Total Peserta (Master Card) -->
-        <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-xs col-span-2 lg:col-span-1 flex items-center justify-between lg:block">
+        <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-xs col-span-2 lg:col-span-1 flex items-center justify-between lg:block">
             <div class="flex items-center gap-2.5 lg:block">
                 <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs shrink-0 lg:hidden">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -94,28 +94,28 @@
         </div>
 
         <!-- 2. Belum Mulai -->
-        <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-xs col-span-1">
+        <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-xs col-span-1">
             <div class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Belum Mulai</div>
             <div class="text-xl sm:text-2xl font-bold text-slate-600">{{ $stats['registered'] }}</div>
             <div class="text-[10px] sm:text-[11px] text-slate-400 mt-0.5 truncate">Menunggu Jadwal</div>
         </div>
 
         <!-- 3. Mengerjakan -->
-        <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-xs col-span-1">
+        <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-xs col-span-1">
             <div class="text-[10px] sm:text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-1">Mengerjakan</div>
             <div class="text-xl sm:text-2xl font-bold text-emerald-600">{{ $stats['working'] }}</div>
             <div class="text-[10px] sm:text-[11px] text-emerald-600/80 mt-0.5 truncate">Sesi Aktif di App</div>
         </div>
 
         <!-- 4. Terkunci (Locked) -->
-        <div class="bg-white p-3.5 sm:p-4 rounded-2xl border {{ $stats['locked'] > 0 ? 'border-rose-300 bg-rose-50/30 ring-1 ring-rose-200' : 'border-slate-200/80' }} shadow-xs col-span-1">
+        <div class="bg-white p-3.5 sm:p-4 rounded-2xl border {{ $stats['locked'] > 0 ? 'border-rose-400 bg-rose-50/40 ring-1 ring-rose-200' : 'border-slate-200' }} shadow-xs col-span-1">
             <div class="text-[10px] sm:text-xs font-semibold {{ $stats['locked'] > 0 ? 'text-rose-600' : 'text-slate-500' }} uppercase tracking-wider mb-1">Terkunci</div>
             <div class="text-xl sm:text-2xl font-bold {{ $stats['locked'] > 0 ? 'text-rose-600' : 'text-slate-700' }}">{{ $stats['locked'] }}</div>
             <div class="text-[10px] sm:text-[11px] {{ $stats['locked'] > 0 ? 'text-rose-500 font-medium' : 'text-slate-400' }} mt-0.5 truncate">Butuh Buka Kunci</div>
         </div>
 
         <!-- 5. Selesai -->
-        <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 shadow-xs col-span-1">
+        <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-xs col-span-1">
             <div class="text-[10px] sm:text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Selesai</div>
             <div class="text-xl sm:text-2xl font-bold text-indigo-600">{{ $stats['finished'] }}</div>
             <div class="text-[10px] sm:text-[11px] text-indigo-500/80 mt-0.5 truncate">Submit Form</div>
@@ -125,7 +125,7 @@
     <!-- Informasi Ujian Box -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 items-stretch">
         <!-- Kolom Kiri: Informasi Utama & Link -->
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 lg:col-span-2 flex flex-col justify-between space-y-4">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 sm:p-6 lg:col-span-2 flex flex-col justify-between space-y-4">
             <div>
                 <div class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">Target Kelas / Peserta</div>
                 <div class="flex flex-wrap items-center gap-1.5 mb-3">
@@ -143,10 +143,10 @@
                 </div>
 
                 <div class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">Deskripsi Ujian</div>
-                <div class="text-slate-700 text-xs sm:text-sm leading-relaxed bg-slate-50/50 p-3.5 rounded-xl border border-slate-100">{{ $exam->description ?: 'Tidak ada deskripsi tambahan untuk ujian ini.' }}</div>
+                <div class="text-slate-700 text-xs sm:text-sm leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-200">{{ $exam->description ?: 'Tidak ada deskripsi tambahan untuk ujian ini.' }}</div>
             </div>
             
-            <div class="p-3.5 sm:p-4 rounded-xl bg-indigo-50/60 border border-indigo-100/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="p-3.5 sm:p-4 rounded-xl bg-indigo-50/60 border border-indigo-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div class="overflow-hidden min-w-0">
                     <div class="text-indigo-900 text-xs font-semibold uppercase tracking-wider mb-1 flex items-center gap-2">
                         <svg class="w-4 h-4 text-indigo-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -173,7 +173,7 @@
                 @endif
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-3 border-t border-slate-100 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-3 border-t border-slate-200 text-xs">
                 <div>
                     <div class="text-slate-400 font-semibold uppercase tracking-wider mb-1">Waktu Mulai</div>
                     <div class="text-slate-900 font-semibold text-sm">{{ \Carbon\Carbon::parse($exam->start_at)->format('d M Y, H:i') }} WIB</div>
@@ -186,17 +186,17 @@
         </div>
 
         <!-- Kolom Kanan: Pengaturan & Toleransi -->
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 flex flex-col justify-between">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 sm:p-6 flex flex-col justify-between">
             <div>
                 <div class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-4">Parameter Keamanan</div>
                 
                 <div class="space-y-4 text-sm">
-                    <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                    <div class="flex justify-between items-center pb-3 border-b border-slate-200">
                         <span class="text-slate-500 font-medium">Durasi Ujian</span>
                         <span class="text-slate-900 font-bold">{{ $exam->duration }} Menit</span>
                     </div>
 
-                    <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                    <div class="flex justify-between items-center pb-3 border-b border-slate-200">
                         <span class="text-slate-500 font-medium">Batas Pelanggaran (Max)</span>
                         <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 ring-1 ring-rose-600/20">
                             {{ $exam->max_violation }}x Keluar / Switch
@@ -210,7 +210,7 @@
                 </div>
             </div>
 
-            <div class="pt-4 border-t border-slate-100 mt-4">
+            <div class="pt-4 border-t border-slate-200 mt-4">
                 <div class="text-[11px] text-slate-400 leading-relaxed flex items-center gap-1.5">
                     <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>
                     Siswa yang melebihi batas {{ $exam->max_violation }}x otomatis terkunci dan harus dibuka oleh pengawas.
@@ -220,8 +220,8 @@
     </div>
 
     <!-- TABEL 1: Live Monitoring Peserta Ujian (Dual Mode: Desktop Table + Mobile Cards) -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div class="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="p-4 sm:p-6 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
             <div>
                 <h3 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Monitoring Peserta Ujian</h3>
                 <p class="text-xs text-slate-500 mt-0.5">Daftar siswa yang terdaftar, status pengerjaan, dan kontrol buka kunci sesi.</p>
@@ -369,14 +369,14 @@
         </div>
 
         <!-- Mobile Card View (< md) -->
-        <div class="md:hidden divide-y divide-slate-100" id="studentsMobileList">
+        <div class="md:hidden p-3 sm:p-4 space-y-3 bg-slate-50/60" id="studentsMobileList">
             @forelse($participants as $index => $p)
                 @php
                     $user = $p->user;
                     $isLocked = ($p->status === 'locked' || (isset($p->session) && $p->session->status === 'LOCKED'));
                     $canUnlockAndReset = auth()->user()->isAdmin() || ($exam->created_by === auth()->id());
                 @endphp
-                <div class="student-card p-3.5 sm:p-4 hover:bg-slate-50/70 transition-colors space-y-2.5 {{ $isLocked ? 'bg-rose-50/35 border-l-4 border-l-rose-500 ring-1 ring-rose-200/70 rounded-xl my-1.5' : '' }}">
+                <div class="student-card bg-white rounded-xl border {{ $isLocked ? 'border-2 border-rose-400 bg-rose-50/40 ring-1 ring-rose-200' : 'border border-slate-200' }} shadow-xs p-3.5 sm:p-4 space-y-2.5 transition-all">
                     <!-- Header Siswa & Kelas -->
                     <div class="flex items-center justify-between gap-2">
                         <div class="flex items-center gap-2.5 min-w-0">
@@ -388,13 +388,13 @@
                                 <div class="text-[10px] sm:text-[11px] text-slate-400 font-mono student-nis">NIS: {{ $user->username ?? '-' }}</div>
                             </div>
                         </div>
-                        <span class="text-[10px] sm:text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md shrink-0">
+                        <span class="text-[10px] sm:text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md shrink-0">
                             {{ $user->class->name ?? '-' }}
                         </span>
                     </div>
 
                     <!-- Informasi Status & Pelanggaran (Clean 2-Column Grid) -->
-                    <div class="grid grid-cols-2 gap-2 p-2.5 bg-slate-50/90 rounded-xl border border-slate-100 text-xs">
+                    <div class="grid grid-cols-2 gap-2 p-2.5 bg-slate-50/90 rounded-xl border border-slate-200 text-xs">
                         <div>
                             <span class="text-[10px] text-slate-400 font-medium block mb-0.5">Status Pengerjaan</span>
                             @if($isLocked)
@@ -433,9 +433,9 @@
                         </div>
 
                         @if($p->started_at)
-                        <div class="col-span-2 pt-1 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-400">
+                        <div class="col-span-2 pt-1.5 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-500">
                             <span>Mulai Ujian:</span>
-                            <span class="font-mono text-slate-600 font-medium">{{ \Carbon\Carbon::parse($p->started_at)->format('H:i:s') }} WIB</span>
+                            <span class="font-mono text-slate-700 font-medium">{{ \Carbon\Carbon::parse($p->started_at)->format('H:i:s') }} WIB</span>
                         </div>
                         @endif
                     </div>
@@ -455,7 +455,7 @@
                                 </form>
                                 <form action="{{ route('admin.exams.students.reset', [$exam->id, $p->user_id]) }}" method="POST" onsubmit="return confirm('Reset sesi ujian {{ $user->name }} dari awal?');">
                                     @csrf
-                                    <button type="submit" class="p-2 inline-flex items-center justify-center bg-white border border-slate-200 hover:bg-rose-50 text-slate-500 hover:text-rose-600 rounded-xl text-xs transition-colors" title="Reset Sesi Siswa">
+                                    <button type="submit" class="p-2 inline-flex items-center justify-center bg-white border border-slate-300 hover:bg-rose-50 text-slate-500 hover:text-rose-600 rounded-xl text-xs transition-colors" title="Reset Sesi Siswa">
                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                         </svg>
@@ -466,7 +466,7 @@
                             <div class="pt-0.5 flex justify-end">
                                 <form action="{{ route('admin.exams.students.reset', [$exam->id, $p->user_id]) }}" method="POST" onsubmit="return confirm('Reset sesi ujian {{ $user->name }} dari awal?');">
                                     @csrf
-                                    <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-500 hover:text-rose-600 rounded-lg text-[11px] font-medium transition-colors">
+                                    <button type="submit" class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-500 hover:text-rose-600 rounded-lg text-[11px] font-medium transition-colors">
                                         <svg class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                         </svg>
@@ -484,18 +484,18 @@
                     @endif
                 </div>
             @empty
-                <div class="p-6 text-center text-slate-400 text-xs">
+                <div class="p-6 text-center text-slate-400 text-xs bg-white rounded-xl border border-slate-200">
                     Belum ada siswa yang terdaftar sebagai peserta ujian ini.
                 </div>
             @endforelse
-            <div id="noMatchStudentMobile" class="hidden p-6 text-center text-slate-400 text-xs">
+            <div id="noMatchStudentMobile" class="hidden p-6 text-center text-slate-400 text-xs bg-white rounded-xl border border-slate-200">
                 Tidak ada siswa yang cocok dengan pencarian.
             </div>
         </div>
     </div>
 
     <!-- TABEL 2: Realtime Violation Logs (Dual Mode: Desktop Table + Mobile Cards) -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-4 sm:p-6">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 sm:p-6">
         <div class="flex items-center justify-between mb-4">
             <div>
                 <h3 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
@@ -516,7 +516,7 @@
             <div class="hidden md:block overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="border-b border-slate-100 bg-slate-50/50 text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
+                        <tr class="border-b border-slate-200 bg-slate-50/50 text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
                             <th class="py-3 px-4">Waktu</th>
                             <th class="py-3 px-4">Siswa</th>
                             <th class="py-3 px-4">Kelas</th>
@@ -568,11 +568,11 @@
             <!-- Mobile Violation Cards (< md) -->
             <div class="md:hidden space-y-2.5">
                 @foreach($violations as $v)
-                    <div class="p-3 bg-slate-50/70 hover:bg-slate-100/70 rounded-xl border border-slate-100 transition-colors space-y-1.5">
+                    <div class="p-3 bg-white hover:bg-slate-50 rounded-xl border border-slate-200 transition-colors space-y-1.5 shadow-2xs">
                         <div class="flex items-center justify-between gap-2">
                             <div class="flex items-center gap-2 min-w-0">
                                 <span class="font-bold text-slate-900 text-xs truncate">{{ $v->user->name ?? 'User #' . $v->user_id }}</span>
-                                <span class="text-[10px] text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded shrink-0">{{ $v->user->class->name ?? '-' }}</span>
+                                <span class="text-[10px] text-slate-500 bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded shrink-0">{{ $v->user->class->name ?? '-' }}</span>
                             </div>
                             <span class="font-mono text-[10px] text-slate-400 shrink-0">{{ \Carbon\Carbon::parse($v->created_at)->format('H:i:s') }} WIB</span>
                         </div>

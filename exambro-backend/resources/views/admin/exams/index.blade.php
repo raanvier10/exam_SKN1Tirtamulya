@@ -133,12 +133,13 @@
     </div>
 </div>
 
-<!-- Exam List Container (Dual Mode: Desktop Table + Mobile Cards) -->
-<div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-    <!-- Desktop Table View (>= md) -->
-    <div class="hidden md:block overflow-x-auto">
+<!-- Dual Mode: Desktop Table + Mobile Standalone Cards -->
+
+<!-- 1. Desktop Table View (>= md) -->
+<div class="hidden md:block bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+    <div class="overflow-x-auto">
         <table class="w-full text-left text-sm text-slate-600">
-            <thead class="bg-slate-50/80 border-b border-slate-200/80 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+            <thead class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                 <tr>
                     <th class="px-6 py-4 min-w-[200px]">Judul Ujian</th>
                     <th class="px-6 py-4 whitespace-nowrap min-w-[170px]">Target Kelas</th>
@@ -163,7 +164,7 @@
                         <div class="line-clamp-2 max-w-sm">{{ $e->title }}</div>
                         <div class="mt-1 flex items-center gap-1.5 text-[11px]">
                             @if($e->created_by === auth()->id())
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200/80">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
                                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1"></span> Ujian Anda
                                 </span>
                             @elseif($e->creator)
@@ -171,7 +172,7 @@
                                     Oleh: <span class="text-slate-600 font-medium">{{ $e->creator->name }}</span>
                                 </span>
                             @else
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-medium border border-slate-200/60">
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-medium border border-slate-200">
                                     UAS Umum
                                 </span>
                             @endif
@@ -179,7 +180,7 @@
                     </td>
                     <td class="px-6 py-4 align-middle whitespace-nowrap">
                         @if($classCount === 0)
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200/80">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
                                 Semua Kelas
                             </span>
                         @elseif($classCount <= 2)
@@ -195,7 +196,7 @@
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
                                     {{ $e->classes->first()->name }}
                                 </span>
-                                <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-indigo-100 text-slate-700 hover:text-indigo-800 border border-slate-200/80 transition-colors cursor-help" title="{{ $classList }}">
+                                <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-indigo-100 text-slate-700 hover:text-indigo-800 border border-slate-200 transition-colors cursor-help" title="{{ $classList }}">
                                     +{{ $classCount - 1 }} Kelas
                                 </span>
                             </div>
@@ -262,101 +263,103 @@
             </tbody>
         </table>
     </div>
+</div>
 
-    <!-- Mobile Card View (< md) -->
-    <div class="md:hidden divide-y divide-slate-100" id="examMobileList">
-        @forelse($exams as $e)
-        @php
-            $classList = $e->classes->pluck('name')->implode(', ');
-            $classCount = $e->classes->count();
-            $canManage = auth()->user()->isAdmin() || ($e->created_by === auth()->id());
-        @endphp
-        <div class="exam-card p-4 sm:p-5 hover:bg-slate-50/50 transition-colors space-y-3"
-             data-title="{{ strtolower($e->title) }}" 
-             data-classes="{{ strtolower($classList ?: 'semua kelas') }}" 
-             data-status="{{ $e->status }}">
-            <div class="flex items-start justify-between gap-3">
-                <div class="space-y-1.5 min-w-0 flex-1">
-                    <h4 class="text-sm sm:text-base font-bold text-slate-900 leading-snug">{{ $e->title }}</h4>
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg">
-                            <svg class="w-3 h-3 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+<!-- 2. Mobile Standalone Cards View (< md) -->
+<div class="md:hidden space-y-3.5" id="examMobileList">
+    @forelse($exams as $e)
+    @php
+        $classList = $e->classes->pluck('name')->implode(', ');
+        $classCount = $e->classes->count();
+        $canManage = auth()->user()->isAdmin() || ($e->created_by === auth()->id());
+    @endphp
+    <div class="exam-card bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 shadow-xs p-4 sm:p-5 space-y-3 transition-all"
+         data-title="{{ strtolower($e->title) }}" 
+         data-classes="{{ strtolower($classList ?: 'semua kelas') }}" 
+         data-status="{{ $e->status }}">
+        <!-- Card Top Bar: Title, Meta Chips & Status -->
+        <div class="flex items-start justify-between gap-3">
+            <div class="space-y-1.5 min-w-0 flex-1">
+                <h4 class="text-sm sm:text-base font-bold text-slate-900 leading-snug">{{ $e->title }}</h4>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-lg">
+                        <svg class="w-3 h-3 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {{ $e->duration }} Menit
+                    </span>
+                    @if($e->created_by === auth()->id())
+                        <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg">
+                            <svg class="w-3 h-3 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
-                            {{ $e->duration }} Menit
-                        </span>
-                        @if($e->created_by === auth()->id())
-                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-lg">
-                                <svg class="w-3 h-3 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                                Ujian Anda
-                            </span>
-                        @endif
-                    </div>
-                </div>
-                <div class="shrink-0 pt-0.5">
-                    @if($e->status === 'active')
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Aktif
-                        </span>
-                    @else
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 ring-1 ring-slate-400/20">
-                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Nonaktif
+                            Ujian Anda
                         </span>
                     @endif
                 </div>
             </div>
-
-            <div class="space-y-2 py-2.5 px-3.5 bg-slate-50/80 rounded-xl border border-slate-100">
-                <div class="flex items-start justify-between gap-3 text-xs">
-                    <div class="min-w-0 flex-1">
-                        <span class="text-[10px] uppercase font-semibold text-slate-400 block tracking-wider mb-0.5">Target Kelas</span>
-                        <span class="font-medium text-slate-700 text-xs block truncate" title="{{ $classList ?: 'Semua Kelas' }}">
-                            {{ $classCount === 0 ? 'Semua Kelas' : ($classCount <= 2 ? $classList : $e->classes->first()->name . ' +' . ($classCount - 1) . ' kelas') }}
-                        </span>
-                    </div>
-                    <div class="text-right shrink-0">
-                        <span class="text-[10px] uppercase font-semibold text-slate-400 block tracking-wider mb-0.5">Toleransi</span>
-                        <span class="font-semibold text-rose-600 text-xs">Max {{ $e->max_violation }}x Keluar</span>
-                    </div>
-                </div>
-                <div class="pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[11px] text-slate-500">
-                    <span>{{ \Carbon\Carbon::parse($e->start_at)->format('d M Y') }}</span>
-                    <span class="font-mono font-medium text-slate-600">{{ \Carbon\Carbon::parse($e->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($e->end_at)->format('H:i') }} WIB</span>
-                </div>
-            </div>
-
-            <!-- Mobile Action Buttons -->
-            <div class="flex items-center gap-2 pt-1">
-                <a href="{{ route('admin.exams.show', $e->id) }}" class="flex-1 inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-[0.98]">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    <span>Pantau Live</span>
-                </a>
-                @if($canManage)
-                    <a href="{{ route('admin.exams.edit', $e->id) }}" class="inline-flex items-center justify-center px-3 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition-all active:scale-[0.98]">
-                        Edit
-                    </a>
-                    <form action="{{ route('admin.exams.destroy', $e->id) }}" method="POST" class="inline-flex m-0" onsubmit="return confirm('Hapus ujian ini?');">
-                        @csrf @method('DELETE')
-                        <button type="submit" class="inline-flex items-center justify-center px-3 py-2 bg-white border border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-700 rounded-xl text-xs font-semibold transition-all active:scale-[0.98]">
-                            Hapus
-                        </button>
-                    </form>
+            <div class="shrink-0 pt-0.5">
+                @if($e->status === 'active')
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/30 border border-emerald-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Aktif
+                    </span>
+                @else
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 ring-1 ring-slate-400/30 border border-slate-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Nonaktif
+                    </span>
                 @endif
             </div>
         </div>
-        @empty
-        <div class="p-8 text-center text-slate-400 text-xs">
-            Belum ada jadwal ujian terdaftar.
+
+        <!-- Card Body: Target Kelas, Toleransi & Jadwal -->
+        <div class="space-y-2 py-2.5 px-3.5 bg-slate-50/90 rounded-xl border border-slate-200">
+            <div class="flex items-start justify-between gap-3 text-xs">
+                <div class="min-w-0 flex-1">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider mb-0.5">Target Kelas</span>
+                    <span class="font-semibold text-slate-700 text-xs block truncate" title="{{ $classList ?: 'Semua Kelas' }}">
+                        {{ $classCount === 0 ? 'Semua Kelas' : ($classCount <= 2 ? $classList : $e->classes->first()->name . ' +' . ($classCount - 1) . ' kelas') }}
+                    </span>
+                </div>
+                <div class="text-right shrink-0">
+                    <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider mb-0.5">Toleransi</span>
+                    <span class="font-bold text-rose-600 text-xs">Max {{ $e->max_violation }}x Keluar</span>
+                </div>
+            </div>
+            <div class="pt-2 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
+                <span>{{ \Carbon\Carbon::parse($e->start_at)->format('d M Y') }}</span>
+                <span class="font-mono font-medium text-slate-700">{{ \Carbon\Carbon::parse($e->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($e->end_at)->format('H:i') }} WIB</span>
+            </div>
         </div>
-        @endforelse
-        <div id="noMatchMobile" class="hidden p-8 text-center text-slate-400 text-xs">
-            Tidak ada jadwal ujian yang cocok dengan pencarian / filter.
+
+        <!-- Mobile Action Buttons -->
+        <div class="flex items-center gap-2 pt-1">
+            <a href="{{ route('admin.exams.show', $e->id) }}" class="flex-1 inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-[0.98]">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span>Pantau Live</span>
+            </a>
+            @if($canManage)
+                <a href="{{ route('admin.exams.edit', $e->id) }}" class="inline-flex items-center justify-center px-3.5 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition-all active:scale-[0.98]">
+                    Edit
+                </a>
+                <form action="{{ route('admin.exams.destroy', $e->id) }}" method="POST" class="inline-flex m-0" onsubmit="return confirm('Hapus ujian ini?');">
+                    @csrf @method('DELETE')
+                    <button type="submit" class="inline-flex items-center justify-center px-3.5 py-2.5 bg-white border border-slate-300 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-300 text-slate-700 rounded-xl text-xs font-semibold transition-all active:scale-[0.98]">
+                        Hapus
+                    </button>
+                </form>
+            @endif
         </div>
+    </div>
+    @empty
+    <div class="p-8 text-center text-slate-400 text-xs bg-white rounded-2xl border-2 border-slate-200">
+        Belum ada jadwal ujian terdaftar.
+    </div>
+    @endforelse
+    <div id="noMatchMobile" class="hidden p-8 text-center text-slate-400 text-xs bg-white rounded-2xl border-2 border-slate-200">
+        Tidak ada jadwal ujian yang cocok dengan pencarian / filter.
     </div>
 </div>
 
