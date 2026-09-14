@@ -75,6 +75,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _isLoading = false;
           });
         }
+      } else {
+        if (mounted) {
+          setState(() => _isLoading = false);
+          if (response['message'] == 'Unauthenticated.') {
+            await ApiService.removeToken();
+            if (!mounted) return;
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LoginScreen()),
+            );
+          }
+        }
       }
     } catch (e) {
       if (!mounted) return;

@@ -25,7 +25,8 @@ class TeacherManagementTest extends TestCase
         ]);
 
         $response = $this->actingAs($teacher)->get(route('admin.teachers.index'));
-        $response->assertStatus(403);
+        $response->assertRedirect(route('admin.exams.index'));
+        $response->assertSessionHas('error');
     }
 
     public function test_admin_can_view_teachers_page(): void

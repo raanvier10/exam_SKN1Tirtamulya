@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -17,19 +18,27 @@ class _GoogleAuthScreenState extends State<GoogleAuthScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageStarted: (String url) {
-            if (mounted) setState(() => _isLoading = true);
-          },
-          onPageFinished: (String url) {
-            if (mounted) setState(() => _isLoading = false);
-          },
-        ),
-      )
-      ..loadRequest(Uri.parse('https://accounts.google.com/ServiceLogin'));
+    if (!kIsWeb) {
+      _controller = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setUserAgent(
+          'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36',
+        )
+        ..setNavigationDelegate(
+          NavigationDelegate(
+            onPageStarted: (String url) {
+              if (mounted) setState(() => _isLoading = true);
+            },
+            onPageFinished: (String url) {
+              if (mounted) setState(() => _isLoading = false);
+            },
+            onWebResourceError: (WebResourceError error) {
+              if (mounted) setState(() => _isLoading = false);
+            },
+          ),
+        )
+        ..loadRequest(Uri.parse('https://accounts.google.com/ServiceLogin'));
+    }
   }
 
   Future<void> _handleSaveAndExit() async {
@@ -115,16 +124,52 @@ class _GoogleAuthScreenState extends State<GoogleAuthScreen> {
           child: Container(color: const Color(0xFFE2E8F0), height: 1),
         ),
       ),
-      body: Stack(
-        children: [
-          WebViewWidget(controller: _controller),
-          if (_isLoading)
-            const LinearProgressIndicator(
-              color: Color(0xFF0A2540),
-              backgroundColor: Color(0xFFE2E8F0),
+      body: kIsWeb
+          ? Center(
+              child: Container(
+                margin: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.phone_android_rounded, size: 56, color: Color(0xFF2563EB)),
+                    SizedBox(height: 16),
+                    Text(
+                      'Hanya Didukung di Perangkat Android',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: Color(0xFF0F172A)),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Fitur WebView Google Auth hanya dapat berjalan di perangkat Android (HP fisik atau Emulator).\nDi browser Web (Edge/Chrome), WebView tidak didukung.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Color(0xFF64748B), fontSize: 13, height: 1.4),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : Stack(
+              children: [
+                WebViewWidget(controller: _controller),
+                if (_isLoading)
+                  const LinearProgressIndicator(
+                    color: Color(0xFF0A2540),
+                    backgroundColor: Color(0xFFE2E8F0),
+                  ),
+              ],
             ),
-        ],
-      ),
     );
   }
 }

@@ -71,6 +71,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('/students/{student}/toggle-pkl', [StudentController::class, 'togglePkl'])->name('students.toggle-pkl');
             Route::resource('students', StudentController::class);
 
+            Route::get('/teachers/template', function () {
+                $csv = "nama_lengkap,nip_username,email,password,status\nBudi Setiawan,198501012025,budi@sekolah.id,password123,active\nSiti Aminah,198703152026,,password123,active\n";
+                return response($csv)->header('Content-Type', 'text/csv')->header('Content-Disposition', 'attachment; filename="template_guru.csv"');
+            })->name('teachers.template');
+            Route::post('/teachers/import', [TeacherController::class, 'import'])->name('teachers.import');
             Route::resource('teachers', TeacherController::class);
         });
         

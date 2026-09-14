@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -38,86 +39,119 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // Listener deteksi Jendela Mengambang (Floating Window) & Split-Screen dari Native Android
-    platform.setMethodCallHandler((call) async {
-      if (call.method == 'onWindowFocusLost') {
-        final reason = call.arguments?.toString() ?? '';
-        final desc = reason == 'MULTI_WINDOW'
-            ? 'Terdeteksi mengaktifkan mode Layar Belah (Split-Screen)'
-            : 'Terdeteksi membuka Jendela Mengambang (Floating Window / Smart Sidebar)';
-        _handleViolation('FLOATING_WINDOW', desc);
-      }
-    });
+    if (!kIsWeb) {
+      // Listener deteksi Jendela Mengambang (Floating Window) & Split-Screen dari Native Android
+      platform.setMethodCallHandler((call) async {
+        if (call.method == 'onWindowFocusLost') {
+          final reason = call.arguments?.toString() ?? '';
+          final desc = reason == 'MULTI_WINDOW'
+              ? 'Terdeteksi mengaktifkan mode Layar Belah (Split-Screen)'
+              : 'Terdeteksi membuka Jendela Mengambang (Floating Window / Smart Sidebar)';
+          _handleViolation('FLOATING_WINDOW', desc);
+        }
+      });
 
-    // 1. Kiosk Mode Immersive: Lock status bar & nav bar
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      // 1. Kiosk Mode Immersive: Lock status bar & nav bar
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
-    // 2. Lock screen capture / screenshot & Native App Pinning
-    _secureScreen();
+      // 2. Lock screen capture / screenshot & Native App Pinning
+      _secureScreen();
+    }
 
     // 3. Setup end time & live countdown timer
     _endTime = DateTime.parse(widget.exam['end_at']).toLocal();
     _examTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
         setState(() {});
-        if (timer.tick % 3 == 0 && !_isLoading) {
-          _injectAntiCopyProtection();
-        }
         if (DateTime.now().isAfter(_endTime) && !_isLocked) {
           _handleTimeExpired();
         }
       }
     });
 
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageStarted: (String url) {
-            if (mounted) setState(() => _isLoading = true);
-          },
-          onPageFinished: (String url) {
-            if (mounted) setState(() => _isLoading = false);
-            _injectAntiCopyProtection();
-          },
-          onNavigationRequest: (NavigationRequest request) {
-            final uri = Uri.tryParse(request.url);
-            final host = uri?.host.toLowerCase() ?? '';
-            final path = uri?.path.toLowerCase() ?? '';
+    if (!kIsWeb) {
+      _controller = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setUserAgent(
+          'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36',
+        )
+        ..setNavigationDelegate(
+          NavigationDelegate(
+            onPageStarted: (String url) {
+              if (mounted) setState(() => _isLoading = true);
+            },
+            onPageFinished: (String url) {
+              if (mounted) setState(() => _isLoading = false);
+              _injectAntiCopyProtection();
+            },
+            onWebResourceError: (WebResourceError error) {
+              if (mounted) setState(() => _isLoading = false);
+            },
+            onNavigationRequest: (NavigationRequest request) {
+              final uri = Uri.tryParse(request.url);
+              final host = uri?.host.toLowerCase() ?? '';
+              final path = uri?.path.toLowerCase() ?? '';
 
-            // Explicitly block YouTube and Google Search
-            if (host.contains('youtube.com') ||
-                host.contains('youtu.be') ||
-                path.startsWith('/search')) {
-              return NavigationDecision.prevent;
-            }
+              // Explicitly block YouTube and Google Search
+              if (host.contains('youtube.com') ||
+                  host.contains('youtu.be') ||
+                  path.startsWith('/search') ||
+                  ((path == '/' || path.isEmpty) &&
+                      (host == 'google.com' ||
+                          host == 'www.google.com' ||
+                          host == 'google.co.id' ||
+                          host == 'www.google.co.id'))) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Akses ke pencarian atau YouTube diblokir.'),
+                    backgroundColor: Color(0xFFEF4444),
+                    duration: Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+                return NavigationDecision.prevent;
+              }
 
-            // Whitelist Google Forms, Google Auth, Google Drive assets, and static assets
-            bool isAllowed = (host == 'docs.google.com' &&
-                    (path.contains('/forms') || path.contains('/document'))) ||
-                host == 'accounts.google.com' ||
-                host == 'drive.google.com' ||
-                host.endsWith('gstatic.com') ||
-                host.endsWith('googleusercontent.com') ||
-                host.endsWith('googleapis.com');
+              // Allow exam original target URL domain if configured
+              final examUrl = widget.exam['google_form_url']?.toString();
+              final examUri = examUrl != null ? Uri.tryParse(examUrl) : null;
+              if (examUri != null &&
+                  examUri.host.isNotEmpty &&
+                  host == examUri.host.toLowerCase()) {
+                return NavigationDecision.navigate;
+              }
 
-            if (!isAllowed) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Akses ke situs di luar ujian diblokir.'),
-                  backgroundColor: Color(0xFFEF4444),
-                  duration: Duration(seconds: 2),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-              return NavigationDecision.prevent;
-            }
-            return NavigationDecision.navigate;
-          },
-        ),
-      );
+              // Whitelist Google Forms, short links, Google Auth, Drive, and static assets
+              final isAllowed = host == 'forms.gle' ||
+                  host.endsWith('.forms.gle') ||
+                  host == 'forms.google.com' ||
+                  host.endsWith('.google.com') ||
+                  host == 'google.com' ||
+                  host.endsWith('.google.co.id') ||
+                  host == 'google.co.id' ||
+                  host.endsWith('gstatic.com') ||
+                  host.endsWith('googleusercontent.com') ||
+                  host.endsWith('googleapis.com') ||
+                  host.endsWith('1e100.net');
 
-    _startExamSession();
+              if (!isAllowed) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Akses ke situs di luar ujian diblokir.'),
+                    backgroundColor: Color(0xFFEF4444),
+                    duration: Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+                return NavigationDecision.prevent;
+              }
+              return NavigationDecision.navigate;
+            },
+          ),
+        );
+
+      _startExamSession();
+    }
   }
 
   Future<void> _secureScreen() async {
@@ -131,84 +165,58 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
   Future<void> _injectAntiCopyProtection() async {
     const jsCode = """
       (function() {
-        function enforceLock() {
-          try {
-            if (!document.getElementById('exambro-lock-style')) {
-              const style = document.createElement('style');
-              style.id = 'exambro-lock-style';
-              style.innerHTML = `
-                *, *::before, *::after {
-                  -webkit-touch-callout: none !important;
-                  -webkit-user-select: none !important;
-                  -khtml-user-select: none !important;
-                  -moz-user-select: none !important;
-                  -ms-user-select: none !important;
-                  user-select: none !important;
-                  -webkit-user-drag: none !important;
-                  user-drag: none !important;
-                }
-                input, textarea, [contenteditable="true"] {
-                  -webkit-user-select: text !important;
-                  user-select: text !important;
-                }
-              `;
-              (document.head || document.documentElement).appendChild(style);
+        if (!document.getElementById('exambro-lock-style')) {
+          const style = document.createElement('style');
+          style.id = 'exambro-lock-style';
+          style.innerHTML = `
+            body {
+              -webkit-touch-callout: none;
+              -webkit-user-select: none;
+              user-select: none;
             }
-
-            const active = document.activeElement;
-            if (!active || (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA')) {
-              const sel = window.getSelection();
-              if (sel && sel.rangeCount > 0) {
-                sel.removeAllRanges();
-              }
+            input, textarea, [contenteditable="true"], [role="textbox"], .whsOnd {
+              -webkit-user-select: text !important;
+              user-select: text !important;
+              -webkit-touch-callout: default !important;
             }
-          } catch(e) {}
+          `;
+          (document.head || document.documentElement).appendChild(style);
         }
 
-        enforceLock();
+        if (!window._exambroProtectionSet) {
+          window._exambroProtectionSet = true;
 
-        if (!window._exambroObserverSet) {
-          window._exambroObserverSet = true;
-
-          try {
-            const observer = new MutationObserver(function() {
-              enforceLock();
-            });
-            if (document.documentElement) {
-              observer.observe(document.documentElement, {
-                childList: true,
-                subtree: true,
-                attributes: true
-              });
-            }
-          } catch(e) {}
-
-          ['contextmenu', 'copy', 'cut', 'drag', 'dragstart', 'dragend', 'drop'].forEach(function(evt) {
+          // Cegah copy / cut hanya pada teks soal ujian (di luar input)
+          ['copy', 'cut'].forEach(function(evt) {
             document.addEventListener(evt, function(e) {
-              const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : '';
-              if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
+              const active = document.activeElement;
+              const isInput = active && (
+                active.tagName === 'INPUT' ||
+                active.tagName === 'TEXTAREA' ||
+                active.isContentEditable ||
+                active.getAttribute('role') === 'textbox'
+              );
+              if (!isInput) {
                 e.preventDefault();
-                e.stopPropagation();
-                return false;
+                if (e.clipboardData) {
+                  e.clipboardData.clearData();
+                }
               }
             }, true);
           });
 
-          document.addEventListener('selectionchange', function(e) {
-            const active = document.activeElement;
-            if (!active || (active.tagName !== 'INPUT' && active.tagName !== 'TEXTAREA')) {
-              const sel = window.getSelection();
-              if (sel && !sel.isCollapsed) {
-                sel.removeAllRanges();
-              }
-            }
-          }, true);
-
-          document.addEventListener('selectstart', function(e) {
-            const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : '';
-            if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
+          // Cegah contextmenu (long-press menu Android) pada teks soal, tetapi izinkan pada field input
+          document.addEventListener('contextmenu', function(e) {
+            const target = e.target;
+            const isInput = target && (
+              target.tagName === 'INPUT' ||
+              target.tagName === 'TEXTAREA' ||
+              target.isContentEditable ||
+              target.getAttribute('role') === 'textbox' ||
+              (target.closest && target.closest('input, textarea, [contenteditable="true"], [role="textbox"]') !== null)
+            );
+            if (!isInput) {
               e.preventDefault();
-              return false;
             }
           }, true);
         }
@@ -234,9 +242,13 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
         _sessionId = response['data']?['id'] != null
             ? int.tryParse(response['data']['id'].toString())
             : null;
-        final formUrl = response['data']?['google_form_url']?.toString() ??
+        String? formUrl = response['data']?['google_form_url']?.toString() ??
             widget.exam['google_form_url']?.toString();
-        if (formUrl != null && formUrl.isNotEmpty) {
+        if (formUrl != null && formUrl.trim().isNotEmpty) {
+          formUrl = formUrl.trim();
+          if (!formUrl.startsWith('http://') && !formUrl.startsWith('https://')) {
+            formUrl = 'https://$formUrl';
+          }
           _controller.loadRequest(Uri.parse(formUrl));
         }
       } else if (response['locked'] == true) {
@@ -256,8 +268,13 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
         Navigator.pop(context);
       }
     } catch (e) {
-      if (widget.exam['google_form_url'] != null) {
-        _controller.loadRequest(Uri.parse(widget.exam['google_form_url']));
+      String? fallbackUrl = widget.exam['google_form_url']?.toString();
+      if (fallbackUrl != null && fallbackUrl.trim().isNotEmpty) {
+        fallbackUrl = fallbackUrl.trim();
+        if (!fallbackUrl.startsWith('http://') && !fallbackUrl.startsWith('https://')) {
+          fallbackUrl = 'https://$fallbackUrl';
+        }
+        _controller.loadRequest(Uri.parse(fallbackUrl));
       }
     }
   }
@@ -494,11 +511,15 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
         _wasAway = false;
         final secondsAway = _awayStartTime != null
             ? DateTime.now().difference(_awayStartTime!).inSeconds
-            : 1;
-        _handleViolation(
-          'FLOATING_WINDOW',
-          'Terdeteksi keluar aplikasi / beralih jendela ($secondsAway detik)',
-        );
+            : 0;
+        // ponytail: grace period 2s — keyboard open/close triggers
+        // inactive→resumed cycle under ~1s, real app-switch takes longer.
+        if (secondsAway >= 2) {
+          _handleViolation(
+            'FLOATING_WINDOW',
+            'Terdeteksi keluar aplikasi / beralih jendela ($secondsAway detik)',
+          );
+        }
       }
     }
   }
@@ -1286,46 +1307,80 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
 
               // 2. MAIN WEBVIEW BODY
               Expanded(
-                child: _isLocked
-                    ? Container(
-                        color: const Color(0xFF0B132B),
-                        padding: const EdgeInsets.all(32),
-                        child: const Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                child: kIsWeb
+                    ? Center(
+                        child: Container(
+                          margin: const EdgeInsets.all(24),
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0F172A),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: const Color(0xFF334155)),
+                          ),
+                          child: const Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.lock_rounded, size: 64, color: Color(0xFFEF4444)),
-                              SizedBox(height: 20),
+                              Icon(Icons.phone_android_rounded, size: 56, color: Color(0xFF38BDF8)),
+                              SizedBox(height: 16),
                               Text(
-                                'UJIAN DIKUNCI',
+                                'Mode Ujian Khusus Aplikasi Android',
+                                textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  fontSize: 22,
-                                  color: Color(0xFFF87171),
+                                  color: Colors.white,
                                   fontWeight: FontWeight.w800,
-                                  letterSpacing: -0.5,
+                                  fontSize: 17,
                                 ),
                               ),
                               SizedBox(height: 8),
                               Text(
-                                'Toleransi batas pelanggaran telah habis.',
+                                'Fitur Kiosk Keamanan Ujian (Lock Task, Anti-Screenshot, dsb.) dan Google Form WebView hanya berjalan di perangkat Android (HP fisik atau Emulator).\nDi browser Web (Edge/Chrome), WebView tidak didukung.',
                                 textAlign: TextAlign.center,
-                                style: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+                                style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13, height: 1.4),
                               ),
                             ],
                           ),
                         ),
                       )
-                    : Stack(
-                        children: [
-                          WebViewWidget(controller: _controller),
-                          if (_isLoading)
-                            const LinearProgressIndicator(
-                              color: Color(0xFF38BDF8),
-                              backgroundColor: Color(0xFF091728),
-                              minHeight: 2.5,
+                    : _isLocked
+                        ? Container(
+                            color: const Color(0xFF0B132B),
+                            padding: const EdgeInsets.all(32),
+                            child: const Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.lock_rounded, size: 64, color: Color(0xFFEF4444)),
+                                  SizedBox(height: 20),
+                                  Text(
+                                    'UJIAN DIKUNCI',
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      color: Color(0xFFF87171),
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -0.5,
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Toleransi batas pelanggaran telah habis.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+                                  ),
+                                ],
+                              ),
                             ),
-                        ],
-                      ),
+                          )
+                        : Stack(
+                            children: [
+                              WebViewWidget(controller: _controller),
+                              if (_isLoading)
+                                const LinearProgressIndicator(
+                                  color: Color(0xFF38BDF8),
+                                  backgroundColor: Color(0xFF091728),
+                                  minHeight: 2.5,
+                                ),
+                            ],
+                          ),
               ),
             ],
           ),

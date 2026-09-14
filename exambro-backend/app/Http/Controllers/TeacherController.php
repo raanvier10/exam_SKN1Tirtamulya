@@ -126,5 +126,53 @@ class TeacherController extends Controller
         $teacher->delete();
 
         return redirect()->route('admin.teachers.index')->with('success', 'Akun guru berhasil dihapus.');
+    public function import(Request $request)
+    {
+        $request->validate(['file' => 'required|file']);
+        $rows = \App\Helpers\SimpleSpreadsheetReader::read($request->file('file'));
+        $count = 0;
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($rows, &$count) {
+            foreach ($rows as $row) {
+                $name = $row['nama_lengkap'] ?? $row['nama'] ?? $row['name'] ?? null;
+                $username = (string)($row['nip_username'] ?? $row['nip'] ?? $row['username'] ?? '');
+
+                if (!empty($username) && !empty($name)) {
+                    $existingUser = User::where('username', $username)->first();
+
+                    $status = $existingUser?->status ?? 'active';
+                    if (isset($row['status'])) {
+                        $statusVal = strtolower(trim((string)$row['status']));
+                        $status = in_array($statusVal, ['inactive', 'nonaktif', '0', 'disabled']) ? 'inactive' : 'active';
+                    }
+
+                    $updateData = [
+                        'name' => $name,
+                        'role' => 'guru',
+                        'status' => $status,
+                    ];
+
+                    $emailInput = trim((string)($row['email'] ?? ''));
+                    if (!empty($emailInput)) {
+                        $updateData['email'] = $emailInput;
+                    }
+
+                    $passInput = $row['password'] ?? $row['kata_sandi'] ?? null;
+                    if (!empty($passInput)) {
+                        $updateData['password'] = Hash::make((string)$passInput);
+                    } elseif (!$existingUser) {
+                        $updateData['password'] = Hash::make($username);
+                    }
+
+                    User::updateOrCreate(
+                        ['username' => $username],
+                        $updateData
+                    );
+                    $count++;
+                }
+            }
+        });
+
+        return back()->with('success', "Berhasil memproses & menyinkronkan {$count} data guru.");
     }
 }
