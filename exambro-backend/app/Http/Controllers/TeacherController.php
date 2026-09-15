@@ -126,6 +126,8 @@ class TeacherController extends Controller
         $teacher->delete();
 
         return redirect()->route('admin.teachers.index')->with('success', 'Akun guru berhasil dihapus.');
+    }
+
     public function import(Request $request)
     {
         $request->validate(['file' => 'required|file']);

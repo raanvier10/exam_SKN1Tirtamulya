@@ -253,17 +253,29 @@
             <div>
                 <div class="flex items-center justify-between mb-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Target Kelas / Peserta</label>
-                        <p class="text-xs text-slate-500 mt-0.5">Pilih kelas yang wajib mengikuti ujian ini.</p>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Target Kelas / Peserta <span class="text-rose-500">*</span></label>
+                        <p class="text-xs text-slate-500 mt-0.5">Pilih minimal 1 kelas yang wajib mengikuti ujian ini.</p>
                     </div>
                     <button type="button" id="toggle-all-classes" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors">
                         Pilih Semua Kelas
                     </button>
                 </div>
 
+                @error('classes') <span class="text-rose-500 text-xs mb-2 block">{{ $message }}</span> @enderror
+
+                <!-- Search kelas -->
+                <div class="relative mb-2.5">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input type="text" id="classSearchInput" placeholder="Cari kelas..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                </div>
+
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 p-4 bg-slate-50/70 border border-slate-200/80 rounded-2xl max-h-56 overflow-y-auto">
                     @forelse($classes as $c)
-                    <label class="class-card group flex items-center gap-2.5 p-2.5 bg-white border border-slate-200/80 rounded-xl cursor-pointer transition-all hover:border-indigo-300 select-none">
+                    <label class="class-card group flex items-center gap-2.5 p-2.5 bg-white border border-slate-200/80 rounded-xl cursor-pointer transition-all hover:border-indigo-300 select-none" data-classname="{{ strtolower($c->name) }}">
                         <input type="checkbox" name="classes[]" value="{{ $c->id }}" {{ in_array($c->id, old('classes', $selectedClasses ?? [])) ? 'checked' : '' }} class="class-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4">
                         <span class="text-xs font-semibold text-slate-700 group-hover:text-indigo-700 transition-colors">{{ $c->name }}</span>
                     </label>
@@ -300,7 +312,7 @@
                         </div>
                         <div>
                             <div class="text-sm font-bold text-slate-700">Nonaktif (Simpan Draft)</div>
-                            <p class="text-xs text-slate-500 mt-1">Disimpan sementara. Siswa belum dapat melihat ujian ini di aplikasi.</p>
+                            <p class="text-xs text-slate-500 mt-1">Disimpan sementara. Otomatis aktif saat waktu ujian tiba.</p>
                         </div>
                     </div>
                 </div>
@@ -412,10 +424,20 @@
     }
 
     document.getElementById('toggle-all-classes').addEventListener('click', function() {
-        const checkboxes = document.querySelectorAll('.class-checkbox');
-        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-        checkboxes.forEach(cb => cb.checked = !allChecked);
+        const visibleCards = document.querySelectorAll('.class-card:not([style*="display: none"])');
+        const visibleCheckboxes = Array.from(visibleCards).map(c => c.querySelector('.class-checkbox'));
+        const allChecked = visibleCheckboxes.every(cb => cb.checked);
+        visibleCheckboxes.forEach(cb => cb.checked = !allChecked);
         this.textContent = allChecked ? 'Pilih Semua Kelas' : 'Batal Pilih Semua';
+    });
+
+    // Class search filter
+    document.getElementById('classSearchInput').addEventListener('input', function() {
+        const q = this.value.toLowerCase().trim();
+        document.querySelectorAll('.class-card').forEach(card => {
+            const name = card.getAttribute('data-classname') || '';
+            card.style.display = q === '' || name.includes(q) ? '' : 'none';
+        });
     });
 
     function selectViolationPreset(val) {

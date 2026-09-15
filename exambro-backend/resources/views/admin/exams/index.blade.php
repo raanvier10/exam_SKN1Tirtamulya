@@ -38,7 +38,7 @@
             </div>
             <div>
                 <h4 class="text-sm font-semibold text-slate-900">Format Wajib Sesuai!</h4>
-                <p class="text-xs text-slate-500 mt-0.5 mb-2">Kolom <code>target_kelas</code> bisa diisi nama kelas (misal: <em>11 TJKT 1, 11 TJKT 2</em>) atau kosongkan untuk Semua Kelas.</p>
+                <p class="text-xs text-slate-500 mt-0.5 mb-2">Kolom <code>target_kelas</code> bisa diisi nama kelas (misal: <em>11 TJKT 1, 11 TJKT 2</em>) atau kosongkan untuk Semua Kelas. Data yang sudah ada akan otomatis dilewati.</p>
                 <a href="{{ route('admin.exams.template') }}" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline">
                     Download Template CSV &rarr;
                 </a>
@@ -92,9 +92,8 @@
             </button>
         </div>
 
-        <!-- Filter Controls: Single unified row on mobile -->
+        <!-- Filter Controls -->
         <div class="flex items-center gap-2 w-full md:w-auto">
-            <!-- Filter Target Kelas -->
             <div class="relative flex-1 sm:w-44">
                 <select id="filterClass" class="w-full appearance-none pl-3 pr-7 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs sm:text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer">
                     <option value="">Semua Kelas</option>
@@ -109,7 +108,6 @@
                 </div>
             </div>
 
-            <!-- Filter Status -->
             <div class="relative flex-1 sm:w-36">
                 <select id="filterStatus" class="w-full appearance-none pl-3 pr-7 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs sm:text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer">
                     <option value="">Semua Status</option>
@@ -123,7 +121,6 @@
                 </div>
             </div>
 
-            <!-- Reset Filters (Clean square button matching select height) -->
             <button id="resetFilters" class="h-9 w-9 shrink-0 flex items-center justify-center text-slate-500 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50 rounded-xl border border-slate-200/80 hover:border-indigo-200 transition-all active:scale-95" title="Reset Filter">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -133,6 +130,23 @@
     </div>
 </div>
 
+<!-- Bulk Delete Floating Bar -->
+<div id="bulkBar" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 transition-all">
+    <span class="text-sm font-semibold"><span id="bulkCount">0</span> dipilih</span>
+    <button type="button" id="bulkDeleteBtn" class="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold shadow-sm transition-all active:scale-[0.98]">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+        Hapus Terpilih
+    </button>
+    <button type="button" id="bulkCancelBtn" class="text-xs text-slate-400 hover:text-white transition-colors">Batal</button>
+</div>
+
+<!-- Hidden bulk delete form -->
+<form id="bulkDeleteForm" action="{{ route('admin.exams.bulk-delete') }}" method="POST" class="hidden">
+    @csrf
+</form>
+
 <!-- Dual Mode: Desktop Table + Mobile Standalone Cards -->
 
 <!-- 1. Desktop Table View (>= md) -->
@@ -141,6 +155,9 @@
         <table class="w-full text-left text-sm text-slate-600">
             <thead class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                 <tr>
+                    <th class="px-4 py-4 w-10">
+                        <input type="checkbox" id="selectAllDesktop" class="rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 cursor-pointer">
+                    </th>
                     <th class="px-6 py-4 min-w-[200px]">Judul Ujian</th>
                     <th class="px-6 py-4 whitespace-nowrap min-w-[170px]">Target Kelas</th>
                     <th class="px-6 py-4 whitespace-nowrap min-w-[150px]">Waktu</th>
@@ -155,11 +172,19 @@
                 @php
                     $classList = $e->classes->pluck('name')->implode(', ');
                     $classCount = $e->classes->count();
+                    $canManage = auth()->user()->isAdmin() || ($e->created_by === auth()->id());
                 @endphp
                 <tr class="exam-row hover:bg-indigo-50/20 transition-colors duration-150 group" 
                     data-title="{{ strtolower($e->title) }}" 
                     data-classes="{{ strtolower($classList ?: 'semua kelas') }}" 
-                    data-status="{{ $e->status }}">
+                    data-status="{{ $e->status }}"
+                    data-exam-id="{{ $e->id }}"
+                    data-can-manage="{{ $canManage ? '1' : '0' }}">
+                    <td class="px-4 py-4 align-middle">
+                        @if($canManage)
+                        <input type="checkbox" class="bulk-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 cursor-pointer" value="{{ $e->id }}">
+                        @endif
+                    </td>
                     <td class="px-6 py-4 font-semibold text-slate-900 align-middle">
                         <div class="line-clamp-2 max-w-sm">{{ $e->title }}</div>
                         <div class="mt-1 flex items-center gap-1.5 text-[11px]">
@@ -231,9 +256,6 @@
                         @endif
                     </td>
                     <td class="px-6 py-4 align-middle whitespace-nowrap text-right">
-                        @php
-                            $canManage = auth()->user()->isAdmin() || ($e->created_by === auth()->id());
-                        @endphp
                         <div class="inline-flex items-center justify-end gap-1.5">
                             <a href="{{ route('admin.exams.show', $e->id) }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-600 hover:text-white shadow-2xs transition-all duration-150" title="Monitor & Buka Kunci Siswa">
                                 Monitor
@@ -250,13 +272,13 @@
                 </tr>
                 @empty
                 <tr id="emptyStaticRow">
-                    <td colspan="7" class="px-6 py-12 text-center text-slate-400">
+                    <td colspan="8" class="px-6 py-12 text-center text-slate-400">
                         Belum ada jadwal ujian terdaftar.
                     </td>
                 </tr>
                 @endforelse
                 <tr id="noMatchRow" class="hidden">
-                    <td colspan="7" class="px-6 py-12 text-center text-slate-400">
+                    <td colspan="8" class="px-6 py-12 text-center text-slate-400">
                         Tidak ada jadwal ujian yang cocok dengan pencarian / filter.
                     </td>
                 </tr>
@@ -276,26 +298,33 @@
     <div class="exam-card bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 shadow-xs p-4 sm:p-5 space-y-3 transition-all"
          data-title="{{ strtolower($e->title) }}" 
          data-classes="{{ strtolower($classList ?: 'semua kelas') }}" 
-         data-status="{{ $e->status }}">
-        <!-- Card Top Bar: Title, Meta Chips & Status -->
+         data-status="{{ $e->status }}"
+         data-exam-id="{{ $e->id }}"
+         data-can-manage="{{ $canManage ? '1' : '0' }}">
+        <!-- Card Top Bar -->
         <div class="flex items-start justify-between gap-3">
-            <div class="space-y-1.5 min-w-0 flex-1">
-                <h4 class="text-sm sm:text-base font-bold text-slate-900 leading-snug">{{ $e->title }}</h4>
-                <div class="flex items-center gap-2 flex-wrap">
-                    <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-lg">
-                        <svg class="w-3 h-3 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        {{ $e->duration }} Menit
-                    </span>
-                    @if($e->created_by === auth()->id())
-                        <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg">
-                            <svg class="w-3 h-3 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                @if($canManage)
+                <input type="checkbox" class="bulk-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 cursor-pointer mt-1 shrink-0" value="{{ $e->id }}">
+                @endif
+                <div class="space-y-1.5 min-w-0">
+                    <h4 class="text-sm sm:text-base font-bold text-slate-900 leading-snug">{{ $e->title }}</h4>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-lg">
+                            <svg class="w-3 h-3 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            Ujian Anda
+                            {{ $e->duration }} Menit
                         </span>
-                    @endif
+                        @if($e->created_by === auth()->id())
+                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg">
+                                <svg class="w-3 h-3 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                Ujian Anda
+                            </span>
+                        @endif
+                    </div>
                 </div>
             </div>
             <div class="shrink-0 pt-0.5">
@@ -311,7 +340,7 @@
             </div>
         </div>
 
-        <!-- Card Body: Target Kelas, Toleransi & Jadwal -->
+        <!-- Card Body -->
         <div class="space-y-2 py-2.5 px-3.5 bg-slate-50/90 rounded-xl border border-slate-200">
             <div class="flex items-start justify-between gap-3 text-xs">
                 <div class="min-w-0 flex-1">
@@ -436,8 +465,71 @@
             filterExams();
         });
 
-        // Run initial filter
         filterExams();
+
+        // === Bulk Select & Delete ===
+        const bulkBar = document.getElementById('bulkBar');
+        const bulkCount = document.getElementById('bulkCount');
+        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        const bulkCancelBtn = document.getElementById('bulkCancelBtn');
+        const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+        const selectAllDesktop = document.getElementById('selectAllDesktop');
+        const allCheckboxes = document.querySelectorAll('.bulk-checkbox');
+
+        function updateBulkBar() {
+            const checked = document.querySelectorAll('.bulk-checkbox:checked');
+            const count = checked.length;
+            bulkCount.textContent = count;
+            if (count > 0) {
+                bulkBar.classList.remove('hidden');
+                bulkBar.classList.add('flex');
+            } else {
+                bulkBar.classList.add('hidden');
+                bulkBar.classList.remove('flex');
+            }
+        }
+
+        allCheckboxes.forEach(cb => cb.addEventListener('change', updateBulkBar));
+
+        if (selectAllDesktop) {
+            selectAllDesktop.addEventListener('change', function() {
+                // Only toggle visible rows
+                rows.forEach(row => {
+                    if (row.style.display !== 'none') {
+                        const cb = row.querySelector('.bulk-checkbox');
+                        if (cb) cb.checked = selectAllDesktop.checked;
+                    }
+                });
+                updateBulkBar();
+            });
+        }
+
+        bulkCancelBtn.addEventListener('click', function() {
+            allCheckboxes.forEach(cb => cb.checked = false);
+            if (selectAllDesktop) selectAllDesktop.checked = false;
+            updateBulkBar();
+        });
+
+        bulkDeleteBtn.addEventListener('click', function() {
+            const checked = document.querySelectorAll('.bulk-checkbox:checked');
+            if (checked.length === 0) return;
+
+            if (!confirm(`Yakin ingin menghapus ${checked.length} jadwal ujian yang dipilih?`)) return;
+
+            // Clear old hidden inputs
+            bulkDeleteForm.querySelectorAll('input[name="exam_ids[]"]').forEach(el => el.remove());
+
+            checked.forEach(cb => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'exam_ids[]';
+                input.value = cb.value;
+                bulkDeleteForm.appendChild(input);
+            });
+
+            bulkDeleteForm.submit();
+        });
     });
+
 </script>
 @endsection

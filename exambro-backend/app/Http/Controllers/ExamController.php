@@ -74,41 +74,60 @@ class ExamController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'google_form_url' => 'required|url',
-            'start_at' => 'required|date',
+            'schedules' => 'required|array|min:1',
+            'schedules.*.date' => 'required|date',
+            'schedules.*.time' => 'required|date_format:H:i',
             'duration' => 'required|integer|min:1',
             'max_violation' => 'required|integer|min:1',
             'status' => 'required|in:active,inactive',
-            'classes' => 'nullable|array',
+            'classes' => 'required|array|min:1',
             'classes.*' => 'exists:classes,id',
+        ], [
+            'classes.required' => 'Pilih minimal 1 kelas target.',
+            'classes.min' => 'Pilih minimal 1 kelas target.',
+            'schedules.required' => 'Tambahkan minimal 1 jadwal.',
         ]);
 
-        $validated['end_at'] = \Carbon\Carbon::parse($validated['start_at'])->addMinutes((int)$validated['duration']);
-        $validated['created_by'] = Auth::id();
+        $students = \App\Models\User::where('role', 'siswa')
+            ->where('status', 'active')
+            ->whereIn('class_id', $request->classes)
+            ->get();
 
-        $exam = Exam::create($validated);
+        $createdCount = 0;
+        foreach ($validated['schedules'] as $slot) {
+            $start_at = \Carbon\Carbon::parse($slot['date'] . ' ' . $slot['time']);
+            $end_at = $start_at->copy()->addMinutes((int)$validated['duration']);
 
-        if (!empty($request->classes)) {
-            $exam->classes()->sync($request->classes);
-            $students = \App\Models\User::where('role', 'siswa')
-                ->where('status', 'active')
-                ->whereIn('class_id', $request->classes)
-                ->get();
-        } else {
-            $students = \App\Models\User::where('role', 'siswa')
-                ->where('status', 'active')
-                ->get();
-        }
-
-        foreach ($students as $student) {
-            \App\Models\ExamParticipant::firstOrCreate([
-                'exam_id' => $exam->id,
-                'user_id' => $student->id,
-            ], [
-                'status' => 'registered'
+            $exam = Exam::create([
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'google_form_url' => $validated['google_form_url'],
+                'start_at' => $start_at,
+                'end_at' => $end_at,
+                'duration' => $validated['duration'],
+                'max_violation' => $validated['max_violation'],
+                'status' => $validated['status'],
+                'created_by' => Auth::id(),
             ]);
+
+            $exam->classes()->sync($request->classes);
+
+            foreach ($students as $student) {
+                \App\Models\ExamParticipant::firstOrCreate([
+                    'exam_id' => $exam->id,
+                    'user_id' => $student->id,
+                ], [
+                    'status' => 'registered'
+                ]);
+            }
+            $createdCount++;
         }
 
-        return redirect()->route('admin.exams.index')->with('success', 'Ujian berhasil dibuat');
+        $msg = $createdCount > 1
+            ? "Berhasil membuat {$createdCount} jadwal ujian sekaligus."
+            : 'Ujian berhasil dibuat.';
+
+        return redirect()->route('admin.exams.index')->with('success', $msg);
     }
 
     public function show(Exam $exam)
@@ -245,50 +264,40 @@ class ExamController extends Controller
             'duration' => 'required|integer|min:1',
             'max_violation' => 'required|integer|min:1',
             'status' => 'required|in:active,inactive',
-            'classes' => 'nullable|array',
+            'classes' => 'required|array|min:1',
             'classes.*' => 'exists:classes,id',
+        ], [
+            'classes.required' => 'Pilih minimal 1 kelas target.',
+            'classes.min' => 'Pilih minimal 1 kelas target.',
         ]);
 
         $validated['end_at'] = \Carbon\Carbon::parse($validated['start_at'])->addMinutes((int)$validated['duration']);
 
         $exam->update($validated);
 
-        if (!empty($request->classes)) {
-            $exam->classes()->sync($request->classes);
-            $targetStudents = \App\Models\User::where('role', 'siswa')
-                ->where('status', 'active')
-                ->whereIn('class_id', $request->classes)
-                ->get();
-            
-            $targetStudentIds = $targetStudents->pluck('id')->toArray();
+        $exam->classes()->sync($request->classes);
+        $targetStudents = \App\Models\User::where('role', 'siswa')
+            ->where('status', 'active')
+            ->whereIn('class_id', $request->classes)
+            ->get();
+        
+        $targetStudentIds = $targetStudents->pluck('id')->toArray();
 
-            // Daftarkan siswa baru yang belum terdaftar
-            foreach ($targetStudents as $student) {
-                \App\Models\ExamParticipant::firstOrCreate([
-                    'exam_id' => $exam->id,
-                    'user_id' => $student->id,
-                ], [
-                    'status' => 'registered'
-                ]);
-            }
-
-            // Hapus peserta yang kelasnya tidak lagi terpilih HANYA jika statusnya masih 'registered'
-            \App\Models\ExamParticipant::where('exam_id', $exam->id)
-                ->whereNotIn('user_id', $targetStudentIds)
-                ->where('status', 'registered')
-                ->delete();
-        } else {
-            $exam->classes()->detach();
-            $allStudents = \App\Models\User::where('role', 'siswa')->where('status', 'active')->get();
-            foreach ($allStudents as $student) {
-                \App\Models\ExamParticipant::firstOrCreate([
-                    'exam_id' => $exam->id,
-                    'user_id' => $student->id,
-                ], [
-                    'status' => 'registered'
-                ]);
-            }
+        // Daftarkan siswa baru yang belum terdaftar
+        foreach ($targetStudents as $student) {
+            \App\Models\ExamParticipant::firstOrCreate([
+                'exam_id' => $exam->id,
+                'user_id' => $student->id,
+            ], [
+                'status' => 'registered'
+            ]);
         }
+
+        // Hapus peserta yang kelasnya tidak lagi terpilih HANYA jika statusnya masih 'registered'
+        \App\Models\ExamParticipant::where('exam_id', $exam->id)
+            ->whereNotIn('user_id', $targetStudentIds)
+            ->where('status', 'registered')
+            ->delete();
 
         return redirect()->route('admin.exams.index')->with('success', 'Ujian berhasil diupdate');
     }
@@ -378,17 +387,49 @@ class ExamController extends Controller
         return redirect()->route('admin.exams.index')->with('success', 'Ujian berhasil dihapus');
     }
 
+    public function destroyBulk(Request $request)
+    {
+        $request->validate([
+            'exam_ids' => 'required|array|min:1',
+            'exam_ids.*' => 'exists:exams,id',
+        ]);
+
+        $query = Exam::whereIn('id', $request->exam_ids);
+
+        // Guru hanya bisa hapus ujian buatannya sendiri
+        if (Auth::user()->isTeacher()) {
+            $query->where('created_by', Auth::id());
+        }
+
+        $count = $query->count();
+        $query->delete();
+
+        return redirect()->route('admin.exams.index')->with('success', "Berhasil menghapus {$count} jadwal ujian.");
+    }
+
     public function import(\Illuminate\Http\Request $request)
     {
         $request->validate(['file' => 'required|file']);
         $rows = \App\Helpers\SimpleSpreadsheetReader::read($request->file('file'));
         $count = 0;
+        $skipped = 0;
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($rows, &$count) {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($rows, &$count, &$skipped) {
             foreach ($rows as $row) {
                 if (!empty($row['judul_ujian']) && !empty($row['url_google_form'])) {
                     $start_at = !empty($row['waktu_mulai']) ? \Carbon\Carbon::parse($row['waktu_mulai']) : now();
                     $duration = (int)($row['durasi_menit'] ?? 60);
+
+                    // ponytail: dedup by composite key — skip if exact same exam already exists
+                    $exists = \App\Models\Exam::where('title', $row['judul_ujian'])
+                        ->where('google_form_url', $row['url_google_form'])
+                        ->where('start_at', $start_at)
+                        ->exists();
+
+                    if ($exists) {
+                        $skipped++;
+                        continue;
+                    }
 
                     $exam = \App\Models\Exam::create([
                         'title' => $row['judul_ujian'],
@@ -441,6 +482,11 @@ class ExamController extends Controller
             }
         });
 
-        return back()->with('success', "Berhasil mengimpor {$count} jadwal ujian.");
+        $msg = "Berhasil mengimpor {$count} jadwal ujian baru.";
+        if ($skipped > 0) {
+            $msg .= " {$skipped} data sudah ada sebelumnya (dilewati).";
+        }
+
+        return back()->with('success', $msg);
     }
 }
