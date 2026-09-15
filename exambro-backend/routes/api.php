@@ -21,6 +21,10 @@ Route::middleware('auth:api')->group(function () {
     // Google Status Sync
     Route::post('/student/google-status', [AuthController::class, 'updateGoogleStatus']);
 
+    // Change Password (APK Siswa)
+    Route::post('/student/change-password', [AuthController::class, 'changePassword']);
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
+
     // Violations
     Route::post('/violations', [ApiExamController::class, 'reportViolation']);
 });

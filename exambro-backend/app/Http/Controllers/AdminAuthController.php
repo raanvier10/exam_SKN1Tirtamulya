@@ -55,13 +55,14 @@ class AdminAuthController extends Controller
     {
         $request->validate([
             'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
+            'password' => ['required', 'string', 'min:6', 'confirmed', 'regex:/^\S*$/u'],
         ], [
             'current_password.required' => 'Password saat ini wajib diisi.',
             'current_password.current_password' => 'Password saat ini tidak cocok.',
             'password.required' => 'Password baru wajib diisi.',
             'password.min' => 'Password baru minimal harus :min karakter.',
             'password.confirmed' => 'Konfirmasi password baru tidak cocok.',
+            'password.regex' => 'Password tidak boleh mengandung spasi.',
         ]);
 
         /** @var \App\Models\User $user */

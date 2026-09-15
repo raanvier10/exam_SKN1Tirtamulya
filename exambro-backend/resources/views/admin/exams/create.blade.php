@@ -7,7 +7,7 @@
     <div class="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
             <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Buat Jadwal Ujian Baru</h2>
-            <p class="text-xs sm:text-sm text-slate-500 mt-1">Lengkapi rincian jadwal, kelas target, dan tautan Google Form soal.</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">Lengkapi rincian jadwal, kelas target per sesi, dan tautan Google Form soal.</p>
         </div>
         <a href="{{ route('admin.exams.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium text-slate-600 bg-white border border-slate-200/80 hover:bg-slate-50 hover:text-indigo-600 transition-all shadow-2xs self-start sm:self-auto">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -20,7 +20,7 @@
     <form action="{{ route('admin.exams.store') }}" method="POST" id="examForm" class="space-y-6">
         @csrf
 
-        <!-- Card 1: Informasi Dasar -->
+        <!-- Card 1: Informasi Dasar & Soal -->
         <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-5">
             <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
                 <div class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">1</div>
@@ -29,7 +29,7 @@
 
             <div>
                 <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Judul Ujian <span class="text-rose-500">*</span></label>
-                <input type="text" name="title" value="{{ old('title') }}" required class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 transition-all" placeholder="Contoh: PTS Matematika Wajib Kelas XI">
+                <input type="text" name="title" value="{{ old('title') }}" required class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 transition-all" placeholder="Contoh: PTS Matematika Wajib">
                 @error('title') <span class="text-rose-500 text-xs mt-1 block">{{ $message }}</span> @enderror
             </div>
 
@@ -49,18 +49,22 @@
                     <input type="url" name="google_form_url" value="{{ old('google_form_url') }}" required class="w-full bg-slate-50/50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-900 font-mono placeholder-slate-400 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 transition-all" placeholder="https://docs.google.com/forms/d/e/.../viewform">
                 </div>
                 <p class="text-[11px] text-slate-400 mt-1">Pastikan link Google Form dapat diakses siswa tanpa perlu login edit akun.</p>
+                @error('google_form_url') <span class="text-rose-500 text-xs mt-1 block">{{ $message }}</span> @enderror
             </div>
         </div>
 
-        <!-- Card 2: Multi-Jadwal Pelaksanaan & Durasi -->
+        <!-- Card 2: Jadwal Sesi & Kelas Target Per Sesi -->
         <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-6">
             <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
                 <div class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">2</div>
-                <h3 class="text-base font-bold text-slate-900">Jadwal Pelaksanaan & Durasi</h3>
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">Jadwal Sesi & Kelas Target</h3>
+                    <p class="text-xs text-slate-500">Tentukan jadwal dan kelas spesifik untuk setiap sesi ujian.</p>
+                </div>
             </div>
 
-            <!-- Durasi (shared across all schedules) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <!-- Durasi (berlaku untuk semua sesi ujian pada form ini) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pb-4 border-b border-slate-100">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Durasi Per Sesi (Menit) <span class="text-rose-500">*</span></label>
                     <input type="number" name="duration" id="exam_duration" required min="1" value="{{ old('duration', 90) }}" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 transition-all font-medium">
@@ -76,49 +80,35 @@
                         <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        <span>Durasi: <span id="preview_duration_pill">90 Menit</span></span>
+                        <span>Durasi pengerjaan: <span id="preview_duration_pill">90 Menit</span></span>
                     </div>
                 </div>
             </div>
 
             <!-- Multi-Schedule Slots -->
-            <div>
-                <div class="flex items-center justify-between mb-3">
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Jadwal Sesi <span class="text-rose-500">*</span></label>
-                        <p class="text-xs text-slate-500 mt-0.5">Tambahkan satu atau lebih jadwal untuk mapel yang sama di hari/jam berbeda.</p>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Daftar Sesi Jadwal <span class="text-rose-500">*</span></label>
+                        <p class="text-xs text-slate-500 mt-0.5">Tiap sesi hanya akan muncul pada akun siswa dari kelas yang dipilih pada sesi tersebut.</p>
                     </div>
                     <button type="button" id="addScheduleBtn" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors">
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
-                        Tambah Jadwal
+                        Tambah Jadwal Sesi
                     </button>
                 </div>
 
-                @error('schedules') <span class="text-rose-500 text-xs mb-2 block">{{ $message }}</span> @enderror
+                @error('schedules') <span class="text-rose-500 text-xs block">{{ $message }}</span> @enderror
 
-                <div id="scheduleContainer" class="space-y-3">
-                    <!-- Schedule slot 0 (default) -->
-                    <div class="schedule-slot flex items-center gap-3 p-3.5 bg-slate-50/70 border border-slate-200/80 rounded-2xl" data-index="0">
-                        <div class="flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-600 text-white text-xs font-bold shrink-0 schedule-num">1</div>
-                        <div class="flex-1 grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Tanggal</label>
-                                <input type="date" name="schedules[0][date]" required class="schedule-date w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 font-medium">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Jam Mulai</label>
-                                <input type="time" name="schedules[0][time]" required value="07:30" class="schedule-time w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 font-medium">
-                            </div>
-                        </div>
-                        <div class="text-xs text-slate-500 font-medium whitespace-nowrap schedule-preview">—</div>
-                    </div>
+                <div id="scheduleContainer" class="space-y-4">
+                    <!-- Schedule slots will be rendered here by JS -->
                 </div>
 
                 <!-- Quick time buttons -->
-                <div class="flex items-center gap-1.5 mt-2.5 flex-wrap">
-                    <span class="text-[10px] text-slate-400 font-semibold uppercase mr-1">Preset Jam:</span>
+                <div class="flex items-center gap-1.5 pt-1 flex-wrap">
+                    <span class="text-[10px] text-slate-400 font-semibold uppercase mr-1">Preset Jam Sesi Terakhir:</span>
                     <button type="button" onclick="setLastSlotTime('07:30')" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors">07:30</button>
                     <button type="button" onclick="setLastSlotTime('08:00')" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors">08:00</button>
                     <button type="button" onclick="setLastSlotTime('09:30')" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors">09:30</button>
@@ -126,7 +116,7 @@
                 </div>
             </div>
 
-            <!-- Live Schedule Summary -->
+            <!-- Live Schedule & Class Summary -->
             <div class="p-4 sm:p-5 rounded-2xl bg-indigo-50/60 border border-indigo-100/90 space-y-2.5">
                 <div class="flex items-center gap-2">
                     <div class="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-xs shadow-2xs">
@@ -134,17 +124,17 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                     </div>
-                    <span class="text-xs font-bold text-indigo-950 uppercase tracking-wider">Ringkasan Jadwal</span>
+                    <span class="text-xs font-bold text-indigo-950 uppercase tracking-wider">Ringkasan Jadwal & Peserta</span>
                     <span class="ml-auto inline-flex items-center px-2.5 py-0.5 rounded-full bg-white border border-indigo-200 text-xs font-bold text-indigo-700" id="scheduleCountBadge">1 Sesi</span>
                 </div>
-                <div id="scheduleSummaryList" class="space-y-1.5 text-xs">
-                    <!-- Filled by JS -->
+                <div id="scheduleSummaryList" class="space-y-2 text-xs">
+                    <!-- Filled dynamically by JS -->
                 </div>
                 <div class="flex items-center gap-1.5 text-[11px] text-indigo-800/70 pt-0.5">
                     <svg class="w-3.5 h-3.5 shrink-0 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>Setiap jadwal akan menjadi sesi ujian terpisah dengan judul & soal yang sama.</span>
+                    <span>Siswa hanya akan melihat 1 jadwal ujian pada jam yang dialokasikan khusus untuk kelasnya.</span>
                 </div>
             </div>
 
@@ -223,52 +213,14 @@
             </div>
         </div>
 
-        <!-- Card 3: Target Kelas & Status -->
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-6">
+        <!-- Card 3: Status Publikasi -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-5">
             <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
                 <div class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">3</div>
-                <h3 class="text-base font-bold text-slate-900">Target Kelas & Status Publikasi</h3>
+                <h3 class="text-base font-bold text-slate-900">Status Publikasi Ujian</h3>
             </div>
 
-            <!-- Target Kelas Interactive Badges -->
             <div>
-                <div class="flex items-center justify-between mb-3">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Target Kelas / Peserta <span class="text-rose-500">*</span></label>
-                        <p class="text-xs text-slate-500 mt-0.5">Pilih minimal 1 kelas yang wajib mengikuti ujian ini.</p>
-                    </div>
-                    <button type="button" id="toggle-all-classes" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors">
-                        Pilih Semua Kelas
-                    </button>
-                </div>
-
-                @error('classes') <span class="text-rose-500 text-xs mb-2 block">{{ $message }}</span> @enderror
-
-                <!-- Search kelas -->
-                <div class="relative mb-2.5">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
-                    <input type="text" id="classSearchInput" placeholder="Cari kelas..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
-                </div>
-
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 p-4 bg-slate-50/70 border border-slate-200/80 rounded-2xl max-h-56 overflow-y-auto">
-                    @forelse($classes as $c)
-                    <label class="class-card group flex items-center gap-2.5 p-2.5 bg-white border border-slate-200/80 rounded-xl cursor-pointer transition-all hover:border-indigo-300 select-none" data-classname="{{ strtolower($c->name) }}">
-                        <input type="checkbox" name="classes[]" value="{{ $c->id }}" {{ in_array($c->id, old('classes', [])) ? 'checked' : '' }} class="class-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4">
-                        <span class="text-xs font-semibold text-slate-700 group-hover:text-indigo-700 transition-colors">{{ $c->name }}</span>
-                    </label>
-                    @empty
-                    <div class="col-span-full text-xs text-slate-400 py-3 text-center">Belum ada kelas yang terdaftar.</div>
-                    @endforelse
-                </div>
-            </div>
-
-            <!-- Status Ujian -->
-            <div>
-                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-3">Status Publikasi Ujian</label>
                 <input type="hidden" name="status" id="status_input" value="{{ old('status', 'active') }}">
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -281,7 +233,7 @@
                                 Aktif (Tersedia untuk Siswa)
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                             </div>
-                            <p class="text-xs text-emerald-800/80 mt-1">Ujian langsung muncul di aplikasi siswa sesuai dengan jadwal yang ditentukan.</p>
+                            <p class="text-xs text-emerald-800/80 mt-1">Ujian langsung muncul di aplikasi siswa sesuai dengan jadwal masing-masing kelas.</p>
                         </div>
                     </div>
 
@@ -315,82 +267,238 @@
 
 <script>
     const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    const daysShort = ['MIN', 'SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB'];
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    
+    // Master data kelas dari backend
+    const allClasses = @json($classes);
 
-    let scheduleIndex = 1; // next index to use
+    let scheduleIndex = 0; // counter untuk index unik
 
-    document.addEventListener('DOMContentLoaded', () => {
-        // Set default date to today on first slot
+    function getTodayString() {
         const today = new Date();
         const yyyy = today.getFullYear();
         const mm = String(today.getMonth() + 1).padStart(2, '0');
         const dd = String(today.getDate()).padStart(2, '0');
-        const firstDate = document.querySelector('.schedule-date');
-        if (firstDate && !firstDate.value) firstDate.value = `${yyyy}-${mm}-${dd}`;
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function renderScheduleSlot(idx, defaultDate, defaultTime = '07:30', selectedClassIds = []) {
+        const container = document.getElementById('scheduleContainer');
+        const num = container.querySelectorAll('.schedule-slot').length + 1;
+        const dateVal = defaultDate || getTodayString();
+
+        let classCardsHtml = '';
+        allClasses.forEach(c => {
+            const isChecked = selectedClassIds.includes(c.id);
+            classCardsHtml += `
+                <label class="slot-class-card group flex items-center gap-2 p-2 bg-slate-50/70 border border-slate-200 rounded-lg cursor-pointer transition-all hover:border-indigo-300 select-none" data-classname="${c.name.toLowerCase()}">
+                    <input type="checkbox" name="schedules[${idx}][classes][]" value="${c.id}" ${isChecked ? 'checked' : ''} 
+                           class="slot-class-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4"
+                           onchange="onSlotClassChanged(${idx})">
+                    <span class="text-xs font-semibold text-slate-700 group-hover:text-indigo-700 transition-colors">${c.name}</span>
+                </label>
+            `;
+        });
+
+        const slot = document.createElement('div');
+        slot.className = 'schedule-slot p-4 sm:p-5 bg-slate-50/80 border border-slate-200/90 rounded-2xl space-y-3.5 shadow-2xs transition-all';
+        slot.setAttribute('data-index', idx);
+        slot.innerHTML = `
+            <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-200/80">
+                <div class="flex items-center gap-2.5 flex-wrap">
+                    <div class="flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-600 text-white text-xs font-bold shrink-0 schedule-num">${num}</div>
+                    <span class="text-xs font-bold text-slate-900 uppercase tracking-wide">Jadwal Sesi <span class="slot-title-num">${num}</span></span>
+                    <span class="text-xs text-indigo-700 font-mono font-semibold bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-100 schedule-preview">—</span>
+                </div>
+                <button type="button" onclick="removeScheduleSlot(this)" class="remove-slot-btn inline-flex items-center gap-1 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2.5 py-1 rounded-lg transition-colors font-medium ${num === 1 ? 'hidden' : ''}">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Hapus Sesi
+                </button>
+            </div>
+
+            <!-- Inputs Waktu -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Tanggal Ujian <span class="text-rose-500">*</span></label>
+                    <input type="date" name="schedules[${idx}][date]" value="${dateVal}" required class="schedule-date w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 font-medium">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Jam Mulai <span class="text-rose-500">*</span></label>
+                    <input type="time" name="schedules[${idx}][time]" value="${defaultTime}" required class="schedule-time w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 font-medium">
+                </div>
+            </div>
+
+            <!-- Target Kelas untuk Slot Ini -->
+            <div class="pt-2">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">Target Kelas Sesi Ini <span class="text-rose-500">*</span></label>
+                        <span class="slot-class-count text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">0 Kelas Dipilih</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        ${num > 1 ? `
+                        <button type="button" onclick="copyClassesFromFirstSlot(${idx})" class="text-[11px] font-semibold text-slate-600 hover:text-indigo-600 bg-white hover:bg-indigo-50 border border-slate-200 px-2 py-1 rounded-lg transition-colors">
+                            Salin Kelas Jadwal 1
+                        </button>
+                        ` : ''}
+                        <button type="button" onclick="toggleAllSlotClasses(${idx})" class="slot-toggle-btn text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-colors">
+                            Pilih Semua Kelas
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search filter mini -->
+                <div class="relative mb-2">
+                    <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
+                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                    <input type="text" oninput="filterSlotClasses(${idx}, this.value)" placeholder="Cari kelas untuk jadwal ini..." class="w-full pl-7 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                </div>
+
+                <!-- Grid Checkboxes Kelas -->
+                <div class="slot-class-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 p-3 bg-white border border-slate-200/90 rounded-xl max-h-44 overflow-y-auto">
+                    ${classCardsHtml}
+                </div>
+            </div>
+        `;
+
+        container.appendChild(slot);
+        onSlotClassChanged(idx);
+        updateAllPreviews();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Slot awal
+        renderScheduleSlot(scheduleIndex++);
 
         document.getElementById('exam_duration').addEventListener('input', updateAllPreviews);
-
-        // Delegate change events for schedule inputs
-        document.getElementById('scheduleContainer').addEventListener('change', updateAllPreviews);
         document.getElementById('scheduleContainer').addEventListener('input', updateAllPreviews);
+        document.getElementById('scheduleContainer').addEventListener('change', updateAllPreviews);
 
-        updateAllPreviews();
-
-        // Class search filter
-        document.getElementById('classSearchInput').addEventListener('input', function() {
-            const q = this.value.toLowerCase().trim();
-            document.querySelectorAll('.class-card').forEach(card => {
-                const name = card.getAttribute('data-classname') || '';
-                card.style.display = q === '' || name.includes(q) ? '' : 'none';
-            });
+        // Validasi sebelum submit form
+        document.getElementById('examForm').addEventListener('submit', function(e) {
+            const slots = document.querySelectorAll('.schedule-slot');
+            for (let i = 0; i < slots.length; i++) {
+                const checked = slots[i].querySelectorAll('.slot-class-checkbox:checked');
+                if (checked.length === 0) {
+                    e.preventDefault();
+                    alert(`Perhatian: Jadwal Sesi ${i + 1} belum memilih kelas target! Silakan pilih minimal 1 kelas untuk setiap jadwal.`);
+                    slots[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return false;
+                }
+            }
         });
     });
 
-    // Add schedule slot
+    // Tambah slot baru
     document.getElementById('addScheduleBtn').addEventListener('click', function() {
-        const container = document.getElementById('scheduleContainer');
-        const idx = scheduleIndex++;
-        const num = container.querySelectorAll('.schedule-slot').length + 1;
+        const slots = document.querySelectorAll('.schedule-slot');
+        let nextTime = '07:30';
+        let nextDate = getTodayString();
 
-        const slot = document.createElement('div');
-        slot.className = 'schedule-slot flex items-center gap-3 p-3.5 bg-slate-50/70 border border-slate-200/80 rounded-2xl';
-        slot.setAttribute('data-index', idx);
-        slot.innerHTML = `
-            <div class="flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-600 text-white text-xs font-bold shrink-0 schedule-num">${num}</div>
-            <div class="flex-1 grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Tanggal</label>
-                    <input type="date" name="schedules[${idx}][date]" required class="schedule-date w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 font-medium">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Jam Mulai</label>
-                    <input type="time" name="schedules[${idx}][time]" required value="07:30" class="schedule-time w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 font-medium">
-                </div>
-            </div>
-            <div class="text-xs text-slate-500 font-medium whitespace-nowrap schedule-preview">—</div>
-            <button type="button" onclick="removeScheduleSlot(this)" class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0" title="Hapus jadwal ini">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        `;
-        container.appendChild(slot);
+        if (slots.length > 0) {
+            const lastSlot = slots[slots.length - 1];
+            const lastDateInput = lastSlot.querySelector('.schedule-date');
+            const lastTimeInput = lastSlot.querySelector('.schedule-time');
+            if (lastDateInput && lastDateInput.value) nextDate = lastDateInput.value;
+            if (lastTimeInput && lastTimeInput.value) nextTime = lastTimeInput.value;
+        }
+
+        renderScheduleSlot(scheduleIndex++, nextDate, nextTime);
+        renumberSlots();
         updateAllPreviews();
     });
 
     function removeScheduleSlot(btn) {
         const slot = btn.closest('.schedule-slot');
         const container = document.getElementById('scheduleContainer');
-        if (container.querySelectorAll('.schedule-slot').length <= 1) return; // keep at least 1
+        if (container.querySelectorAll('.schedule-slot').length <= 1) return;
         slot.remove();
         renumberSlots();
         updateAllPreviews();
     }
 
     function renumberSlots() {
-        document.querySelectorAll('.schedule-slot').forEach((slot, i) => {
-            slot.querySelector('.schedule-num').textContent = i + 1;
+        const slots = document.querySelectorAll('.schedule-slot');
+        slots.forEach((slot, i) => {
+            const num = i + 1;
+            const numEl = slot.querySelector('.schedule-num');
+            const titleNumEl = slot.querySelector('.slot-title-num');
+            const removeBtn = slot.querySelector('.remove-slot-btn');
+
+            if (numEl) numEl.textContent = num;
+            if (titleNumEl) titleNumEl.textContent = num;
+            if (removeBtn) {
+                if (slots.length === 1) {
+                    removeBtn.classList.add('hidden');
+                } else {
+                    removeBtn.classList.remove('hidden');
+                }
+            }
+        });
+    }
+
+    function onSlotClassChanged(idx) {
+        const slot = document.querySelector(`.schedule-slot[data-index="${idx}"]`);
+        if (!slot) return;
+        const checked = slot.querySelectorAll('.slot-class-checkbox:checked');
+        const countBadge = slot.querySelector('.slot-class-count');
+        const toggleBtn = slot.querySelector('.slot-toggle-btn');
+        const allBoxes = slot.querySelectorAll('.slot-class-checkbox');
+
+        if (countBadge) {
+            if (checked.length > 0) {
+                countBadge.className = 'slot-class-count text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200';
+                countBadge.textContent = `${checked.length} Kelas Dipilih`;
+            } else {
+                countBadge.className = 'slot-class-count text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200';
+                countBadge.textContent = `Wajib Pilih Kelas`;
+            }
+        }
+
+        if (toggleBtn) {
+            toggleBtn.textContent = (checked.length === allBoxes.length && allBoxes.length > 0)
+                ? 'Batal Pilih Semua'
+                : 'Pilih Semua Kelas';
+        }
+
+        updateAllPreviews();
+    }
+
+    function toggleAllSlotClasses(idx) {
+        const slot = document.querySelector(`.schedule-slot[data-index="${idx}"]`);
+        if (!slot) return;
+        const visibleCards = slot.querySelectorAll('.slot-class-card:not([style*="display: none"])');
+        const visibleBoxes = Array.from(visibleCards).map(c => c.querySelector('.slot-class-checkbox'));
+        const allChecked = visibleBoxes.every(cb => cb.checked);
+        visibleBoxes.forEach(cb => cb.checked = !allChecked);
+        onSlotClassChanged(idx);
+    }
+
+    function copyClassesFromFirstSlot(targetIdx) {
+        const firstSlot = document.querySelector('.schedule-slot');
+        const targetSlot = document.querySelector(`.schedule-slot[data-index="${targetIdx}"]`);
+        if (!firstSlot || !targetSlot) return;
+
+        const firstCheckedValues = Array.from(firstSlot.querySelectorAll('.slot-class-checkbox:checked')).map(cb => cb.value);
+        targetSlot.querySelectorAll('.slot-class-checkbox').forEach(cb => {
+            cb.checked = firstCheckedValues.includes(cb.value);
+        });
+
+        onSlotClassChanged(targetIdx);
+    }
+
+    function filterSlotClasses(idx, query) {
+        const slot = document.querySelector(`.schedule-slot[data-index="${idx}"]`);
+        if (!slot) return;
+        const q = query.toLowerCase().trim();
+        slot.querySelectorAll('.slot-class-card').forEach(card => {
+            const name = card.getAttribute('data-classname') || '';
+            card.style.display = (q === '' || name.includes(q)) ? '' : 'none';
         });
     }
 
@@ -421,6 +529,12 @@
             const dateInput = slot.querySelector('.schedule-date');
             const timeInput = slot.querySelector('.schedule-time');
             const previewEl = slot.querySelector('.schedule-preview');
+            const checkedBoxes = slot.querySelectorAll('.slot-class-checkbox:checked');
+
+            const classNames = Array.from(checkedBoxes).map(cb => {
+                const label = cb.closest('label');
+                return label ? label.querySelector('span').textContent.trim() : '';
+            }).filter(Boolean);
 
             if (!dateInput.value || !timeInput.value) {
                 if (previewEl) previewEl.textContent = '—';
@@ -440,14 +554,30 @@
             const eH = String(endDT.getHours()).padStart(2, '0');
             const eM = String(endDT.getMinutes()).padStart(2, '0');
 
-            if (previewEl) previewEl.textContent = `${sH}:${sM}–${eH}:${eM}`;
+            if (previewEl) previewEl.textContent = `${sH}:${sM}–${eH}:${eM} WIB`;
 
-            summaryHTML += `<div class="flex items-center gap-2 p-2 rounded-lg bg-white border border-indigo-100/80">
-                <span class="w-5 h-5 rounded-md bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">${i+1}</span>
-                <span class="font-semibold text-slate-800">${dayName}, ${dayDate} ${monthName} ${year}</span>
-                <span class="text-slate-400">•</span>
-                <span class="font-mono font-medium text-indigo-700">${sH}:${sM} – ${eH}:${eM} WIB</span>
-            </div>`;
+            let classDisplay = '';
+            if (classNames.length === 0) {
+                classDisplay = '<span class="text-rose-600 font-bold">Belum ada kelas yang dipilih!</span>';
+            } else if (classNames.length <= 3) {
+                classDisplay = `<span class="text-slate-700 font-medium">Kelas: <strong>${classNames.join(', ')}</strong></span>`;
+            } else {
+                classDisplay = `<span class="text-slate-700 font-medium">Kelas: <strong>${classNames.slice(0, 2).join(', ')}</strong> +${classNames.length - 2} kelas lainnya</span>`;
+            }
+
+            summaryHTML += `
+                <div class="p-2.5 rounded-xl bg-white border border-indigo-100/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
+                    <div class="flex items-center gap-2">
+                        <span class="w-5 h-5 rounded-md bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">${i + 1}</span>
+                        <span class="font-semibold text-slate-900">${dayName}, ${dayDate} ${monthName} ${year}</span>
+                        <span class="text-slate-300">•</span>
+                        <span class="font-mono font-medium text-indigo-700">${sH}:${sM}–${eH}:${eM} WIB</span>
+                    </div>
+                    <div class="text-[11px] self-start sm:self-auto pl-7 sm:pl-0">
+                        ${classDisplay}
+                    </div>
+                </div>
+            `;
         });
 
         if (summaryList) summaryList.innerHTML = summaryHTML || '<div class="text-slate-400 py-1">Isi tanggal & jam di atas...</div>';
@@ -471,16 +601,6 @@
             activeCard.querySelector('div').className = "w-4 h-4 rounded-full border-2 border-slate-400 mt-0.5 flex items-center justify-center shrink-0";
         }
     }
-
-    // Toggle All Classes button
-    document.getElementById('toggle-all-classes').addEventListener('click', function() {
-        const checkboxes = document.querySelectorAll('.class-checkbox');
-        const visibleCards = document.querySelectorAll('.class-card:not([style*="display: none"])');
-        const visibleCheckboxes = Array.from(visibleCards).map(c => c.querySelector('.class-checkbox'));
-        const allChecked = visibleCheckboxes.every(cb => cb.checked);
-        visibleCheckboxes.forEach(cb => cb.checked = !allChecked);
-        this.textContent = allChecked ? 'Pilih Semua Kelas' : 'Batal Pilih Semua';
-    });
 
     function selectViolationPreset(val) {
         document.getElementById('max_violation').value = val;

@@ -47,19 +47,46 @@
 
         <div>
             <label class="block text-sm font-medium text-slate-700 mb-2">Upload File Excel/CSV</label>
-            <div class="mt-1 flex justify-center rounded-xl border-2 border-dashed border-slate-200 px-6 py-7 hover:border-indigo-400 hover:bg-indigo-50/20 transition-all cursor-pointer group" onclick="document.getElementById('file-upload-teachers').click()">
+            
+            <div id="dropzone-teachers-empty" class="mt-1 flex justify-center rounded-2xl border-2 border-dashed border-slate-200 px-6 py-7 hover:border-indigo-400 hover:bg-indigo-50/20 transition-all cursor-pointer group" onclick="document.getElementById('file-upload-teachers').click()">
                 <div class="text-center">
-                    <svg class="mx-auto h-10 w-10 text-slate-400 group-hover:text-indigo-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                    <div class="mt-3 flex text-sm leading-6 text-slate-600 justify-center">
-                        <span class="relative font-semibold text-indigo-600 hover:text-indigo-500">
-                            Click to upload
-                            <input id="file-upload-teachers" name="file" type="file" accept=".xlsx,.xls,.csv" required class="sr-only" onchange="document.getElementById('file-name-teachers').textContent = this.files[0].name">
-                        </span>
-                        <p class="pl-1">or drag and drop</p>
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                     </div>
-                    <p class="text-xs leading-5 text-slate-400 mt-0.5" id="file-name-teachers">CSV, XLS, XLSX up to 10MB</p>
+                    <div class="flex text-sm leading-6 text-slate-600 justify-center">
+                        <span class="font-bold text-indigo-600 hover:text-indigo-500">Pilih file</span>
+                        <p class="pl-1">atau tarik file ke sini</p>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">CSV, XLS, XLSX up to 10MB</p>
                 </div>
             </div>
+
+            <!-- Preview Card -->
+            <div id="dropzone-teachers-preview" class="hidden mt-1 p-4 rounded-2xl border-2 border-emerald-500/40 bg-emerald-50/40 transition-all">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-11 h-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm1.5 14h-7v-2h7v2zm0-4h-7v-2h7v2zm-2-5V3.5L18.5 7H13.5z"/></svg>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2">
+                                <h5 id="preview-teachers-name" class="text-sm font-bold text-slate-900 truncate">file.csv</h5>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 shrink-0">✓ Siap Diupload</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                                <span id="preview-teachers-size" class="font-medium font-mono text-slate-600">0 KB</span>
+                                <span>•</span>
+                                <span id="preview-teachers-type" class="uppercase font-semibold text-emerald-700">CSV</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="removeTeachersFile()" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors shrink-0" title="Ganti / Batalkan file">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+            </div>
+
+            <input id="file-upload-teachers" name="file" type="file" accept=".xlsx,.xls,.csv" required class="sr-only" onchange="handleTeachersFile(this)">
         </div>
 
         <div class="flex justify-end gap-2.5 pt-2">
@@ -161,4 +188,31 @@
     </div>
     @endif
 </div>
+
+<script>
+    function handleTeachersFile(input) {
+        if (!input.files || !input.files[0]) return;
+        const file = input.files[0];
+        document.getElementById('preview-teachers-name').textContent = file.name;
+
+        let sizeStr = '';
+        if (file.size < 1024) sizeStr = file.size + ' B';
+        else if (file.size < 1024 * 1024) sizeStr = (file.size / 1024).toFixed(1) + ' KB';
+        else sizeStr = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+        document.getElementById('preview-teachers-size').textContent = sizeStr;
+
+        const ext = file.name.split('.').pop().toUpperCase();
+        document.getElementById('preview-teachers-type').textContent = ext + ' SPREADSHEET';
+
+        document.getElementById('dropzone-teachers-empty').classList.add('hidden');
+        document.getElementById('dropzone-teachers-preview').classList.remove('hidden');
+    }
+
+    function removeTeachersFile() {
+        const input = document.getElementById('file-upload-teachers');
+        if (input) input.value = '';
+        document.getElementById('dropzone-teachers-empty').classList.remove('hidden');
+        document.getElementById('dropzone-teachers-preview').classList.add('hidden');
+    }
+</script>
 @endsection

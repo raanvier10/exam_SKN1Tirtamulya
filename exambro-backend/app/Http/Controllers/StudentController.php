@@ -120,6 +120,24 @@ class StudentController extends Controller
         return redirect()->route('admin.students.index')->with('success', 'Siswa berhasil dihapus');
     }
 
+    public function destroyBulk(Request $request)
+    {
+        $request->validate([
+            'student_ids' => 'required|array|min:1',
+            'student_ids.*' => 'exists:users,id',
+        ]);
+
+        $count = User::whereIn('id', $request->student_ids)
+            ->where('role', 'siswa')
+            ->delete();
+
+        if ($count > 0) {
+            return redirect()->route('admin.students.index')->with('success', "{$count} siswa berhasil dihapus");
+        }
+
+        return redirect()->route('admin.students.index')->with('error', 'Tidak ada data siswa yang dapat dihapus');
+    }
+
     public function import(Request $request)
     {
         $request->validate(['file' => 'required|file']);

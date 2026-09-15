@@ -74,24 +74,19 @@ class ExamController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'google_form_url' => 'required|url',
-            'schedules' => 'required|array|min:1',
-            'schedules.*.date' => 'required|date',
-            'schedules.*.time' => 'required|date_format:H:i',
             'duration' => 'required|integer|min:1',
             'max_violation' => 'required|integer|min:1',
             'status' => 'required|in:active,inactive',
-            'classes' => 'required|array|min:1',
-            'classes.*' => 'exists:classes,id',
+            'schedules' => 'required|array|min:1',
+            'schedules.*.date' => 'required|date',
+            'schedules.*.time' => 'required|date_format:H:i',
+            'schedules.*.classes' => 'required|array|min:1',
+            'schedules.*.classes.*' => 'exists:classes,id',
         ], [
-            'classes.required' => 'Pilih minimal 1 kelas target.',
-            'classes.min' => 'Pilih minimal 1 kelas target.',
             'schedules.required' => 'Tambahkan minimal 1 jadwal.',
+            'schedules.*.classes.required' => 'Setiap jadwal wajib memilih minimal 1 kelas target.',
+            'schedules.*.classes.min' => 'Setiap jadwal wajib memilih minimal 1 kelas target.',
         ]);
-
-        $students = \App\Models\User::where('role', 'siswa')
-            ->where('status', 'active')
-            ->whereIn('class_id', $request->classes)
-            ->get();
 
         $createdCount = 0;
         foreach ($validated['schedules'] as $slot) {
@@ -110,9 +105,16 @@ class ExamController extends Controller
                 'created_by' => Auth::id(),
             ]);
 
-            $exam->classes()->sync($request->classes);
+            // Hubungkan HANYA kelas yang dipilih pada slot jadwal ini
+            $exam->classes()->sync($slot['classes']);
 
-            foreach ($students as $student) {
+            // Daftarkan HANYA siswa yang berada di kelas jadwal ini
+            $slotStudents = \App\Models\User::where('role', 'siswa')
+                ->where('status', 'active')
+                ->whereIn('class_id', $slot['classes'])
+                ->get();
+
+            foreach ($slotStudents as $student) {
                 \App\Models\ExamParticipant::firstOrCreate([
                     'exam_id' => $exam->id,
                     'user_id' => $student->id,
@@ -124,7 +126,7 @@ class ExamController extends Controller
         }
 
         $msg = $createdCount > 1
-            ? "Berhasil membuat {$createdCount} jadwal ujian sekaligus."
+            ? "Berhasil membuat {$createdCount} jadwal ujian spesifik per kelas."
             : 'Ujian berhasil dibuat.';
 
         return redirect()->route('admin.exams.index')->with('success', $msg);
@@ -141,6 +143,18 @@ class ExamController extends Controller
         }
 
         $exam->load('classes');
+
+        // Jika waktu ujian sudah berakhir, otomatis ubah siswa yang masih 'working' menjadi 'finished'
+        if ($exam->end_at && now()->gt($exam->end_at)) {
+            \App\Models\ExamParticipant::where('exam_id', $exam->id)
+                ->where('status', 'working')
+                ->update(['status' => 'finished']);
+
+            \App\Models\ExamSession::where('exam_id', $exam->id)
+                ->where('status', 'ACTIVE')
+                ->update(['status' => 'FINISHED']);
+        }
+
         $participants = $exam->participants()
             ->with(['user.class'])
             ->get()
@@ -383,6 +397,10 @@ class ExamController extends Controller
             return redirect()->route('admin.exams.index')->with('error', 'Anda hanya dapat menghapus jadwal ujian yang Anda buat sendiri.');
         }
 
+        if ($exam->isOngoing()) {
+            return redirect()->route('admin.exams.index')->with('error', 'Ujian "' . $exam->title . '" sedang berlangsung dan tidak dapat dihapus!');
+        }
+
         $exam->delete();
         return redirect()->route('admin.exams.index')->with('success', 'Ujian berhasil dihapus');
     }
@@ -401,10 +419,31 @@ class ExamController extends Controller
             $query->where('created_by', Auth::id());
         }
 
-        $count = $query->count();
-        $query->delete();
+        $exams = $query->get();
+        $deletableIds = [];
+        $ongoingCount = 0;
 
-        return redirect()->route('admin.exams.index')->with('success', "Berhasil menghapus {$count} jadwal ujian.");
+        foreach ($exams as $exam) {
+            if ($exam->isOngoing()) {
+                $ongoingCount++;
+            } else {
+                $deletableIds[] = $exam->id;
+            }
+        }
+
+        if (empty($deletableIds)) {
+            return redirect()->route('admin.exams.index')->with('error', 'Semua jadwal ujian yang dipilih sedang berlangsung dan tidak dapat dihapus.');
+        }
+
+        Exam::whereIn('id', $deletableIds)->delete();
+
+        $count = count($deletableIds);
+        $msg = "Berhasil menghapus {$count} jadwal ujian.";
+        if ($ongoingCount > 0) {
+            $msg .= " ({$ongoingCount} jadwal dilewati karena sedang berlangsung).";
+        }
+
+        return redirect()->route('admin.exams.index')->with('success', $msg);
     }
 
     public function import(\Illuminate\Http\Request $request)

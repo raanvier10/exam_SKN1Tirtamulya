@@ -83,4 +83,35 @@ class AuthController extends Controller
             'data' => $user
         ]);
     }
+
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'password' => ['required', 'string', 'min:6', 'confirmed', 'regex:/^\S*$/u'],
+        ], [
+            'current_password.required' => 'Password saat ini wajib diisi.',
+            'password.required' => 'Password baru wajib diisi.',
+            'password.min' => 'Password baru minimal harus :min karakter.',
+            'password.confirmed' => 'Konfirmasi password baru tidak cocok.',
+            'password.regex' => 'Password tidak boleh mengandung spasi.',
+        ]);
+
+        $user = $request->user();
+
+        if (!\Illuminate\Support\Facades\Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password saat ini tidak sesuai.',
+            ], 422);
+        }
+
+        $user->password = \Illuminate\Support\Facades\Hash::make($request->password);
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Password berhasil diperbarui.',
+        ]);
+    }
 }

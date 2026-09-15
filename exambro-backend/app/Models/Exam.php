@@ -50,4 +50,16 @@ class Exam extends Model
     {
         return $this->hasMany(Violation::class);
     }
+
+    public function isOngoing(): bool
+    {
+        $now = now();
+        // Berlangsung jika status aktif dan waktu saat ini di antara start_at dan end_at
+        if ($this->status === 'active' && $this->start_at && $this->end_at && $now->between($this->start_at, $this->end_at)) {
+            return true;
+        }
+
+        // Atau jika ada sesi ujian siswa yang masih aktif atau terkunci
+        return $this->sessions()->whereIn('status', ['ACTIVE', 'LOCKED'])->exists();
+    }
 }

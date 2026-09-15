@@ -2,6 +2,19 @@
 @section('title', 'Ganti Password Admin')
 
 @section('content')
+<style>
+    /* Hilangkan mata password bawaan Microsoft Edge & WebKit agar tidak dobel/picek */
+    input[type="password"]::-ms-reveal,
+    input[type="password"]::-ms-clear {
+        display: none !important;
+    }
+    input[type="password"]::-webkit-credentials-auto-fill-button {
+        visibility: hidden !important;
+        position: absolute !important;
+        right: 0 !important;
+    }
+</style>
+
 <div class="max-w-2xl mx-auto">
     <!-- Header -->
     <div class="mb-6 sm:mb-8">
@@ -27,6 +40,15 @@
         </div>
     </div>
 
+    @if(session('success'))
+        <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-medium flex items-center gap-2.5">
+            <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>{{ session('success') }}</span>
+        </div>
+    @endif
+
     <!-- Form -->
     <form action="{{ route('admin.change-password.update') }}" method="POST" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-8 space-y-6">
         @csrf
@@ -34,12 +56,12 @@
 
         <!-- Password Saat Ini -->
         <div>
-            <label class="block text-sm font-semibold text-slate-800 mb-2">Password Saat Ini</label>
+            <label class="block text-sm font-semibold text-slate-800 mb-2">Password Saat Ini <span class="text-rose-500">*</span></label>
             <div class="relative">
                 <input type="password" name="current_password" id="current_password" required
-                    class="w-full bg-white border @error('current_password') border-rose-300 ring-rose-500/10 @else border-slate-200 @enderror rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 shadow-2xs transition-all pr-10"
+                    class="w-full bg-white border @error('current_password') border-rose-300 ring-rose-500/10 @else border-slate-200 @enderror rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 shadow-2xs transition-all pr-11"
                     placeholder="Masukkan password saat ini">
-                <button type="button" onclick="togglePassword('current_password', 'current_icon')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
+                <button type="button" onclick="togglePassword('current_password', 'current_icon')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none transition-colors" title="Lihat/Sembunyikan Password">
                     <svg id="current_icon" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -60,12 +82,13 @@
 
         <!-- Password Baru -->
         <div>
-            <label class="block text-sm font-semibold text-slate-800 mb-2">Password Baru</label>
+            <label class="block text-sm font-semibold text-slate-800 mb-1.5">Password Baru <span class="text-rose-500">*</span></label>
+            <p class="text-xs text-slate-400 mb-2">Minimal 6 karakter, tidak boleh mengandung spasi.</p>
             <div class="relative">
                 <input type="password" name="password" id="new_password" required
-                    class="w-full bg-white border @error('password') border-rose-300 ring-rose-500/10 @else border-slate-200 @enderror rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 shadow-2xs transition-all pr-10"
-                    placeholder="Minimal 6 karakter">
-                <button type="button" onclick="togglePassword('new_password', 'new_icon')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
+                    class="w-full bg-white border @error('password') border-rose-300 ring-rose-500/10 @else border-slate-200 @enderror rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 shadow-2xs transition-all pr-11"
+                    placeholder="Contoh: sulastri123">
+                <button type="button" onclick="togglePassword('new_password', 'new_icon')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none transition-colors" title="Lihat/Sembunyikan Password">
                     <svg id="new_icon" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -84,12 +107,12 @@
 
         <!-- Konfirmasi Password Baru -->
         <div>
-            <label class="block text-sm font-semibold text-slate-800 mb-2">Konfirmasi Password Baru</label>
+            <label class="block text-sm font-semibold text-slate-800 mb-2">Konfirmasi Password Baru <span class="text-rose-500">*</span></label>
             <div class="relative">
                 <input type="password" name="password_confirmation" id="confirm_password" required
-                    class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 shadow-2xs transition-all pr-10"
+                    class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 shadow-2xs transition-all pr-11"
                     placeholder="Ulangi password baru">
-                <button type="button" onclick="togglePassword('confirm_password', 'confirm_icon')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none">
+                <button type="button" onclick="togglePassword('confirm_password', 'confirm_icon')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none transition-colors" title="Lihat/Sembunyikan Password">
                     <svg id="confirm_icon" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -99,7 +122,7 @@
         </div>
 
         <div class="pt-4 border-t border-slate-100 flex items-center justify-end">
-            <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium shadow-sm shadow-indigo-500/20 hover:shadow-md hover:shadow-indigo-500/30 transition-all duration-150 active:scale-[0.98] flex items-center justify-center gap-2">
+            <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-sm shadow-indigo-500/20 hover:shadow-md hover:shadow-indigo-500/30 transition-all duration-150 active:scale-[0.98] flex items-center justify-center gap-2">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>

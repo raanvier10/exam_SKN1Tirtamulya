@@ -47,19 +47,46 @@
 
         <div>
             <label class="block text-sm font-medium text-slate-700 mb-2">Upload File Excel/CSV</label>
-            <div class="mt-1 flex justify-center rounded-xl border-2 border-dashed border-slate-200 px-6 py-7 hover:border-indigo-400 hover:bg-indigo-50/20 transition-all cursor-pointer group" onclick="document.getElementById('file-upload-students').click()">
+            
+            <div id="dropzone-students-empty" class="mt-1 flex justify-center rounded-2xl border-2 border-dashed border-slate-200 px-6 py-7 hover:border-indigo-400 hover:bg-indigo-50/20 transition-all cursor-pointer group" onclick="document.getElementById('file-upload-students').click()">
                 <div class="text-center">
-                    <svg class="mx-auto h-10 w-10 text-slate-400 group-hover:text-indigo-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                    <div class="mt-3 flex text-sm leading-6 text-slate-600 justify-center">
-                        <span class="relative font-semibold text-indigo-600 hover:text-indigo-500">
-                            Click to upload
-                            <input id="file-upload-students" name="file" type="file" accept=".xlsx,.xls,.csv" required class="sr-only" onchange="document.getElementById('file-name-students').textContent = this.files[0].name">
-                        </span>
-                        <p class="pl-1">or drag and drop</p>
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                     </div>
-                    <p class="text-xs leading-5 text-slate-400 mt-0.5" id="file-name-students">CSV, XLS, XLSX up to 10MB</p>
+                    <div class="flex text-sm leading-6 text-slate-600 justify-center">
+                        <span class="font-bold text-indigo-600 hover:text-indigo-500">Pilih file</span>
+                        <p class="pl-1">atau tarik file ke sini</p>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">CSV, XLS, XLSX up to 10MB</p>
                 </div>
             </div>
+
+            <!-- Preview Card -->
+            <div id="dropzone-students-preview" class="hidden mt-1 p-4 rounded-2xl border-2 border-emerald-500/40 bg-emerald-50/40 transition-all">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-11 h-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm1.5 14h-7v-2h7v2zm0-4h-7v-2h7v2zm-2-5V3.5L18.5 7H13.5z"/></svg>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2">
+                                <h5 id="preview-students-name" class="text-sm font-bold text-slate-900 truncate">file.csv</h5>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 shrink-0">✓ Siap Diupload</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                                <span id="preview-students-size" class="font-medium font-mono text-slate-600">0 KB</span>
+                                <span>•</span>
+                                <span id="preview-students-type" class="uppercase font-semibold text-emerald-700">CSV</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="removeStudentsFile()" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors shrink-0" title="Ganti / Batalkan file">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+            </div>
+
+            <input id="file-upload-students" name="file" type="file" accept=".xlsx,.xls,.csv" required class="sr-only" onchange="handleStudentsFile(this)">
         </div>
 
         <div class="flex justify-end gap-2.5 pt-2">
@@ -107,11 +134,31 @@
     </form>
 </div>
 
+<!-- Bulk Delete Floating Bar -->
+<div id="bulkBar" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 transition-all">
+    <span class="text-sm font-semibold"><span id="bulkCount">0</span> dipilih</span>
+    <button type="button" id="bulkDeleteBtn" class="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold shadow-sm transition-all active:scale-[0.98]">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
+        Hapus Terpilih
+    </button>
+    <button type="button" id="bulkCancelBtn" class="text-xs text-slate-400 hover:text-white transition-colors">Batal</button>
+</div>
+
+<!-- Hidden bulk delete form -->
+<form id="bulkDeleteForm" action="{{ route('admin.students.bulk-delete') }}" method="POST" class="hidden">
+    @csrf
+</form>
+
 <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
     <div class="overflow-x-auto">
         <table class="w-full text-left text-sm text-slate-600">
             <thead class="bg-slate-50/80 border-b border-slate-200/80 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                 <tr>
+                    <th class="px-4 py-4 w-10">
+                        <input type="checkbox" id="selectAllStudents" class="rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 cursor-pointer">
+                    </th>
                     <th class="px-6 py-4">Nama</th>
                     <th class="px-6 py-4">Username / NIS</th>
                     <th class="px-6 py-4">Kelas</th>
@@ -123,6 +170,9 @@
             <tbody class="divide-y divide-slate-100">
                 @forelse($students as $s)
                 <tr class="hover:bg-indigo-50/20 transition-colors duration-150 group">
+                    <td class="px-4 py-4 align-middle">
+                        <input type="checkbox" class="bulk-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 cursor-pointer" value="{{ $s->id }}">
+                    </td>
                     <td class="px-6 py-4 text-slate-900 font-semibold">{{ $s->name }}</td>
                     <td class="px-6 py-4 font-mono text-slate-500 text-xs">{{ $s->username }}</td>
                     <td class="px-6 py-4">
@@ -170,7 +220,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="px-6 py-12 text-center text-slate-400">
+                    <td colspan="7" class="px-6 py-12 text-center text-slate-400">
                         Belum ada data siswa yang sesuai filter.
                     </td>
                 </tr>
@@ -185,4 +235,101 @@
     </div>
     @endif
 </div>
+
+<script>
+    function handleStudentsFile(input) {
+        if (!input.files || !input.files[0]) return;
+        const file = input.files[0];
+        document.getElementById('preview-students-name').textContent = file.name;
+
+        let sizeStr = '';
+        if (file.size < 1024) sizeStr = file.size + ' B';
+        else if (file.size < 1024 * 1024) sizeStr = (file.size / 1024).toFixed(1) + ' KB';
+        else sizeStr = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+        document.getElementById('preview-students-size').textContent = sizeStr;
+
+        const ext = file.name.split('.').pop().toUpperCase();
+        document.getElementById('preview-students-type').textContent = ext + ' SPREADSHEET';
+
+        document.getElementById('dropzone-students-empty').classList.add('hidden');
+        document.getElementById('dropzone-students-preview').classList.remove('hidden');
+    }
+
+    function removeStudentsFile() {
+        const input = document.getElementById('file-upload-students');
+        if (input) input.value = '';
+        document.getElementById('dropzone-students-empty').classList.remove('hidden');
+        document.getElementById('dropzone-students-preview').classList.add('hidden');
+    }
+
+    // === Bulk Select & Delete ===
+    document.addEventListener('DOMContentLoaded', function() {
+        const bulkBar = document.getElementById('bulkBar');
+        const bulkCount = document.getElementById('bulkCount');
+        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        const bulkCancelBtn = document.getElementById('bulkCancelBtn');
+        const bulkDeleteForm = document.getElementById('bulkDeleteForm');
+        const selectAllStudents = document.getElementById('selectAllStudents');
+        const allCheckboxes = document.querySelectorAll('.bulk-checkbox');
+
+        function updateBulkBar() {
+            const checked = document.querySelectorAll('.bulk-checkbox:checked');
+            const count = checked.length;
+            if (bulkCount) bulkCount.textContent = count;
+            if (bulkBar) {
+                if (count > 0) {
+                    bulkBar.classList.remove('hidden');
+                    bulkBar.classList.add('flex');
+                } else {
+                    bulkBar.classList.add('hidden');
+                    bulkBar.classList.remove('flex');
+                }
+            }
+            if (selectAllStudents) {
+                selectAllStudents.checked = allCheckboxes.length > 0 && checked.length === allCheckboxes.length;
+            }
+        }
+
+        allCheckboxes.forEach(cb => cb.addEventListener('change', updateBulkBar));
+
+        if (selectAllStudents) {
+            selectAllStudents.addEventListener('change', function() {
+                allCheckboxes.forEach(cb => {
+                    cb.checked = selectAllStudents.checked;
+                });
+                updateBulkBar();
+            });
+        }
+
+        if (bulkCancelBtn) {
+            bulkCancelBtn.addEventListener('click', function() {
+                allCheckboxes.forEach(cb => cb.checked = false);
+                if (selectAllStudents) selectAllStudents.checked = false;
+                updateBulkBar();
+            });
+        }
+
+        if (bulkDeleteBtn) {
+            bulkDeleteBtn.addEventListener('click', function() {
+                const checked = document.querySelectorAll('.bulk-checkbox:checked');
+                if (checked.length === 0) return;
+
+                if (!confirm(`Yakin ingin menghapus ${checked.length} data siswa yang dipilih?`)) return;
+
+                // Clear old hidden inputs
+                bulkDeleteForm.querySelectorAll('input[name="student_ids[]"]').forEach(el => el.remove());
+
+                checked.forEach(cb => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'student_ids[]';
+                    input.value = cb.value;
+                    bulkDeleteForm.appendChild(input);
+                });
+
+                bulkDeleteForm.submit();
+            });
+        }
+    });
+</script>
 @endsection

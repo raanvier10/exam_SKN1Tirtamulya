@@ -38,7 +38,7 @@
             </div>
             <div>
                 <h4 class="text-sm font-semibold text-slate-900">Format Wajib Sesuai!</h4>
-                <p class="text-xs text-slate-500 mt-0.5 mb-2">Kolom <code>target_kelas</code> bisa diisi nama kelas (misal: <em>11 TJKT 1, 11 TJKT 2</em>) atau kosongkan untuk Semua Kelas. Data yang sudah ada akan otomatis dilewati.</p>
+                <p class="text-xs text-slate-500 mt-0.5 mb-2">Kolom <code>target_kelas</code> bisa diisi nama kelas (misal: <em>XI TJKT 1, XI TJKT 2</em>) atau kosongkan untuk Semua Kelas. Data yang sudah ada akan otomatis dilewati.</p>
                 <a href="{{ route('admin.exams.template') }}" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline">
                     Download Template CSV &rarr;
                 </a>
@@ -47,19 +47,57 @@
 
         <div>
             <label class="block text-sm font-medium text-slate-700 mb-2">Upload File Excel/CSV</label>
-            <div class="mt-1 flex justify-center rounded-xl border-2 border-dashed border-slate-200 px-6 py-7 hover:border-indigo-400 hover:bg-indigo-50/20 transition-all cursor-pointer group" onclick="document.getElementById('file-upload-exams').click()">
+            
+            <!-- State 1: Dropzone kosong (belum ada file) -->
+            <div id="dropzone-empty" class="mt-1 flex justify-center rounded-2xl border-2 border-dashed border-slate-200 px-6 py-7 hover:border-indigo-400 hover:bg-indigo-50/20 transition-all cursor-pointer group" onclick="document.getElementById('file-upload-exams').click()">
                 <div class="text-center">
-                    <svg class="mx-auto h-10 w-10 text-slate-400 group-hover:text-indigo-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                    <div class="mt-3 flex text-sm leading-6 text-slate-600 justify-center">
-                        <span class="relative font-semibold text-indigo-600 hover:text-indigo-500">
-                            Click to upload
-                            <input id="file-upload-exams" name="file" type="file" accept=".xlsx,.xls,.csv" required class="sr-only" onchange="document.getElementById('file-name-exams').textContent = this.files[0].name">
-                        </span>
-                        <p class="pl-1">or drag and drop</p>
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                     </div>
-                    <p class="text-xs leading-5 text-slate-400 mt-0.5" id="file-name-exams">CSV, XLS, XLSX up to 10MB</p>
+                    <div class="flex text-sm leading-6 text-slate-600 justify-center">
+                        <span class="font-bold text-indigo-600 hover:text-indigo-500">
+                            Pilih file
+                        </span>
+                        <p class="pl-1">atau tarik file ke sini</p>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">CSV, XLS, XLSX up to 10MB</p>
                 </div>
             </div>
+
+            <!-- State 2: Preview Bentuk File Card (saat file sudah dipilih) -->
+            <div id="dropzone-file-preview" class="hidden mt-1 p-4 rounded-2xl border-2 border-emerald-500/40 bg-emerald-50/40 transition-all">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <!-- Icon Dokumen Excel / Spreadsheet Hijau -->
+                        <div class="w-11 h-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm1.5 14h-7v-2h7v2zm0-4h-7v-2h7v2zm-2-5V3.5L18.5 7H13.5z"/>
+                            </svg>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-2">
+                                <h5 id="preview-file-name" class="text-sm font-bold text-slate-900 truncate">nama_file.csv</h5>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 shrink-0">
+                                    ✓ Siap Diupload
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                                <span id="preview-file-size" class="font-medium font-mono text-slate-600">0 KB</span>
+                                <span>•</span>
+                                <span id="preview-file-type" class="uppercase font-semibold text-emerald-700">EXCEL/CSV</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="removeSelectedFile()" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors shrink-0" title="Ganti / Batalkan file">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hidden native file input -->
+            <input id="file-upload-exams" name="file" type="file" accept=".xlsx,.xls,.csv" required class="sr-only" onchange="handleFileSelected(this)">
         </div>
 
         <div class="flex justify-end gap-2.5 pt-2">
@@ -173,16 +211,22 @@
                     $classList = $e->classes->pluck('name')->implode(', ');
                     $classCount = $e->classes->count();
                     $canManage = auth()->user()->isAdmin() || ($e->created_by === auth()->id());
+                    $isOngoing = $e->isOngoing();
                 @endphp
                 <tr class="exam-row hover:bg-indigo-50/20 transition-colors duration-150 group" 
                     data-title="{{ strtolower($e->title) }}" 
                     data-classes="{{ strtolower($classList ?: 'semua kelas') }}" 
                     data-status="{{ $e->status }}"
                     data-exam-id="{{ $e->id }}"
-                    data-can-manage="{{ $canManage ? '1' : '0' }}">
+                    data-can-manage="{{ $canManage ? '1' : '0' }}"
+                    data-ongoing="{{ $isOngoing ? '1' : '0' }}">
                     <td class="px-4 py-4 align-middle">
                         @if($canManage)
-                        <input type="checkbox" class="bulk-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 cursor-pointer" value="{{ $e->id }}">
+                            @if($isOngoing)
+                                <input type="checkbox" disabled class="rounded text-slate-300 border-slate-200 w-4 h-4 cursor-not-allowed opacity-40" title="Ujian sedang berlangsung">
+                            @else
+                                <input type="checkbox" class="bulk-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 cursor-pointer" value="{{ $e->id }}">
+                            @endif
                         @endif
                     </td>
                     <td class="px-6 py-4 font-semibold text-slate-900 align-middle">
@@ -192,13 +236,17 @@
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
                                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1"></span> Ujian Anda
                                 </span>
+                            @elseif($e->creator && $e->creator->isAdmin())
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200">
+                                    Ujian Sekolah (Admin)
+                                </span>
                             @elseif($e->creator)
                                 <span class="text-slate-400">
                                     Oleh: <span class="text-slate-600 font-medium">{{ $e->creator->name }}</span>
                                 </span>
                             @else
-                                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-medium border border-slate-200">
-                                    UAS Umum
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200">
+                                    Ujian Sekolah (Admin)
                                 </span>
                             @endif
                         </div>
@@ -245,7 +293,11 @@
                         </span>
                     </td>
                     <td class="px-6 py-4 align-middle whitespace-nowrap">
-                        @if($e->status === 'active')
+                        @if($isOngoing)
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-600/30 border border-amber-200">
+                                <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping mr-0.5"></span> Berlangsung
+                            </span>
+                        @elseif($e->status === 'active')
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Aktif
                             </span>
@@ -262,10 +314,16 @@
                             </a>
                             @if($canManage)
                                 <a href="{{ route('admin.exams.edit', $e->id) }}" class="inline-flex items-center justify-center px-2.5 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 shadow-2xs transition-all duration-150">Edit</a>
-                                <form action="{{ route('admin.exams.destroy', $e->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus ujian ini?');">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="inline-flex items-center justify-center px-2.5 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 shadow-2xs transition-all duration-150">Hapus</button>
-                                </form>
+                                @if($isOngoing)
+                                    <button type="button" disabled class="inline-flex items-center justify-center px-2.5 py-1.5 bg-slate-100 border border-slate-200 text-slate-400 rounded-lg text-xs font-medium cursor-not-allowed opacity-50" title="Ujian sedang berlangsung dan tidak dapat dihapus">
+                                        Hapus
+                                    </button>
+                                @else
+                                    <form action="{{ route('admin.exams.destroy', $e->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus ujian ini?');">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="inline-flex items-center justify-center px-2.5 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 shadow-2xs transition-all duration-150">Hapus</button>
+                                    </form>
+                                @endif
                             @endif
                         </div>
                     </td>
@@ -294,18 +352,24 @@
         $classList = $e->classes->pluck('name')->implode(', ');
         $classCount = $e->classes->count();
         $canManage = auth()->user()->isAdmin() || ($e->created_by === auth()->id());
+        $isOngoing = $e->isOngoing();
     @endphp
     <div class="exam-card bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 shadow-xs p-4 sm:p-5 space-y-3 transition-all"
          data-title="{{ strtolower($e->title) }}" 
          data-classes="{{ strtolower($classList ?: 'semua kelas') }}" 
          data-status="{{ $e->status }}"
          data-exam-id="{{ $e->id }}"
-         data-can-manage="{{ $canManage ? '1' : '0' }}">
+         data-can-manage="{{ $canManage ? '1' : '0' }}"
+         data-ongoing="{{ $isOngoing ? '1' : '0' }}">
         <!-- Card Top Bar -->
         <div class="flex items-start justify-between gap-3">
             <div class="flex items-start gap-2.5 min-w-0 flex-1">
                 @if($canManage)
-                <input type="checkbox" class="bulk-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 cursor-pointer mt-1 shrink-0" value="{{ $e->id }}">
+                    @if($isOngoing)
+                        <input type="checkbox" disabled class="rounded text-slate-300 border-slate-200 w-4 h-4 cursor-not-allowed mt-1 shrink-0 opacity-40" title="Ujian sedang berlangsung">
+                    @else
+                        <input type="checkbox" class="bulk-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 cursor-pointer mt-1 shrink-0" value="{{ $e->id }}">
+                    @endif
                 @endif
                 <div class="space-y-1.5 min-w-0">
                     <h4 class="text-sm sm:text-base font-bold text-slate-900 leading-snug">{{ $e->title }}</h4>
@@ -317,18 +381,31 @@
                             {{ $e->duration }} Menit
                         </span>
                         @if($e->created_by === auth()->id())
+                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Ujian Anda
+                            </span>
+                        @elseif($e->creator && $e->creator->isAdmin())
                             <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg">
-                                <svg class="w-3 h-3 text-indigo-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                                Ujian Anda
+                                Ujian Sekolah (Admin)
+                            </span>
+                        @elseif($e->creator)
+                            <span class="text-[11px] text-slate-500">
+                                Oleh: <strong class="text-slate-700 font-medium">{{ $e->creator->name }}</strong>
+                            </span>
+                        @else
+                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg">
+                                Ujian Sekolah (Admin)
                             </span>
                         @endif
                     </div>
                 </div>
             </div>
             <div class="shrink-0 pt-0.5">
-                @if($e->status === 'active')
+                @if($isOngoing)
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-600/30 border border-amber-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Berlangsung
+                    </span>
+                @elseif($e->status === 'active')
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/30 border border-emerald-200">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Aktif
                     </span>
@@ -340,29 +417,42 @@
             </div>
         </div>
 
-        <!-- Card Body -->
-        <div class="space-y-2 py-2.5 px-3.5 bg-slate-50/90 rounded-xl border border-slate-200">
-            <div class="flex items-start justify-between gap-3 text-xs">
-                <div class="min-w-0 flex-1">
-                    <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider mb-0.5">Target Kelas</span>
-                    <span class="font-semibold text-slate-700 text-xs block truncate" title="{{ $classList ?: 'Semua Kelas' }}">
-                        {{ $classCount === 0 ? 'Semua Kelas' : ($classCount <= 2 ? $classList : $e->classes->first()->name . ' +' . ($classCount - 1) . ' kelas') }}
-                    </span>
-                </div>
-                <div class="text-right shrink-0">
-                    <span class="text-[10px] uppercase font-bold text-slate-400 block tracking-wider mb-0.5">Toleransi</span>
-                    <span class="font-bold text-rose-600 text-xs">Max {{ $e->max_violation }}x Keluar</span>
-                </div>
+        <!-- Card Schedule Info -->
+        <div class="grid grid-cols-2 gap-2 text-xs py-2 px-3 bg-slate-50 rounded-xl border border-slate-100">
+            <div>
+                <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Waktu Pelaksanaan</span>
+                <span class="font-semibold text-slate-800">{{ \Carbon\Carbon::parse($e->start_at)->format('d M Y') }}</span>
+                <span class="text-slate-500 font-mono block text-[11px]">{{ \Carbon\Carbon::parse($e->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($e->end_at)->format('H:i') }} WIB</span>
             </div>
-            <div class="pt-2 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500">
-                <span>{{ \Carbon\Carbon::parse($e->start_at)->format('d M Y') }}</span>
-                <span class="font-mono font-medium text-slate-700">{{ \Carbon\Carbon::parse($e->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($e->end_at)->format('H:i') }} WIB</span>
+            <div>
+                <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Batas Toleransi</span>
+                <span class="font-semibold text-rose-600 flex items-center gap-1 mt-0.5">
+                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    Max {{ $e->max_violation }}x Keluar
+                </span>
             </div>
         </div>
 
-        <!-- Mobile Action Buttons -->
-        <div class="flex items-center gap-2 pt-1">
-            <a href="{{ route('admin.exams.show', $e->id) }}" class="flex-1 inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-[0.98]">
+        <!-- Card Classes -->
+        <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="text-[11px] text-slate-400 font-medium">Target:</span>
+            @if($classCount === 0)
+                <span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">Semua Kelas</span>
+            @elseif($classCount <= 3)
+                @foreach($e->classes as $cls)
+                    <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">{{ $cls->name }}</span>
+                @endforeach
+            @else
+                <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">{{ $e->classes->first()->name }}</span>
+                <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">+{{ $classCount - 1 }} Kelas lainnya</span>
+            @endif
+        </div>
+
+        <!-- Card Bottom Actions -->
+        <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+            <a href="{{ route('admin.exams.show', $e->id) }}" class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-[0.98]">
                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -373,12 +463,18 @@
                 <a href="{{ route('admin.exams.edit', $e->id) }}" class="inline-flex items-center justify-center px-3.5 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition-all active:scale-[0.98]">
                     Edit
                 </a>
-                <form action="{{ route('admin.exams.destroy', $e->id) }}" method="POST" class="inline-flex m-0" onsubmit="return confirm('Hapus ujian ini?');">
-                    @csrf @method('DELETE')
-                    <button type="submit" class="inline-flex items-center justify-center px-3.5 py-2.5 bg-white border border-slate-300 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-300 text-slate-700 rounded-xl text-xs font-semibold transition-all active:scale-[0.98]">
+                @if($isOngoing)
+                    <button type="button" disabled class="inline-flex items-center justify-center px-3.5 py-2.5 bg-slate-100 border border-slate-200 text-slate-400 rounded-xl text-xs font-semibold cursor-not-allowed opacity-50" title="Ujian sedang berlangsung dan tidak dapat dihapus">
                         Hapus
                     </button>
-                </form>
+                @else
+                    <form action="{{ route('admin.exams.destroy', $e->id) }}" method="POST" class="inline-flex m-0" onsubmit="return confirm('Hapus ujian ini?');">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="inline-flex items-center justify-center px-3.5 py-2.5 bg-white border border-slate-300 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-300 text-slate-700 rounded-xl text-xs font-semibold transition-all active:scale-[0.98]">
+                            Hapus
+                        </button>
+                    </form>
+                @endif
             @endif
         </div>
     </div>
@@ -497,7 +593,7 @@
                 rows.forEach(row => {
                     if (row.style.display !== 'none') {
                         const cb = row.querySelector('.bulk-checkbox');
-                        if (cb) cb.checked = selectAllDesktop.checked;
+                        if (cb && !cb.disabled) cb.checked = selectAllDesktop.checked;
                     }
                 });
                 updateBulkBar();
@@ -531,5 +627,47 @@
         });
     });
 
+    // File Upload Preview Card Handlers
+    function handleFileSelected(input) {
+        if (!input.files || !input.files[0]) return;
+        const file = input.files[0];
+
+        const nameEl = document.getElementById('preview-file-name');
+        const sizeEl = document.getElementById('preview-file-size');
+        const typeEl = document.getElementById('preview-file-type');
+        const emptyDropzone = document.getElementById('dropzone-empty');
+        const previewDropzone = document.getElementById('dropzone-file-preview');
+
+        if (nameEl) nameEl.textContent = file.name;
+
+        // Hitung ukuran file dalam B, KB, atau MB
+        let sizeStr = '';
+        if (file.size < 1024) {
+            sizeStr = file.size + ' B';
+        } else if (file.size < 1024 * 1024) {
+            sizeStr = (file.size / 1024).toFixed(1) + ' KB';
+        } else {
+            sizeStr = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+        if (sizeEl) sizeEl.textContent = sizeStr;
+
+        // Ekstensi file
+        const ext = file.name.split('.').pop().toUpperCase();
+        if (typeEl) typeEl.textContent = ext + ' SPREADSHEET';
+
+        if (emptyDropzone) emptyDropzone.classList.add('hidden');
+        if (previewDropzone) previewDropzone.classList.remove('hidden');
+    }
+
+    function removeSelectedFile() {
+        const input = document.getElementById('file-upload-exams');
+        if (input) input.value = '';
+
+        const emptyDropzone = document.getElementById('dropzone-empty');
+        const previewDropzone = document.getElementById('dropzone-file-preview');
+
+        if (emptyDropzone) emptyDropzone.classList.remove('hidden');
+        if (previewDropzone) previewDropzone.classList.add('hidden');
+    }
 </script>
 @endsection
