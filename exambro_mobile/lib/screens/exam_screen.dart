@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -46,7 +47,9 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
           final reason = call.arguments?.toString() ?? '';
           final desc = reason == 'MULTI_WINDOW'
               ? 'Terdeteksi mengaktifkan mode Layar Belah (Split-Screen)'
-              : 'Terdeteksi membuka Jendela Mengambang (Floating Window / Smart Sidebar)';
+              : reason == 'SCREEN_RECORDING'
+                  ? 'Terdeteksi perekaman layar atau proyeksi layar (Screen Recording / AirPlay)'
+                  : 'Terdeteksi membuka Jendela Mengambang (Floating Window / Smart Sidebar)';
           _handleViolation('FLOATING_WINDOW', desc);
         }
       });
@@ -73,7 +76,9 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
       _controller = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
         ..setUserAgent(
-          'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36',
+          Platform.isIOS
+              ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1'
+              : 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36',
         )
         ..setNavigationDelegate(
           NavigationDelegate(
@@ -451,14 +456,14 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                 ),
                 const SizedBox(height: 24),
 
-                // Exit Button
+                // Exit Button: Langsung lempar ke beranda
                 SizedBox(
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pop(dialogContext);
-                      Navigator.pop(context, 'locked');
+                      Navigator.of(context).popUntil((route) => route.isFirst);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFEF4444),
@@ -469,7 +474,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                       ),
                     ),
                     child: const Text(
-                      'KEMBALI KE PORTAL',
+                      'SAYA PAHAM (KEMBALI KE BERANDA)',
                       style: TextStyle(
                         fontWeight: FontWeight.w800,
                         fontSize: 13.5,
@@ -868,7 +873,12 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                   width: double.infinity,
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: () => Navigator.pop(dialogContext),
+                    onPressed: () {
+                      Navigator.pop(dialogContext);
+                      if (_isLocked || _violationCount >= maxViolations) {
+                        Navigator.of(context).popUntil((route) => route.isFirst);
+                      }
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: isCritical
                           ? const Color(0xFFEF4444)
@@ -1320,10 +1330,10 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                           child: const Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.phone_android_rounded, size: 56, color: Color(0xFF38BDF8)),
+                              Icon(Icons.phone_iphone_rounded, size: 56, color: Color(0xFF38BDF8)),
                               SizedBox(height: 16),
                               Text(
-                                'Mode Ujian Khusus Aplikasi Android',
+                                'Mode Ujian Khusus Aplikasi Mobile',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: Colors.white,
@@ -1333,7 +1343,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                               ),
                               SizedBox(height: 8),
                               Text(
-                                'Fitur Kiosk Keamanan Ujian (Lock Task, Anti-Screenshot, dsb.) dan Google Form WebView hanya berjalan di perangkat Android (HP fisik atau Emulator).\nDi browser Web (Edge/Chrome), WebView tidak didukung.',
+                                'Fitur Kiosk Keamanan Ujian (Lock Screen, Anti-Kecurangan, dsb.) dan Google Form WebView hanya berjalan di perangkat Android / iOS fisik.\\nDi browser Web desktop, WebView tidak didukung.',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13, height: 1.4),
                               ),
@@ -1345,13 +1355,13 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                         ? Container(
                             color: const Color(0xFF0B132B),
                             padding: const EdgeInsets.all(32),
-                            child: const Center(
+                            child: Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.lock_rounded, size: 64, color: Color(0xFFEF4444)),
-                                  SizedBox(height: 20),
-                                  Text(
+                                  const Icon(Icons.lock_rounded, size: 64, color: Color(0xFFEF4444)),
+                                  const SizedBox(height: 20),
+                                  const Text(
                                     'UJIAN DIKUNCI',
                                     style: TextStyle(
                                       fontSize: 22,
@@ -1360,11 +1370,31 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                                       letterSpacing: -0.5,
                                     ),
                                   ),
-                                  SizedBox(height: 8),
-                                  Text(
+                                  const SizedBox(height: 8),
+                                  const Text(
                                     'Toleransi batas pelanggaran telah habis.',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(color: Color(0xFF94A3B8), fontSize: 14),
+                                  ),
+                                  const SizedBox(height: 24),
+                                  ElevatedButton.icon(
+                                    onPressed: () {
+                                      Navigator.of(context).popUntil((route) => route.isFirst);
+                                    },
+                                    icon: const Icon(Icons.home_rounded, size: 18),
+                                    label: const Text(
+                                      'KEMBALI KE BERANDA',
+                                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFFEF4444),
+                                      foregroundColor: Colors.white,
+                                      elevation: 0,
+                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),

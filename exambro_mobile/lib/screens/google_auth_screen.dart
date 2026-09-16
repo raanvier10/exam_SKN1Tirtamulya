@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,7 +23,9 @@ class _GoogleAuthScreenState extends State<GoogleAuthScreen> {
       _controller = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
         ..setUserAgent(
-          'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36',
+          Platform.isIOS
+              ? 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1'
+              : 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36',
         )
         ..setNavigationDelegate(
           NavigationDelegate(
@@ -143,16 +146,16 @@ class _GoogleAuthScreenState extends State<GoogleAuthScreen> {
                 child: const Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.phone_android_rounded, size: 56, color: Color(0xFF2563EB)),
+                    Icon(Icons.phone_iphone_rounded, size: 56, color: Color(0xFF2563EB)),
                     SizedBox(height: 16),
                     Text(
-                      'Hanya Didukung di Perangkat Android',
+                      'Hanya Didukung di Perangkat Mobile',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: Color(0xFF0F172A)),
                     ),
                     SizedBox(height: 8),
                     Text(
-                      'Fitur WebView Google Auth hanya dapat berjalan di perangkat Android (HP fisik atau Emulator).\nDi browser Web (Edge/Chrome), WebView tidak didukung.',
+                      'Fitur WebView Google Auth hanya dapat berjalan di perangkat mobile (Android / iOS).\\nDi browser Web desktop, WebView tidak didukung.',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Color(0xFF64748B), fontSize: 13, height: 1.4),
                     ),
