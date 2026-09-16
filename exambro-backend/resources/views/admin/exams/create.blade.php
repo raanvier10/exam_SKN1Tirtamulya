@@ -6,15 +6,48 @@
     <!-- Header -->
     <div class="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-            <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Buat Jadwal Ujian Baru</h2>
+            <div class="flex items-center gap-2.5 flex-wrap">
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Buat Jadwal Ujian Baru</h2>
+                <!-- Badge Status Autosave -->
+                <div id="autosaveStatusBadge" class="hidden items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all">
+                    <span id="autosaveStatusDot" class="w-2 h-2 rounded-full"></span>
+                    <span id="autosaveStatusText">Draft tersimpan</span>
+                </div>
+            </div>
             <p class="text-xs sm:text-sm text-slate-500 mt-1">Lengkapi rincian jadwal, kelas target per sesi, dan tautan Google Form soal.</p>
         </div>
-        <a href="{{ route('admin.exams.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium text-slate-600 bg-white border border-slate-200/80 hover:bg-slate-50 hover:text-indigo-600 transition-all shadow-2xs self-start sm:self-auto">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Kembali
-        </a>
+        <div class="flex items-center gap-2 self-start sm:self-auto">
+            <button type="button" id="clearDraftBtn" onclick="clearExamDraft(true)" class="hidden items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-all shadow-2xs" title="Hapus draf yang tersimpan dan kosongkan formulir">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span>Reset Draf</span>
+            </button>
+            <a href="{{ route('admin.exams.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium text-slate-600 bg-white border border-slate-200/80 hover:bg-slate-50 hover:text-indigo-600 transition-all shadow-2xs">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Kembali
+            </a>
+        </div>
+    </div>
+
+    <!-- Banner Pemulihan Draf Autosave -->
+    <div id="draftRestoredBanner" class="hidden mb-6 p-4 rounded-2xl bg-indigo-50/90 border border-indigo-200 text-indigo-900 flex items-center justify-between gap-3 shadow-xs">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <div>
+                <div class="text-xs font-bold text-indigo-950">Draf Ujian Dipulihkan Otomatis</div>
+                <div class="text-[11px] text-indigo-700/80" id="draftRestoredTimeText">Data input dan jadwal sesi terakhir Anda berhasil dipulihkan dari penyimpanan browser.</div>
+            </div>
+        </div>
+        <button type="button" onclick="dismissDraftBanner()" class="text-xs font-semibold px-2.5 py-1 text-indigo-700 hover:text-indigo-900 bg-white border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors shrink-0">
+            Tutup
+        </button>
     </div>
 
     <form action="{{ route('admin.exams.store') }}" method="POST" id="examForm" class="space-y-6">
@@ -64,23 +97,41 @@
             </div>
 
             <!-- Durasi (berlaku untuk semua sesi ujian pada form ini) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 pb-4 border-b border-slate-100">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Durasi Per Sesi (Menit) <span class="text-rose-500">*</span></label>
-                    <input type="number" name="duration" id="exam_duration" required min="1" value="{{ old('duration', 90) }}" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 transition-all font-medium">
-                    <div class="flex items-center gap-1.5 mt-2 flex-wrap">
-                        <button type="button" onclick="setExamDuration(45)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors">45m</button>
-                        <button type="button" onclick="setExamDuration(60)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors">60m</button>
-                        <button type="button" onclick="setExamDuration(90)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors">90m</button>
-                        <button type="button" onclick="setExamDuration(120)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors">120m</button>
+            <div class="p-4 sm:p-5 rounded-2xl bg-slate-50/80 border border-slate-200/90 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <div class="w-7 h-7 rounded-lg bg-indigo-100/80 text-indigo-600 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <label for="exam_duration" class="text-xs font-bold text-slate-800 uppercase tracking-wider">Durasi Per Sesi <span class="text-rose-500">*</span></label>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-50 border border-indigo-200/80 text-[11px] font-bold text-indigo-700">
+                            <span id="preview_duration_pill">{{ old('duration', 90) }} Menit</span>
+                            <span class="text-indigo-400">•</span>
+                            <span id="preview_duration_jp_pill">2 JP</span>
+                        </span>
                     </div>
+                    <p class="text-xs text-slate-500 sm:pl-9">
+                        Setara <strong id="preview_duration_jp_text" class="text-indigo-700 font-semibold">2 Jam Pelajaran (JP)</strong> — 1 JP = 45 menit. Dapat disesuaikan per sesi jika ada jadwal kelas dengan JP berbeda di bawah.
+                    </p>
+                    @error('duration') <span class="text-rose-500 text-xs sm:pl-9 block">{{ $message }}</span> @enderror
                 </div>
-                <div class="flex items-end">
-                    <div class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-50/60 border border-indigo-100/90 text-xs font-bold text-indigo-700">
-                        <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span>Durasi pengerjaan: <span id="preview_duration_pill">90 Menit</span></span>
+
+                <div class="flex items-center gap-2.5 flex-wrap sm:flex-nowrap sm:pl-9 md:pl-0">
+                    <!-- Input dengan suffix satuan Menit -->
+                    <div class="relative w-36 sm:w-40 shrink-0">
+                        <input type="number" name="duration" id="exam_duration" required min="1" value="{{ old('duration', 90) }}" class="w-full bg-white border border-slate-200 rounded-xl pl-3.5 pr-14 py-2 text-sm text-slate-900 font-semibold focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 transition-all text-center">
+                        <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-xs font-semibold text-slate-400 uppercase tracking-wider">menit</span>
+                    </div>
+
+                    <!-- Preset Chips dengan JP -->
+                    <div class="inline-flex items-center p-1 bg-white border border-slate-200 rounded-xl gap-1 shadow-2xs flex-wrap">
+                        <button type="button" data-duration="45" onclick="setExamDuration(45)" class="duration-preset-btn px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="1 Jam Pelajaran (45 Menit)">1 JP (45m)</button>
+                        <button type="button" data-duration="60" onclick="setExamDuration(60)" class="duration-preset-btn px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">60m</button>
+                        <button type="button" data-duration="90" onclick="setExamDuration(90)" class="duration-preset-btn px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="2 Jam Pelajaran (90 Menit)">2 JP (90m)</button>
+                        <button type="button" data-duration="120" onclick="setExamDuration(120)" class="duration-preset-btn px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">120m</button>
+                        <button type="button" data-duration="135" onclick="setExamDuration(135)" class="duration-preset-btn px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="3 Jam Pelajaran (135 Menit)">3 JP (135m)</button>
                     </div>
                 </div>
             </div>
@@ -282,10 +333,19 @@
         return `${yyyy}-${mm}-${dd}`;
     }
 
-    function renderScheduleSlot(idx, defaultDate, defaultTime = '07:30', selectedClassIds = []) {
+    function formatJP(mins) {
+        const num = parseInt(mins) || 0;
+        if (num <= 0) return '0 JP';
+        const jp = num / 45;
+        const formatted = Number.isInteger(jp) ? jp : parseFloat(jp.toFixed(1));
+        return `${formatted} JP`;
+    }
+
+    function renderScheduleSlot(idx, defaultDate, defaultTime = '07:30', defaultDuration = '', selectedClassIds = []) {
         const container = document.getElementById('scheduleContainer');
         const num = container.querySelectorAll('.schedule-slot').length + 1;
         const dateVal = defaultDate || getTodayString();
+        const globalDurationVal = parseInt(document.getElementById('exam_duration') ? document.getElementById('exam_duration').value : 90) || 90;
 
         let classCardsHtml = '';
         allClasses.forEach(c => {
@@ -294,7 +354,7 @@
                 <label class="slot-class-card group flex items-center gap-2 p-2 bg-slate-50/70 border border-slate-200 rounded-lg cursor-pointer transition-all hover:border-indigo-300 select-none" data-classname="${c.name.toLowerCase()}">
                     <input type="checkbox" name="schedules[${idx}][classes][]" value="${c.id}" ${isChecked ? 'checked' : ''} 
                            class="slot-class-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4"
-                           onchange="onSlotClassChanged(${idx})">
+                           onchange="onSlotClassChanged(${idx}); triggerAutosave();">
                     <span class="text-xs font-semibold text-slate-700 group-hover:text-indigo-700 transition-colors">${c.name}</span>
                 </label>
             `;
@@ -318,8 +378,8 @@
                 </button>
             </div>
 
-            <!-- Inputs Waktu -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- Inputs Waktu & Durasi -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                     <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Tanggal Ujian <span class="text-rose-500">*</span></label>
                     <input type="date" name="schedules[${idx}][date]" value="${dateVal}" required class="schedule-date w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 font-medium">
@@ -327,6 +387,23 @@
                 <div>
                     <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Jam Mulai <span class="text-rose-500">*</span></label>
                     <input type="time" name="schedules[${idx}][time]" value="${defaultTime}" required class="schedule-time w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 font-medium">
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Durasi Khusus Sesi Ini</label>
+                        <span class="slot-jp-badge text-[9px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">Ikut default</span>
+                    </div>
+                    <div class="relative">
+                        <input type="number" name="schedules[${idx}][duration]" value="${defaultDuration || ''}" min="1" placeholder="Ikut default (${globalDurationVal}m)" class="schedule-duration w-full bg-white border border-slate-200 rounded-xl pl-3 pr-14 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 font-medium" oninput="updateAllPreviews(); triggerAutosave();">
+                        <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-xs font-semibold text-slate-400 uppercase tracking-wider">menit</span>
+                    </div>
+                    <!-- Quick JP buttons for this slot -->
+                    <div class="flex items-center gap-1 mt-1.5 flex-wrap">
+                        <span class="text-[9px] text-slate-400 font-semibold uppercase mr-0.5">Preset:</span>
+                        <button type="button" onclick="setSlotDuration(${idx}, 45)" class="px-1.5 py-0.5 text-[10px] font-medium bg-white hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 border border-slate-200 rounded transition-colors" title="1 Jam Pelajaran">1 JP (45m)</button>
+                        <button type="button" onclick="setSlotDuration(${idx}, 90)" class="px-1.5 py-0.5 text-[10px] font-medium bg-white hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 border border-slate-200 rounded transition-colors" title="2 Jam Pelajaran">2 JP (90m)</button>
+                        <button type="button" onclick="setSlotDuration(${idx}, '')" class="px-1.5 py-0.5 text-[10px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 rounded transition-colors">Default</button>
+                    </div>
                 </div>
             </div>
 
@@ -371,15 +448,203 @@
         updateAllPreviews();
     }
 
+    function setSlotDuration(idx, val) {
+        const slot = document.querySelector(`.schedule-slot[data-index="${idx}"]`);
+        if (!slot) return;
+        const durInput = slot.querySelector('.schedule-duration');
+        if (durInput) {
+            durInput.value = val;
+            updateAllPreviews();
+            triggerAutosave();
+        }
+    }
+
+    // ==========================================
+    // FITUR AUTOSAVE DRAFT FORM UJIAN
+    // ==========================================
+    const DRAFT_STORAGE_KEY = 'exambro_exam_create_draft_v1';
+    let autosaveTimeout = null;
+
+    function getFormDraftData() {
+        const title = document.querySelector('input[name="title"]')?.value || '';
+        const description = document.querySelector('textarea[name="description"]')?.value || '';
+        const google_form_url = document.querySelector('input[name="google_form_url"]')?.value || '';
+        const duration = document.querySelector('input[name="duration"]')?.value || '90';
+        const max_violation = document.querySelector('input[name="max_violation"]')?.value || '3';
+        const status = document.querySelector('input[name="status"]')?.value || 'active';
+
+        const slotsData = [];
+        document.querySelectorAll('.schedule-slot').forEach(slot => {
+            const date = slot.querySelector('.schedule-date')?.value || '';
+            const time = slot.querySelector('.schedule-time')?.value || '';
+            const dur = slot.querySelector('.schedule-duration')?.value || '';
+            const checkedClasses = Array.from(slot.querySelectorAll('.slot-class-checkbox:checked')).map(cb => parseInt(cb.value));
+            slotsData.push({ date, time, duration: dur, classes: checkedClasses });
+        });
+
+        const now = new Date();
+        const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+        return {
+            title,
+            description,
+            google_form_url,
+            duration,
+            max_violation,
+            status,
+            slots: slotsData,
+            savedAt: timeStr,
+        };
+    }
+
+    function triggerAutosave() {
+        updateAutosaveUI('saving');
+        clearTimeout(autosaveTimeout);
+        autosaveTimeout = setTimeout(() => {
+            try {
+                const data = getFormDraftData();
+                const hasSubstantialData = Boolean(
+                    data.title.trim() || 
+                    data.google_form_url.trim() || 
+                    (data.slots.length > 0 && data.slots.some(s => s.classes && s.classes.length > 0))
+                );
+
+                if (hasSubstantialData) {
+                    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(data));
+                    updateAutosaveUI('saved', data.savedAt);
+                    const resetBtn = document.getElementById('clearDraftBtn');
+                    if (resetBtn) {
+                        resetBtn.classList.remove('hidden');
+                        resetBtn.classList.add('inline-flex');
+                    }
+                } else {
+                    updateAutosaveUI('idle');
+                }
+            } catch (err) {
+                console.warn('Autosave failed:', err);
+                updateAutosaveUI('idle');
+            }
+        }, 400);
+    }
+
+    function updateAutosaveUI(state, timeStr) {
+        const badge = document.getElementById('autosaveStatusBadge');
+        const dot = document.getElementById('autosaveStatusDot');
+        const text = document.getElementById('autosaveStatusText');
+        if (!badge || !dot || !text) return;
+
+        if (state === 'saving') {
+            badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200/80 shadow-2xs';
+            dot.className = 'w-2 h-2 rounded-full bg-amber-500 animate-ping';
+            text.textContent = 'Menyimpan draft...';
+        } else if (state === 'saved') {
+            badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs';
+            dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+            text.textContent = `Draft tersimpan (${timeStr || 'otomatis'})`;
+        } else {
+            badge.className = 'hidden';
+        }
+    }
+
+    function restoreExamDraft() {
+        const hasOldSession = Boolean(@json(old('title')));
+        if (hasOldSession) {
+            return false; // Jangan timpa jika ada error validasi backend
+        }
+
+        try {
+            const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+            if (!raw) return false;
+            const data = JSON.parse(raw);
+            if (!data || !Array.isArray(data.slots) || data.slots.length === 0) return false;
+
+            if (data.title) document.querySelector('input[name="title"]').value = data.title;
+            if (data.description) document.querySelector('textarea[name="description"]').value = data.description;
+            if (data.google_form_url) document.querySelector('input[name="google_form_url"]').value = data.google_form_url;
+            if (data.duration) {
+                document.getElementById('exam_duration').value = data.duration;
+            }
+            if (data.max_violation) {
+                document.getElementById('max_violation').value = data.max_violation;
+                updateViolationUI(data.max_violation);
+            }
+            if (data.status) {
+                selectExamStatus(data.status);
+            }
+
+            const container = document.getElementById('scheduleContainer');
+            container.innerHTML = '';
+            scheduleIndex = 0;
+
+            data.slots.forEach(slot => {
+                renderScheduleSlot(scheduleIndex++, slot.date, slot.time, slot.duration, slot.classes || []);
+            });
+            renumberSlots();
+            updateAllPreviews();
+
+            updateAutosaveUI('saved', data.savedAt);
+            const resetBtn = document.getElementById('clearDraftBtn');
+            if (resetBtn) {
+                resetBtn.classList.remove('hidden');
+                resetBtn.classList.add('inline-flex');
+            }
+
+            const banner = document.getElementById('draftRestoredBanner');
+            if (banner) {
+                banner.classList.remove('hidden');
+                const timeText = document.getElementById('draftRestoredTimeText');
+                if (timeText && data.savedAt) {
+                    timeText.textContent = `Draft ujian terakhir Anda (tersimpan pukul ${data.savedAt}) berhasil dipulihkan secara otomatis.`;
+                }
+            }
+
+            return true;
+        } catch (e) {
+            console.warn('Gagal memulihkan draft:', e);
+            return false;
+        }
+    }
+
+    function dismissDraftBanner() {
+        const banner = document.getElementById('draftRestoredBanner');
+        if (banner) banner.classList.add('hidden');
+    }
+
+    function clearExamDraft(confirmUser = true) {
+        if (confirmUser && !confirm('Kosongkan formulir dan hapus draf ujian yang tersimpan di browser ini?')) {
+            return;
+        }
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+        window.location.reload();
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
-        // Slot awal
-        renderScheduleSlot(scheduleIndex++);
+        // Coba pulihkan draft autosave terlebih dahulu
+        const restored = restoreExamDraft();
+        if (!restored) {
+            // Jika tidak ada draft tersimpan, render 1 slot awal default
+            renderScheduleSlot(scheduleIndex++);
+        }
 
-        document.getElementById('exam_duration').addEventListener('input', updateAllPreviews);
-        document.getElementById('scheduleContainer').addEventListener('input', updateAllPreviews);
-        document.getElementById('scheduleContainer').addEventListener('change', updateAllPreviews);
+        // Listener untuk kalkulasi & autosave
+        document.getElementById('exam_duration').addEventListener('input', () => {
+            updateAllPreviews();
+            triggerAutosave();
+        });
+        document.getElementById('scheduleContainer').addEventListener('input', () => {
+            updateAllPreviews();
+            triggerAutosave();
+        });
+        document.getElementById('scheduleContainer').addEventListener('change', () => {
+            updateAllPreviews();
+            triggerAutosave();
+        });
 
-        // Validasi sebelum submit form
+        // Pasang listener input pada form untuk autosave
+        document.getElementById('examForm').addEventListener('input', triggerAutosave);
+        document.getElementById('examForm').addEventListener('change', triggerAutosave);
+
+        // Bersihkan draft saat submit berhasil
         document.getElementById('examForm').addEventListener('submit', function(e) {
             const slots = document.querySelectorAll('.schedule-slot');
             for (let i = 0; i < slots.length; i++) {
@@ -391,6 +656,9 @@
                     return false;
                 }
             }
+
+            // Hapus draft dari localStorage saat form disubmit
+            localStorage.removeItem(DRAFT_STORAGE_KEY);
         });
     });
 
@@ -411,6 +679,7 @@
         renderScheduleSlot(scheduleIndex++, nextDate, nextTime);
         renumberSlots();
         updateAllPreviews();
+        triggerAutosave();
     });
 
     function removeScheduleSlot(btn) {
@@ -420,6 +689,7 @@
         slot.remove();
         renumberSlots();
         updateAllPreviews();
+        triggerAutosave();
     }
 
     function renumberSlots() {
@@ -477,6 +747,7 @@
         const allChecked = visibleBoxes.every(cb => cb.checked);
         visibleBoxes.forEach(cb => cb.checked = !allChecked);
         onSlotClassChanged(idx);
+        triggerAutosave();
     }
 
     function copyClassesFromFirstSlot(targetIdx) {
@@ -490,6 +761,7 @@
         });
 
         onSlotClassChanged(targetIdx);
+        triggerAutosave();
     }
 
     function filterSlotClasses(idx, query) {
@@ -507,18 +779,36 @@
         if (slots.length > 0) {
             slots[slots.length - 1].value = timeStr;
             updateAllPreviews();
+            triggerAutosave();
         }
     }
 
     function setExamDuration(mins) {
         document.getElementById('exam_duration').value = mins;
         updateAllPreviews();
+        triggerAutosave();
     }
 
     function updateAllPreviews() {
-        const durationVal = parseInt(document.getElementById('exam_duration').value) || 0;
+        const durationInput = document.getElementById('exam_duration');
+        const durationVal = parseInt(durationInput ? durationInput.value : 0) || 0;
         const durationPill = document.getElementById('preview_duration_pill');
+        const durationJpPill = document.getElementById('preview_duration_jp_pill');
+        const durationJpText = document.getElementById('preview_duration_jp_text');
+
         if (durationPill) durationPill.textContent = `${durationVal} Menit`;
+        if (durationJpPill) durationJpPill.textContent = formatJP(durationVal);
+        if (durationJpText) durationJpText.textContent = `${formatJP(durationVal)}`;
+
+        // Update active style on preset buttons
+        document.querySelectorAll('.duration-preset-btn').forEach(btn => {
+            const btnVal = parseInt(btn.getAttribute('data-duration'));
+            if (btnVal === durationVal) {
+                btn.className = 'duration-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg transition-all bg-indigo-600 text-white shadow-xs';
+            } else {
+                btn.className = 'duration-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-indigo-600 hover:bg-indigo-50';
+            }
+        });
 
         const slots = document.querySelectorAll('.schedule-slot');
         const summaryList = document.getElementById('scheduleSummaryList');
@@ -528,8 +818,27 @@
         slots.forEach((slot, i) => {
             const dateInput = slot.querySelector('.schedule-date');
             const timeInput = slot.querySelector('.schedule-time');
+            const durationInput = slot.querySelector('.schedule-duration');
             const previewEl = slot.querySelector('.schedule-preview');
+            const slotJpBadge = slot.querySelector('.slot-jp-badge');
             const checkedBoxes = slot.querySelectorAll('.slot-class-checkbox:checked');
+
+            if (durationInput) {
+                durationInput.placeholder = `Ikut default (${durationVal}m / ${formatJP(durationVal)})`;
+            }
+
+            const customDur = durationInput && durationInput.value ? parseInt(durationInput.value) : null;
+            const effectiveDur = (customDur && customDur > 0) ? customDur : durationVal;
+
+            if (slotJpBadge) {
+                if (customDur && customDur > 0) {
+                    slotJpBadge.className = 'slot-jp-badge text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200';
+                    slotJpBadge.textContent = `${customDur}m (${formatJP(customDur)})`;
+                } else {
+                    slotJpBadge.className = 'slot-jp-badge text-[9px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100';
+                    slotJpBadge.textContent = `Default (${durationVal}m / ${formatJP(durationVal)})`;
+                }
+            }
 
             const classNames = Array.from(checkedBoxes).map(cb => {
                 const label = cb.closest('label');
@@ -542,7 +851,7 @@
             }
 
             const startDT = new Date(`${dateInput.value}T${timeInput.value}`);
-            const endDT = new Date(startDT.getTime() + durationVal * 60000);
+            const endDT = new Date(startDT.getTime() + effectiveDur * 60000);
 
             const dayName = days[startDT.getDay()];
             const dayDate = startDT.getDate();
@@ -554,7 +863,11 @@
             const eH = String(endDT.getHours()).padStart(2, '0');
             const eM = String(endDT.getMinutes()).padStart(2, '0');
 
-            if (previewEl) previewEl.textContent = `${sH}:${sM}–${eH}:${eM} WIB`;
+            if (previewEl) {
+                previewEl.textContent = customDur 
+                    ? `${sH}:${sM}–${eH}:${eM} WIB (${customDur}m / ${formatJP(customDur)} kustom)`
+                    : `${sH}:${sM}–${eH}:${eM} WIB (${effectiveDur}m / ${formatJP(effectiveDur)})`;
+            }
 
             let classDisplay = '';
             if (classNames.length === 0) {
@@ -567,11 +880,12 @@
 
             summaryHTML += `
                 <div class="p-2.5 rounded-xl bg-white border border-indigo-100/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
                         <span class="w-5 h-5 rounded-md bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">${i + 1}</span>
                         <span class="font-semibold text-slate-900">${dayName}, ${dayDate} ${monthName} ${year}</span>
                         <span class="text-slate-300">•</span>
                         <span class="font-mono font-medium text-indigo-700">${sH}:${sM}–${eH}:${eM} WIB</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${customDur ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-indigo-50 text-indigo-700 border border-indigo-100'}">${effectiveDur} Menit (${formatJP(effectiveDur)})${customDur ? ' (Kustom)' : ''}</span>
                     </div>
                     <div class="text-[11px] self-start sm:self-auto pl-7 sm:pl-0">
                         ${classDisplay}
@@ -600,11 +914,13 @@
             inactiveCard.querySelector('div').className = "w-4 h-4 rounded-full border-2 border-indigo-600 bg-indigo-600 mt-0.5 flex items-center justify-center shrink-0";
             activeCard.querySelector('div').className = "w-4 h-4 rounded-full border-2 border-slate-400 mt-0.5 flex items-center justify-center shrink-0";
         }
+        triggerAutosave();
     }
 
     function selectViolationPreset(val) {
         document.getElementById('max_violation').value = val;
         updateViolationUI(val);
+        triggerAutosave();
     }
 
     function stepViolation(delta) {
@@ -613,11 +929,13 @@
         let nextVal = Math.min(20, Math.max(1, current + delta));
         input.value = nextVal;
         updateViolationUI(nextVal);
+        triggerAutosave();
     }
 
     function handleViolationInput(val) {
         let num = parseInt(val) || 1;
         updateViolationUI(num);
+        triggerAutosave();
     }
 
     function updateViolationUI(val) {

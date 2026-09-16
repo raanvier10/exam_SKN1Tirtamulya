@@ -32,6 +32,14 @@
             $canManageExam = auth()->user()->isAdmin() || ($exam->created_by === auth()->id());
         @endphp
         <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-full md:w-auto">
+            <!-- Tombol Pintasan Cepat ke Log Pelanggaran -->
+            <a href="#violationsSection" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-white border border-slate-200/80 text-slate-700 rounded-xl text-xs sm:text-sm font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 shadow-xs transition-all active:scale-[0.98] w-full sm:w-auto" title="Gulir cepat ke Riwayat Pelanggaran Siswa">
+                <svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+                <span>Log Pelanggaran ({{ $stats['total_violations'] }})</span>
+            </a>
+
             <!-- Tombol Auto Refresh -->
             <button id="autoRefreshBtn" onclick="toggleAutoRefresh()" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-white border border-slate-200/80 text-slate-700 rounded-xl text-xs sm:text-sm font-medium hover:bg-indigo-50 hover:text-indigo-600 shadow-xs transition-all active:scale-[0.98] w-full sm:w-auto">
                 <span class="w-2 h-2 rounded-full bg-slate-400 shrink-0" id="autoRefreshIndicator"></span>
@@ -193,7 +201,12 @@
                 <div class="space-y-4 text-sm">
                     <div class="flex justify-between items-center pb-3 border-b border-slate-200">
                         <span class="text-slate-500 font-medium">Durasi Ujian</span>
-                        <span class="text-slate-900 font-bold">{{ $exam->duration }} Menit</span>
+                        <span class="text-slate-900 font-bold flex items-center gap-1.5">
+                            {{ $exam->duration }} Menit
+                            <span class="text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-md">
+                                {{ round($exam->duration / 45, 1) }} JP
+                            </span>
+                        </span>
                     </div>
 
                     <div class="flex justify-between items-center pb-3 border-b border-slate-200">
@@ -227,8 +240,17 @@
                 <p class="text-xs text-slate-500 mt-0.5">Daftar siswa yang terdaftar, status pengerjaan, dan kontrol buka kunci sesi.</p>
             </div>
             
-            <div class="flex items-center gap-3 w-full sm:w-auto">
-                <input type="text" id="searchStudent" placeholder="Cari nama atau NIS siswa..." class="w-full sm:w-64 px-3.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" onkeyup="filterStudents()">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
+                <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 rounded-xl px-2.5 py-1.5 shrink-0 justify-between sm:justify-start">
+                    <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tampil:</span>
+                    <select id="perPageSelect" onchange="changePerPage(this.value)" class="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer">
+                        <option value="5">5 baris</option>
+                        <option value="10" selected>10 baris</option>
+                        <option value="25">25 baris</option>
+                        <option value="all">Semua</option>
+                    </select>
+                </div>
+                <input type="text" id="searchStudent" placeholder="Cari nama atau NIS siswa..." class="w-full sm:w-60 px-3.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" onkeyup="filterStudents()">
             </div>
         </div>
 
@@ -516,10 +538,20 @@
                 Tidak ada siswa yang cocok dengan pencarian.
             </div>
         </div>
+
+        <!-- Pagination Controls Bar -->
+        <div id="participantPaginationContainer" class="p-3 sm:p-4 bg-slate-50/80 border-t border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div class="text-slate-500 text-center sm:text-left font-medium" id="paginationInfoText">
+                Menampilkan <span class="font-bold text-slate-800" id="pageStartNum">1</span>–<span class="font-bold text-slate-800" id="pageEndNum">10</span> dari <span class="font-bold text-slate-800" id="pageTotalNum">0</span> peserta
+            </div>
+            <div class="flex items-center justify-center gap-1 self-center sm:self-auto flex-wrap" id="paginationButtons">
+                <!-- Tombol Pagination di-render via Javascript -->
+            </div>
+        </div>
     </div>
 
     <!-- TABEL 2: Realtime Violation Logs (Dual Mode: Desktop Table + Mobile Cards) -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 sm:p-6">
+    <div id="violationsSection" class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 sm:p-6 scroll-mt-6">
         <div class="flex items-center justify-between mb-4">
             <div>
                 <h3 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
@@ -635,48 +667,141 @@
 </div>
 
 <script>
-function filterStudents() {
-    const input = document.getElementById('searchStudent').value.toLowerCase().trim();
-    const rows = document.querySelectorAll('#studentsTable tbody tr.student-row');
-    const cards = document.querySelectorAll('#studentsMobileList .student-card');
-    const noMatchMobile = document.getElementById('noMatchStudentMobile');
-    
-    let visibleRows = 0;
-    let visibleCards = 0;
+// ==============================================================
+// PAGINATION & FILTER MONITORING PESERTA (Maksimal 5/10 ke bawah)
+// ==============================================================
+const PER_PAGE_KEY = 'exam_{{ $exam->id }}_per_page';
+const PAGE_KEY = 'exam_{{ $exam->id }}_page';
+
+let currentPerPage = sessionStorage.getItem(PER_PAGE_KEY) || '10';
+let currentPage = parseInt(sessionStorage.getItem(PAGE_KEY)) || 1;
+
+function getStudentData() {
+    const input = document.getElementById('searchStudent')?.value.toLowerCase().trim() || '';
+    const rows = Array.from(document.querySelectorAll('#studentsTable tbody tr.student-row'));
+    const cards = Array.from(document.querySelectorAll('#studentsMobileList .student-card'));
+
+    const matchingRows = [];
+    const matchingCards = [];
 
     rows.forEach(row => {
-        const nameEl = row.querySelector('.student-name');
-        const nisEl = row.querySelector('.student-nis');
-        if (nameEl && nisEl) {
-            const name = nameEl.textContent.toLowerCase();
-            const nis = nisEl.textContent.toLowerCase();
-            if (input === '' || name.includes(input) || nis.includes(input)) {
-                row.style.display = '';
-                visibleRows++;
-            } else {
-                row.style.display = 'none';
-            }
+        const name = row.querySelector('.student-name')?.textContent.toLowerCase() || '';
+        const nis = row.querySelector('.student-nis')?.textContent.toLowerCase() || '';
+        if (input === '' || name.includes(input) || nis.includes(input)) {
+            matchingRows.push(row);
         }
     });
 
     cards.forEach(card => {
-        const nameEl = card.querySelector('.student-name');
-        const nisEl = card.querySelector('.student-nis');
-        if (nameEl && nisEl) {
-            const name = nameEl.textContent.toLowerCase();
-            const nis = nisEl.textContent.toLowerCase();
-            if (input === '' || name.includes(input) || nis.includes(input)) {
-                card.style.display = '';
-                visibleCards++;
-            } else {
-                card.style.display = 'none';
-            }
+        const name = card.querySelector('.student-name')?.textContent.toLowerCase() || '';
+        const nis = card.querySelector('.student-nis')?.textContent.toLowerCase() || '';
+        if (input === '' || name.includes(input) || nis.includes(input)) {
+            matchingCards.push(card);
         }
     });
 
+    return { rows, cards, matchingRows, matchingCards };
+}
+
+function updatePagination() {
+    const { rows, cards, matchingRows, matchingCards } = getStudentData();
+    const total = matchingRows.length;
+    const perPageNum = currentPerPage === 'all' ? (total || 1) : parseInt(currentPerPage);
+    const totalPages = Math.max(1, Math.ceil(total / perPageNum));
+
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+    sessionStorage.setItem(PAGE_KEY, currentPage);
+
+    const startIdx = (currentPage - 1) * perPageNum;
+    const endIdx = currentPerPage === 'all' ? total : Math.min(startIdx + perPageNum, total);
+
+    // Hide all items first
+    rows.forEach(r => r.style.display = 'none');
+    cards.forEach(c => c.style.display = 'none');
+
+    // Show current page slice
+    matchingRows.slice(startIdx, endIdx).forEach(r => r.style.display = '');
+    matchingCards.slice(startIdx, endIdx).forEach(c => c.style.display = '');
+
+    // Mobile no-match state
+    const noMatchMobile = document.getElementById('noMatchStudentMobile');
     if (noMatchMobile) {
-        noMatchMobile.classList.toggle('hidden', cards.length === 0 || visibleCards > 0);
+        noMatchMobile.classList.toggle('hidden', total > 0 || cards.length === 0);
     }
+
+    // Update label counter
+    const startEl = document.getElementById('pageStartNum');
+    const endEl = document.getElementById('pageEndNum');
+    const totalEl = document.getElementById('pageTotalNum');
+    if (startEl) startEl.textContent = total > 0 ? startIdx + 1 : 0;
+    if (endEl) endEl.textContent = endIdx;
+    if (totalEl) totalEl.textContent = total;
+
+    renderPaginationControls(totalPages);
+}
+
+function renderPaginationControls(totalPages) {
+    const container = document.getElementById('paginationButtons');
+    if (!container) return;
+
+    if (totalPages <= 1 && currentPerPage === 'all') {
+        container.innerHTML = '<span class="text-slate-400 text-xs italic">Semua baris ditampilkan</span>';
+        return;
+    }
+
+    let html = '';
+    const prevDisabled = currentPage <= 1;
+    html += `
+        <button type="button" onclick="goToPage(${currentPage - 1})" ${prevDisabled ? 'disabled' : ''} class="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 bg-white ${prevDisabled ? 'opacity-40 cursor-not-allowed text-slate-400' : 'hover:bg-slate-50 text-slate-700 hover:text-indigo-600'} transition-all">
+            &larr; Prev
+        </button>
+    `;
+
+    for (let i = 1; i <= totalPages; i++) {
+        if (totalPages > 7) {
+            if (i !== 1 && i !== totalPages && Math.abs(i - currentPage) > 1) {
+                if (i === 2 || i === totalPages - 1) {
+                    html += `<span class="px-1 text-slate-400 font-bold">...</span>`;
+                }
+                continue;
+            }
+        }
+        const isActive = i === currentPage;
+        html += `
+            <button type="button" onclick="goToPage(${i})" class="min-w-[28px] h-7 px-2 text-xs rounded-lg border transition-all ${isActive ? 'bg-indigo-600 text-white border-indigo-600 font-bold shadow-2xs' : 'bg-white text-slate-700 hover:bg-slate-50 hover:text-indigo-600 border-slate-200 font-medium'}">
+                ${i}
+            </button>
+        `;
+    }
+
+    const nextDisabled = currentPage >= totalPages;
+    html += `
+        <button type="button" onclick="goToPage(${currentPage + 1})" ${nextDisabled ? 'disabled' : ''} class="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 bg-white ${nextDisabled ? 'opacity-40 cursor-not-allowed text-slate-400' : 'hover:bg-slate-50 text-slate-700 hover:text-indigo-600'} transition-all">
+            Next &rarr;
+        </button>
+    `;
+
+    container.innerHTML = html;
+}
+
+function goToPage(pageNum) {
+    currentPage = pageNum;
+    sessionStorage.setItem(PAGE_KEY, currentPage);
+    updatePagination();
+}
+
+function changePerPage(val) {
+    currentPerPage = val;
+    sessionStorage.setItem(PER_PAGE_KEY, currentPerPage);
+    currentPage = 1;
+    sessionStorage.setItem(PAGE_KEY, 1);
+    updatePagination();
+}
+
+function filterStudents() {
+    currentPage = 1;
+    updatePagination();
 }
 
 // Auto Refresh Feature (10 seconds timer)
@@ -742,6 +867,15 @@ function toggleAutoRefresh() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Inisialisasi dropdown per-page dari storage
+    const perPageSelect = document.getElementById('perPageSelect');
+    if (perPageSelect && currentPerPage) {
+        perPageSelect.value = currentPerPage;
+    }
+
+    // Jalankan kalkulasi pagination monitoring peserta
+    updatePagination();
+
     const isAutoRefreshOn = localStorage.getItem(AUTO_REFRESH_KEY) === 'true';
     if (isAutoRefreshOn) {
         startAutoRefresh();

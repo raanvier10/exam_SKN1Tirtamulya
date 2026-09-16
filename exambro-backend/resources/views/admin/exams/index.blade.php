@@ -281,8 +281,9 @@
                             {{ \Carbon\Carbon::parse($e->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($e->end_at)->format('H:i') }} WIB
                         </div>
                     </td>
-                    <td class="px-6 py-4 align-middle whitespace-nowrap font-medium text-slate-700">
-                        {{ $e->duration }} mnt
+                    <td class="px-6 py-4 align-middle whitespace-nowrap">
+                        <div class="font-medium text-slate-800 text-xs">{{ $e->duration }} mnt</div>
+                        <div class="text-[10px] font-semibold text-indigo-600 mt-0.5">{{ round($e->duration / 45, 1) }} JP</div>
                     </td>
                     <td class="px-6 py-4 align-middle whitespace-nowrap">
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-rose-50 text-rose-700 ring-1 ring-rose-600/20">
@@ -378,7 +379,7 @@
                             <svg class="w-3 h-3 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            {{ $e->duration }} Menit
+                            {{ $e->duration }} Menit ({{ round($e->duration / 45, 1) }} JP)
                         </span>
                         @if($e->created_by === auth()->id())
                             <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">

@@ -80,6 +80,7 @@ class ExamController extends Controller
             'schedules' => 'required|array|min:1',
             'schedules.*.date' => 'required|date',
             'schedules.*.time' => 'required|date_format:H:i',
+            'schedules.*.duration' => 'nullable|integer|min:1',
             'schedules.*.classes' => 'required|array|min:1',
             'schedules.*.classes.*' => 'exists:classes,id',
         ], [
@@ -90,8 +91,9 @@ class ExamController extends Controller
 
         $createdCount = 0;
         foreach ($validated['schedules'] as $slot) {
+            $slotDuration = !empty($slot['duration']) ? (int)$slot['duration'] : (int)$validated['duration'];
             $start_at = \Carbon\Carbon::parse($slot['date'] . ' ' . $slot['time']);
-            $end_at = $start_at->copy()->addMinutes((int)$validated['duration']);
+            $end_at = $start_at->copy()->addMinutes($slotDuration);
 
             $exam = Exam::create([
                 'title' => $validated['title'],
@@ -99,7 +101,7 @@ class ExamController extends Controller
                 'google_form_url' => $validated['google_form_url'],
                 'start_at' => $start_at,
                 'end_at' => $end_at,
-                'duration' => $validated['duration'],
+                'duration' => $slotDuration,
                 'max_violation' => $validated['max_violation'],
                 'status' => $validated['status'],
                 'created_by' => Auth::id(),

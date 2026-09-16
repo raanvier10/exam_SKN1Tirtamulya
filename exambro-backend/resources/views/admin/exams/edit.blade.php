@@ -82,13 +82,17 @@
 
                 <!-- 3. Durasi -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Durasi (Menit) <span class="text-rose-500">*</span></label>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Durasi (Menit) <span class="text-rose-500">*</span></label>
+                        <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded" id="edit_duration_jp_pill">{{ round($exam->duration / 45, 1) }} JP</span>
+                    </div>
                     <input type="number" name="duration" id="exam_duration" required min="1" value="{{ old('duration', $exam->duration) }}" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 transition-all font-medium">
                     <div class="flex items-center gap-1.5 mt-2 flex-wrap">
-                        <button type="button" onclick="setExamDuration(45)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors">45m</button>
+                        <button type="button" onclick="setExamDuration(45)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors" title="1 Jam Pelajaran">1 JP (45m)</button>
                         <button type="button" onclick="setExamDuration(60)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors">60m</button>
-                        <button type="button" onclick="setExamDuration(90)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors">90m</button>
+                        <button type="button" onclick="setExamDuration(90)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors" title="2 Jam Pelajaran">2 JP (90m)</button>
                         <button type="button" onclick="setExamDuration(120)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors">120m</button>
+                        <button type="button" onclick="setExamDuration(135)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors" title="3 Jam Pelajaran">3 JP (135m)</button>
                     </div>
                 </div>
             </div>
@@ -368,8 +372,18 @@
         const elDateText = document.getElementById('preview_date_text');
         const elTimeText = document.getElementById('preview_time_text');
         const elDurationPill = document.getElementById('preview_duration_pill');
+        const editJpPill = document.getElementById('edit_duration_jp_pill');
 
-        if (elDurationPill) elDurationPill.textContent = `${durationVal} Menit`;
+        function formatJP(mins) {
+            const num = parseInt(mins) || 0;
+            if (num <= 0) return '0 JP';
+            const jp = num / 45;
+            const formatted = Number.isInteger(jp) ? jp : parseFloat(jp.toFixed(1));
+            return `${formatted} JP`;
+        }
+
+        if (editJpPill) editJpPill.textContent = formatJP(durationVal);
+        if (elDurationPill) elDurationPill.textContent = `${durationVal} Menit (${formatJP(durationVal)})`;
 
         if (!dateVal || !timeVal) {
             if (elDateText) elDateText.textContent = "Pilih tanggal ujian...";
