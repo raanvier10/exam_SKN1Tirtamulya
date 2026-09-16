@@ -146,4 +146,49 @@ class ExamCreationTest extends TestCase
         $this->assertNotNull($slot2);
         $this->assertEquals('2026-09-25 11:15:00', $slot2->end_at->format('Y-m-d H:i:s'));
     }
+
+    public function test_exams_index_groups_multi_session_exams_into_single_card(): void
+    {
+        $teacher = User::factory()->create(['role' => 'guru', 'status' => 'active']);
+        $class1 = StudentClass::create(['name' => 'XII RPL 1']);
+        $class2 = StudentClass::create(['name' => 'XII RPL 2']);
+
+        // 2 Sesi untuk ujian yang sama
+        $exam1 = Exam::create([
+            'title' => 'Ujian Akhir Semester Fisika',
+            'google_form_url' => 'https://forms.gle/fisika-uas-2026',
+            'duration' => 90,
+            'max_violation' => 3,
+            'status' => 'active',
+            'start_at' => now()->addHours(1),
+            'end_at' => now()->addHours(2)->addMinutes(30),
+            'created_by' => $teacher->id,
+        ]);
+        $exam1->classes()->attach($class1->id);
+
+        $exam2 = Exam::create([
+            'title' => 'Ujian Akhir Semester Fisika',
+            'google_form_url' => 'https://forms.gle/fisika-uas-2026',
+            'duration' => 90,
+            'max_violation' => 3,
+            'status' => 'active',
+            'start_at' => now()->addHours(3),
+            'end_at' => now()->addHours(4)->addMinutes(30),
+            'created_by' => $teacher->id,
+        ]);
+        $exam2->classes()->attach($class2->id);
+
+        $response = $this->actingAs($teacher)->get(route('admin.exams.index'));
+        $response->assertStatus(200);
+
+        // Pastikan groupedExams ada 1 grup berisi 2 sesi
+        $grouped = $response->viewData('groupedExams');
+        $this->assertCount(1, $grouped);
+        $this->assertEquals(2, $grouped->first()->session_count);
+        $this->assertEquals('Ujian Akhir Semester Fisika', $grouped->first()->title);
+
+        // Pastikan UI menampilkan badge 2 Sesi Terjadwal
+        $response->assertSee('2 Sesi Terjadwal');
+        $response->assertSee('Buka 2 Sesi');
+    }
 }

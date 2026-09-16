@@ -57,9 +57,39 @@ class ExamController extends Controller
         }
 
         $exams = $query->get();
+
+        // Group exams by title + google_form_url + creator (Ponytail: native Laravel collection grouping)
+        $groupedExams = $exams->groupBy(function ($exam) {
+            return trim(mb_strtolower($exam->title)) . '|' . trim($exam->google_form_url ?? '') . '|' . ($exam->created_by ?? 'school');
+        })->map(function ($group) {
+            $sortedSessions = $group->sortBy('start_at')->values();
+            $primary = $sortedSessions->first();
+            $allClasses = $sortedSessions->flatMap->classes->unique('id')->values();
+            $hasOngoing = $sortedSessions->contains(fn($e) => $e->isOngoing());
+            $hasActive = $sortedSessions->contains(fn($e) => $e->status === 'active');
+            
+            return (object) [
+                'group_id' => 'grp_' . $primary->id,
+                'title' => $primary->title,
+                'google_form_url' => $primary->google_form_url,
+                'created_by' => $primary->created_by,
+                'creator' => $primary->creator,
+                'primary' => $primary,
+                'sessions' => $sortedSessions,
+                'session_count' => $sortedSessions->count(),
+                'classes' => $allClasses,
+                'is_ongoing' => $hasOngoing,
+                'has_active' => $hasActive,
+                'max_violation' => $primary->max_violation,
+                'duration' => $primary->duration,
+                'start_at' => $sortedSessions->first()->start_at,
+                'end_at' => $sortedSessions->last()->end_at,
+            ];
+        })->values();
+
         $classes = \App\Models\StudentClass::orderBy('name')->get();
 
-        return view('admin.exams.index', compact('exams', 'classes'));
+        return view('admin.exams.index', compact('exams', 'groupedExams', 'classes'));
     }
 
     public function create()

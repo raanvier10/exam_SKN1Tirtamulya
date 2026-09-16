@@ -97,43 +97,46 @@
             </div>
 
             <!-- Durasi (berlaku untuk semua sesi ujian pada form ini) -->
-            <div class="p-4 sm:p-5 rounded-2xl bg-slate-50/80 border border-slate-200/90 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div class="space-y-1">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <div class="w-7 h-7 rounded-lg bg-indigo-100/80 text-indigo-600 flex items-center justify-center shrink-0">
+            <div class="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/90 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <label for="exam_duration" class="text-xs font-bold text-slate-800 uppercase tracking-wider">Durasi Per Sesi <span class="text-rose-500">*</span></label>
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-50 border border-indigo-200/80 text-[11px] font-bold text-indigo-700">
+                        <div>
+                            <label for="exam_duration" class="text-xs font-bold text-slate-800 uppercase tracking-wider block">Durasi Per Sesi <span class="text-rose-500">*</span></label>
+                            <p class="text-xs text-slate-500 mt-0.5">
+                                Setara <strong id="preview_duration_jp_text" class="text-indigo-700 font-semibold">2 Jam Pelajaran (JP)</strong> — 1 JP = 45 menit. Dapat disesuaikan per sesi jika ada jadwal kelas dengan JP berbeda di bawah.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Badge Biru di Sisi Kanan -->
+                    <div class="self-start sm:self-auto shrink-0">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-100/70 text-indigo-700 text-xs font-bold border border-indigo-200/60 shadow-2xs">
                             <span id="preview_duration_pill">{{ old('duration', 90) }} Menit</span>
                             <span class="text-indigo-400">•</span>
                             <span id="preview_duration_jp_pill">2 JP</span>
                         </span>
                     </div>
-                    <p class="text-xs text-slate-500 sm:pl-9">
-                        Setara <strong id="preview_duration_jp_text" class="text-indigo-700 font-semibold">2 Jam Pelajaran (JP)</strong> — 1 JP = 45 menit. Dapat disesuaikan per sesi jika ada jadwal kelas dengan JP berbeda di bawah.
-                    </p>
-                    @error('duration') <span class="text-rose-500 text-xs sm:pl-9 block">{{ $message }}</span> @enderror
                 </div>
 
-                <div class="flex items-center gap-2.5 flex-wrap sm:flex-nowrap sm:pl-9 md:pl-0">
-                    <!-- Input dengan suffix satuan Menit -->
-                    <div class="relative w-36 sm:w-40 shrink-0">
-                        <input type="number" name="duration" id="exam_duration" required min="1" value="{{ old('duration', 90) }}" class="w-full bg-white border border-slate-200 rounded-xl pl-3.5 pr-14 py-2 text-sm text-slate-900 font-semibold focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 transition-all text-center">
-                        <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-xs font-semibold text-slate-400 uppercase tracking-wider">menit</span>
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3 pt-3 border-t border-slate-200/60">
+                    <!-- Kiri: Input durasi (mengisi sisa ruang agar penuh) -->
+                    <div class="relative flex-1">
+                        <input type="number" name="duration" id="exam_duration" required min="1" value="{{ old('duration', 90) }}" class="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-16 py-2.5 text-sm text-slate-900 font-bold focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 shadow-2xs transition-all">
+                        <span class="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none text-xs font-bold text-slate-400 uppercase tracking-wider">MENIT</span>
                     </div>
 
-                    <!-- Preset Chips dengan JP -->
-                    <div class="inline-flex items-center p-1 bg-white border border-slate-200 rounded-xl gap-1 shadow-2xs flex-wrap">
-                        <button type="button" data-duration="45" onclick="setExamDuration(45)" class="duration-preset-btn px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="1 Jam Pelajaran (45 Menit)">1 JP (45m)</button>
-                        <button type="button" data-duration="60" onclick="setExamDuration(60)" class="duration-preset-btn px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">60m</button>
-                        <button type="button" data-duration="90" onclick="setExamDuration(90)" class="duration-preset-btn px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="2 Jam Pelajaran (90 Menit)">2 JP (90m)</button>
-                        <button type="button" data-duration="120" onclick="setExamDuration(120)" class="duration-preset-btn px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">120m</button>
-                        <button type="button" data-duration="135" onclick="setExamDuration(135)" class="duration-preset-btn px-2.5 py-1 text-xs font-semibold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all" title="3 Jam Pelajaran (135 Menit)">3 JP (135m)</button>
+                    <!-- Kanan: Pilihan 1, 2, 3 JP (Fixed Width per Tombol) -->
+                    <div class="grid grid-cols-3 sm:flex items-center gap-2 shrink-0">
+                        <button type="button" data-duration="45" onclick="setExamDuration(45)" class="duration-preset-btn w-full sm:w-32 py-2 text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 rounded-xl transition-all shadow-2xs active:scale-95 text-center" title="1 Jam Pelajaran (45 Menit)">1 JP (45m)</button>
+                        <button type="button" data-duration="90" onclick="setExamDuration(90)" class="duration-preset-btn w-full sm:w-32 py-2 text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 rounded-xl transition-all shadow-2xs active:scale-95 text-center" title="2 Jam Pelajaran (90 Menit)">2 JP (90m)</button>
+                        <button type="button" data-duration="135" onclick="setExamDuration(135)" class="duration-preset-btn w-full sm:w-32 py-2 text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 rounded-xl transition-all shadow-2xs active:scale-95 text-center" title="3 Jam Pelajaran (135 Menit)">3 JP (135m)</button>
                     </div>
                 </div>
+                @error('duration') <span class="text-rose-500 text-xs block">{{ $message }}</span> @enderror
             </div>
 
             <!-- Multi-Schedule Slots -->
@@ -185,7 +188,7 @@
                     <svg class="w-3.5 h-3.5 shrink-0 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>Siswa hanya akan melihat 1 jadwal ujian pada jam yang dialokasikan khusus untuk kelasnya.</span>
+                    <span>Tiap siswa otomatis hanya melihat jadwal ujian pada sesi kelasnya masing-masing.</span>
                 </div>
             </div>
 
@@ -351,93 +354,112 @@
         allClasses.forEach(c => {
             const isChecked = selectedClassIds.includes(c.id);
             classCardsHtml += `
-                <label class="slot-class-card group flex items-center gap-2 p-2 bg-slate-50/70 border border-slate-200 rounded-lg cursor-pointer transition-all hover:border-indigo-300 select-none" data-classname="${c.name.toLowerCase()}">
+                <label class="slot-class-card group flex items-center gap-2.5 p-2.5 rounded-xl border transition-all cursor-pointer select-none ${isChecked ? 'bg-indigo-50/80 border-indigo-500 ring-1 ring-indigo-500/30 shadow-2xs' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/80'}" data-classname="${c.name.toLowerCase()}">
                     <input type="checkbox" name="schedules[${idx}][classes][]" value="${c.id}" ${isChecked ? 'checked' : ''} 
-                           class="slot-class-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4"
+                           class="slot-class-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 shrink-0"
                            onchange="onSlotClassChanged(${idx}); triggerAutosave();">
-                    <span class="text-xs font-semibold text-slate-700 group-hover:text-indigo-700 transition-colors">${c.name}</span>
+                    <span class="text-xs ${isChecked ? 'font-bold text-indigo-950' : 'font-medium text-slate-700 group-hover:text-slate-900'} transition-colors">${c.name}</span>
                 </label>
             `;
         });
 
         const slot = document.createElement('div');
-        slot.className = 'schedule-slot p-4 sm:p-5 bg-slate-50/80 border border-slate-200/90 rounded-2xl space-y-3.5 shadow-2xs transition-all';
+        slot.className = 'schedule-slot p-4 sm:p-5 bg-slate-50/80 border border-slate-200/90 rounded-2xl space-y-4 shadow-2xs transition-all';
         slot.setAttribute('data-index', idx);
         slot.innerHTML = `
-            <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-200/80">
-                <div class="flex items-center gap-2.5 flex-wrap">
+            <!-- Header Sesi -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-200/80">
+                <div class="flex items-center gap-2.5">
                     <div class="flex items-center justify-center w-7 h-7 rounded-lg bg-indigo-600 text-white text-xs font-bold shrink-0 schedule-num">${num}</div>
-                    <span class="text-xs font-bold text-slate-900 uppercase tracking-wide">Jadwal Sesi <span class="slot-title-num">${num}</span></span>
-                    <span class="text-xs text-indigo-700 font-mono font-semibold bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-100 schedule-preview">—</span>
+                    <span class="text-xs font-bold text-slate-900 uppercase tracking-wider">Jadwal Sesi <span class="slot-title-num">${num}</span></span>
                 </div>
-                <button type="button" onclick="removeScheduleSlot(this)" class="remove-slot-btn inline-flex items-center gap-1 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2.5 py-1 rounded-lg transition-colors font-medium ${num === 1 ? 'hidden' : ''}">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    Hapus Sesi
-                </button>
-            </div>
-
-            <!-- Inputs Waktu & Durasi -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Tanggal Ujian <span class="text-rose-500">*</span></label>
-                    <input type="date" name="schedules[${idx}][date]" value="${dateVal}" required class="schedule-date w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 font-medium">
-                </div>
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Jam Mulai <span class="text-rose-500">*</span></label>
-                    <input type="time" name="schedules[${idx}][time]" value="${defaultTime}" required class="schedule-time w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 font-medium">
-                </div>
-                <div>
-                    <div class="flex items-center justify-between mb-1">
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Durasi Khusus Sesi Ini</label>
-                        <span class="slot-jp-badge text-[9px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100">Ikut default</span>
-                    </div>
-                    <div class="relative">
-                        <input type="number" name="schedules[${idx}][duration]" value="${defaultDuration || ''}" min="1" placeholder="Ikut default (${globalDurationVal}m)" class="schedule-duration w-full bg-white border border-slate-200 rounded-xl pl-3 pr-14 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 font-medium" oninput="updateAllPreviews(); triggerAutosave();">
-                        <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-xs font-semibold text-slate-400 uppercase tracking-wider">menit</span>
-                    </div>
-                    <!-- Quick JP buttons for this slot -->
-                    <div class="flex items-center gap-1 mt-1.5 flex-wrap">
-                        <span class="text-[9px] text-slate-400 font-semibold uppercase mr-0.5">Preset:</span>
-                        <button type="button" onclick="setSlotDuration(${idx}, 45)" class="px-1.5 py-0.5 text-[10px] font-medium bg-white hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 border border-slate-200 rounded transition-colors" title="1 Jam Pelajaran">1 JP (45m)</button>
-                        <button type="button" onclick="setSlotDuration(${idx}, 90)" class="px-1.5 py-0.5 text-[10px] font-medium bg-white hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 border border-slate-200 rounded transition-colors" title="2 Jam Pelajaran">2 JP (90m)</button>
-                        <button type="button" onclick="setSlotDuration(${idx}, '')" class="px-1.5 py-0.5 text-[10px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 rounded transition-colors">Default</button>
-                    </div>
+                <!-- Jam & Aksi di Sisi Kanan -->
+                <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-semibold border border-indigo-100 schedule-preview shadow-2xs">—</span>
+                    <button type="button" onclick="removeScheduleSlot(this)" class="remove-slot-btn inline-flex items-center gap-1.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2.5 py-1 rounded-lg transition-colors font-semibold ${num === 1 ? 'hidden' : ''}">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Hapus Sesi
+                    </button>
                 </div>
             </div>
 
-            <!-- Target Kelas untuk Slot Ini -->
-            <div class="pt-2">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <label class="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">Target Kelas Sesi Ini <span class="text-rose-500">*</span></label>
-                        <span class="slot-class-count text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">0 Kelas Dipilih</span>
-                    </div>
-                    <div class="flex items-center gap-1.5 flex-wrap">
-                        ${num > 1 ? `
-                        <button type="button" onclick="copyClassesFromFirstSlot(${idx})" class="text-[11px] font-semibold text-slate-600 hover:text-indigo-600 bg-white hover:bg-indigo-50 border border-slate-200 px-2 py-1 rounded-lg transition-colors">
-                            Salin Kelas Jadwal 1
-                        </button>
-                        ` : ''}
-                        <button type="button" onclick="toggleAllSlotClasses(${idx})" class="slot-toggle-btn text-[11px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg transition-colors">
-                            Pilih Semua Kelas
-                        </button>
-                    </div>
+            <!-- Baris 1: Waktu Pelaksanaan (Tanggal & Jam Mulai) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Tanggal Ujian <span class="text-rose-500">*</span></label>
+                    <input type="date" name="schedules[${idx}][date]" value="${dateVal}" required class="schedule-date w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-900 font-semibold focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 shadow-2xs">
                 </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Jam Mulai <span class="text-rose-500">*</span></label>
+                    <input type="time" name="schedules[${idx}][time]" value="${defaultTime}" required class="schedule-time w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-900 font-semibold focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 shadow-2xs">
+                </div>
+            </div>
 
-                <!-- Search filter mini -->
-                <div class="relative mb-2">
-                    <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
-                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <!-- Baris 2: Durasi Sesi (Kiri: Label & Status, Kanan: Pilihan Durasi Jam) -->
+            <div class="p-3.5 bg-slate-100/60 border border-slate-200/80 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-2.5 shrink-0">
+                    <div class="w-8 h-8 rounded-xl bg-white text-slate-500 flex items-center justify-center shrink-0 border border-slate-200 shadow-2xs">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
-                    <input type="text" oninput="filterSlotClasses(${idx}, this.value)" placeholder="Cari kelas untuk jadwal ini..." class="w-full pl-7 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-xs sm:text-sm font-bold text-slate-800">Durasi Sesi</span>
+                            <span class="text-[10px] font-medium text-slate-400 bg-white px-1.5 py-0.5 rounded border border-slate-200/70">Opsional</span>
+                        </div>
+                        <div class="slot-dur-status text-xs text-slate-500 mt-0.5 font-medium">
+                            Sesuai default (<span class="slot-default-hint">${globalDurationVal}m / ${formatJP(globalDurationVal)}</span>)
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Grid Checkboxes Kelas -->
-                <div class="slot-class-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 p-3 bg-white border border-slate-200/90 rounded-xl max-h-44 overflow-y-auto">
+                <!-- Kontrol Pilihan Durasi Jam di Sisi Kanan -->
+                <div class="flex items-center gap-2 shrink-0">
+                    <div class="inline-flex p-1 bg-white border border-slate-200 rounded-xl shadow-2xs gap-1">
+                        <button type="button" onclick="setSlotDuration(${idx}, '')" data-dur="" class="slot-dur-btn px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900" title="Ikuti durasi default ujian">Default</button>
+                        <button type="button" onclick="setSlotDuration(${idx}, 45)" data-dur="45" class="slot-dur-btn px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900" title="1 Jam Pelajaran (45 Menit)">1 JP</button>
+                        <button type="button" onclick="setSlotDuration(${idx}, 90)" data-dur="90" class="slot-dur-btn px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900" title="2 Jam Pelajaran (90 Menit)">2 JP</button>
+                        <button type="button" onclick="setSlotDuration(${idx}, 135)" data-dur="135" class="slot-dur-btn px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900" title="3 Jam Pelajaran (135 Menit)">3 JP</button>
+                    </div>
+                    
+                    <div class="relative w-28 sm:w-32">
+                        <input type="number" name="schedules[${idx}][duration]" value="${defaultDuration || ''}" min="1" placeholder="Kustom" class="schedule-duration w-full bg-white border border-slate-200 rounded-xl pl-3 pr-8 py-1.5 text-xs sm:text-sm text-slate-900 font-bold focus:outline-none transition-all shadow-2xs" oninput="updateAllPreviews(); triggerAutosave();" title="Masukkan durasi menit kustom">
+                        <span class="absolute inset-y-0 right-0 flex items-center pr-2.5 pointer-events-none text-[11px] font-bold text-slate-400 uppercase">m</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Baris 3: Target Kelas untuk Sesi Ini -->
+            <div class="pt-1 space-y-2.5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <label class="text-xs font-bold text-slate-800 uppercase tracking-wider">Target Kelas Sesi Ini <span class="text-rose-500">*</span></label>
+                            <span class="slot-class-count text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200">Wajib Pilih Kelas</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-0.5">Pilih kelas yang mengikuti ujian pada jadwal sesi ini.</p>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <!-- Search Box Mini -->
+                        <div class="relative w-full sm:w-44">
+                            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            <input type="text" oninput="filterSlotClasses(${idx}, this.value)" placeholder="Cari kelas..." class="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 shadow-2xs">
+                        </div>
+                        <button type="button" onclick="toggleAllSlotClasses(${idx})" class="slot-toggle-btn text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 border border-indigo-100/80 px-3 py-1.5 rounded-lg transition-all">
+                            Pilih Semua
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Grid Checkboxes Kelas Interaktif -->
+                <div class="slot-class-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 p-3.5 bg-white border border-slate-200/90 rounded-xl max-h-52 overflow-y-auto">
                     ${classCardsHtml}
                 </div>
             </div>
@@ -454,9 +476,9 @@
         const durInput = slot.querySelector('.schedule-duration');
         if (durInput) {
             durInput.value = val;
-            updateAllPreviews();
-            triggerAutosave();
         }
+        updateAllPreviews();
+        triggerAutosave();
     }
 
     // ==========================================
@@ -720,20 +742,33 @@
         const toggleBtn = slot.querySelector('.slot-toggle-btn');
         const allBoxes = slot.querySelectorAll('.slot-class-checkbox');
 
+        // Visual highlight card yang dipilih
+        slot.querySelectorAll('.slot-class-card').forEach(card => {
+            const cb = card.querySelector('.slot-class-checkbox');
+            const span = card.querySelector('span');
+            if (cb && cb.checked) {
+                card.className = "slot-class-card group flex items-center gap-2.5 p-2.5 rounded-xl border transition-all cursor-pointer select-none bg-indigo-50/80 border-indigo-500 ring-1 ring-indigo-500/30 shadow-2xs";
+                if (span) span.className = "text-xs font-bold text-indigo-950 transition-colors";
+            } else {
+                card.className = "slot-class-card group flex items-center gap-2.5 p-2.5 rounded-xl border transition-all cursor-pointer select-none bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/80";
+                if (span) span.className = "text-xs font-medium text-slate-700 group-hover:text-slate-900 transition-colors";
+            }
+        });
+
         if (countBadge) {
             if (checked.length > 0) {
-                countBadge.className = 'slot-class-count text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200';
+                countBadge.className = 'slot-class-count text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200';
                 countBadge.textContent = `${checked.length} Kelas Dipilih`;
             } else {
-                countBadge.className = 'slot-class-count text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200';
+                countBadge.className = 'slot-class-count text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200';
                 countBadge.textContent = `Wajib Pilih Kelas`;
             }
         }
 
         if (toggleBtn) {
             toggleBtn.textContent = (checked.length === allBoxes.length && allBoxes.length > 0)
-                ? 'Batal Pilih Semua'
-                : 'Pilih Semua Kelas';
+                ? 'Batal Semua'
+                : 'Pilih Semua';
         }
 
         updateAllPreviews();
@@ -747,20 +782,6 @@
         const allChecked = visibleBoxes.every(cb => cb.checked);
         visibleBoxes.forEach(cb => cb.checked = !allChecked);
         onSlotClassChanged(idx);
-        triggerAutosave();
-    }
-
-    function copyClassesFromFirstSlot(targetIdx) {
-        const firstSlot = document.querySelector('.schedule-slot');
-        const targetSlot = document.querySelector(`.schedule-slot[data-index="${targetIdx}"]`);
-        if (!firstSlot || !targetSlot) return;
-
-        const firstCheckedValues = Array.from(firstSlot.querySelectorAll('.slot-class-checkbox:checked')).map(cb => cb.value);
-        targetSlot.querySelectorAll('.slot-class-checkbox').forEach(cb => {
-            cb.checked = firstCheckedValues.includes(cb.value);
-        });
-
-        onSlotClassChanged(targetIdx);
         triggerAutosave();
     }
 
@@ -804,9 +825,9 @@
         document.querySelectorAll('.duration-preset-btn').forEach(btn => {
             const btnVal = parseInt(btn.getAttribute('data-duration'));
             if (btnVal === durationVal) {
-                btn.className = 'duration-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg transition-all bg-indigo-600 text-white shadow-xs';
+                btn.className = 'duration-preset-btn w-full sm:w-32 py-2 text-xs font-bold rounded-xl transition-all bg-indigo-600 text-white shadow-xs text-center';
             } else {
-                btn.className = 'duration-preset-btn px-2.5 py-1 text-xs font-semibold rounded-lg transition-all text-slate-600 hover:text-indigo-600 hover:bg-indigo-50';
+                btn.className = 'duration-preset-btn w-full sm:w-32 py-2 text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 rounded-xl transition-all shadow-2xs active:scale-95 text-center';
             }
         });
 
@@ -823,21 +844,49 @@
             const slotJpBadge = slot.querySelector('.slot-jp-badge');
             const checkedBoxes = slot.querySelectorAll('.slot-class-checkbox:checked');
 
-            if (durationInput) {
-                durationInput.placeholder = `Ikut default (${durationVal}m / ${formatJP(durationVal)})`;
-            }
-
             const customDur = durationInput && durationInput.value ? parseInt(durationInput.value) : null;
             const effectiveDur = (customDur && customDur > 0) ? customDur : durationVal;
+            const durStatusEl = slot.querySelector('.slot-dur-status');
+            const isPresetMatched = [45, 90, 135].includes(customDur);
 
-            if (slotJpBadge) {
+            // Update status teks ringkas di kiri (tidak banyak tulisan, warna adaptif)
+            if (durStatusEl) {
                 if (customDur && customDur > 0) {
-                    slotJpBadge.className = 'slot-jp-badge text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200';
-                    slotJpBadge.textContent = `${customDur}m (${formatJP(customDur)})`;
+                    durStatusEl.innerHTML = `<span class="text-amber-700 font-bold inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Khusus sesi ini: ${customDur}m (${formatJP(customDur)})</span>`;
                 } else {
-                    slotJpBadge.className = 'slot-jp-badge text-[9px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100';
-                    slotJpBadge.textContent = `Default (${durationVal}m / ${formatJP(durationVal)})`;
+                    durStatusEl.innerHTML = `Sesuai default (<span class="slot-default-hint">${durationVal}m / ${formatJP(durationVal)}</span>)`;
                 }
+            }
+
+            // Update status tombol preset durasi sesi
+            const durButtons = slot.querySelectorAll('.slot-dur-btn');
+            durButtons.forEach(b => {
+                const bDur = b.getAttribute('data-dur');
+                const isDefaultBtn = bDur === '';
+                const isActive = isDefaultBtn ? (!customDur) : (parseInt(bDur) === customDur);
+                if (isActive) {
+                    if (isDefaultBtn) {
+                        b.className = 'slot-dur-btn px-3.5 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all bg-slate-800 text-white shadow-xs text-center';
+                    } else {
+                        b.className = 'slot-dur-btn px-3.5 py-1.5 text-xs sm:text-sm font-bold rounded-lg transition-all bg-indigo-600 text-white shadow-xs text-center';
+                    }
+                } else {
+                    b.className = 'slot-dur-btn px-3.5 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all text-slate-600 hover:text-slate-900 hover:bg-slate-100 text-center';
+                }
+            });
+
+            // Highlight input custom jika aktif kustom
+            if (durationInput) {
+                if (customDur && customDur > 0) {
+                    durationInput.className = 'schedule-duration w-full bg-amber-50/70 border border-amber-500 ring-2 ring-amber-500/20 rounded-xl pl-3 pr-8 py-1.5 text-xs sm:text-sm text-amber-950 font-bold focus:outline-none transition-all shadow-2xs';
+                } else {
+                    durationInput.className = 'schedule-duration w-full bg-white border border-slate-200 rounded-xl pl-3 pr-8 py-1.5 text-xs sm:text-sm text-slate-700 font-medium focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all shadow-2xs';
+                }
+            }
+
+            const defaultHint = slot.querySelector('.slot-default-hint');
+            if (defaultHint) {
+                defaultHint.textContent = `${durationVal}m / ${formatJP(durationVal)}`;
             }
 
             const classNames = Array.from(checkedBoxes).map(cb => {
@@ -871,23 +920,27 @@
 
             let classDisplay = '';
             if (classNames.length === 0) {
-                classDisplay = '<span class="text-rose-600 font-bold">Belum ada kelas yang dipilih!</span>';
-            } else if (classNames.length <= 3) {
-                classDisplay = `<span class="text-slate-700 font-medium">Kelas: <strong>${classNames.join(', ')}</strong></span>`;
+                classDisplay = '<span class="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-200"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Belum ada kelas</span>';
+            } else if (classNames.length <= 2) {
+                classDisplay = `<span class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-800 bg-slate-100/90 px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs"><svg class="w-3.5 h-3.5 text-indigo-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg> ${classNames.join(', ')}</span>`;
             } else {
-                classDisplay = `<span class="text-slate-700 font-medium">Kelas: <strong>${classNames.slice(0, 2).join(', ')}</strong> +${classNames.length - 2} kelas lainnya</span>`;
+                classDisplay = `<span class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-800 bg-slate-100/90 px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs" title="${classNames.join(', ')}"><svg class="w-3.5 h-3.5 text-indigo-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg> ${classNames.length} Kelas: ${classNames.slice(0, 2).join(', ')} <span class="text-slate-400 font-normal text-[11px]">+${classNames.length - 2}</span></span>`;
             }
 
             summaryHTML += `
-                <div class="p-2.5 rounded-xl bg-white border border-indigo-100/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="w-5 h-5 rounded-md bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">${i + 1}</span>
-                        <span class="font-semibold text-slate-900">${dayName}, ${dayDate} ${monthName} ${year}</span>
-                        <span class="text-slate-300">•</span>
-                        <span class="font-mono font-medium text-indigo-700">${sH}:${sM}–${eH}:${eM} WIB</span>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${customDur ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-indigo-50 text-indigo-700 border border-indigo-100'}">${effectiveDur} Menit (${formatJP(effectiveDur)})${customDur ? ' (Kustom)' : ''}</span>
+                <div class="p-2.5 sm:p-3 rounded-xl bg-white border border-indigo-100/90 hover:border-indigo-200 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-2xs">
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                        <span class="w-6 h-6 rounded-lg bg-indigo-600 text-white text-xs font-bold flex items-center justify-center shrink-0 shadow-2xs">${i + 1}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-slate-900 text-xs sm:text-sm">${dayName}, ${dayDate} ${monthName}</span>
+                            <span class="text-slate-300">•</span>
+                            <span class="font-mono font-bold text-indigo-600 text-xs sm:text-sm">${sH}:${sM}–${eH}:${eM} WIB</span>
+                        </div>
+                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold ${customDur ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-slate-100 text-slate-700 border border-slate-200'}">
+                            ${effectiveDur} Menit (${formatJP(effectiveDur)})${customDur ? ' • Kustom' : ''}
+                        </span>
                     </div>
-                    <div class="text-[11px] self-start sm:self-auto pl-7 sm:pl-0">
+                    <div class="self-start sm:self-auto pl-8 sm:pl-0">
                         ${classDisplay}
                     </div>
                 </div>

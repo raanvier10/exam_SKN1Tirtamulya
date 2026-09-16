@@ -206,129 +206,331 @@
                 </tr>
             </thead>
             <tbody id="examTableBody" class="divide-y divide-slate-100">
-                @forelse($exams as $e)
+                @php $displayList = $groupedExams ?? $exams; @endphp
+                @forelse($displayList as $grp)
                 @php
-                    $classList = $e->classes->pluck('name')->implode(', ');
-                    $classCount = $e->classes->count();
-                    $canManage = auth()->user()->isAdmin() || ($e->created_by === auth()->id());
-                    $isOngoing = $e->isOngoing();
+                    $isGrouped = isset($grp->session_count);
+                    $sessionCount = $isGrouped ? $grp->session_count : 1;
+                    $isSingle = $sessionCount === 1;
+                    $primary = $isGrouped ? $grp->primary : $grp;
+                    $classList = $isGrouped ? $grp->classes->pluck('name')->implode(', ') : $grp->classes->pluck('name')->implode(', ');
+                    $classCount = $isGrouped ? $grp->classes->count() : $grp->classes->count();
+                    $canManage = auth()->user()->isAdmin() || ($primary->created_by === auth()->id());
+                    $isOngoing = $isGrouped ? $grp->is_ongoing : $primary->isOngoing();
+                    $status = $isOngoing ? 'ongoing' : ($isGrouped ? ($grp->has_active ? 'active' : 'inactive') : $primary->status);
+                    $groupId = $isGrouped ? $grp->group_id : ('exam_' . $primary->id);
                 @endphp
-                <tr class="exam-row hover:bg-indigo-50/20 transition-colors duration-150 group" 
-                    data-title="{{ strtolower($e->title) }}" 
-                    data-classes="{{ strtolower($classList ?: 'semua kelas') }}" 
-                    data-status="{{ $e->status }}"
-                    data-exam-id="{{ $e->id }}"
-                    data-can-manage="{{ $canManage ? '1' : '0' }}"
-                    data-ongoing="{{ $isOngoing ? '1' : '0' }}">
-                    <td class="px-4 py-4 align-middle">
-                        @if($canManage)
-                            @if($isOngoing)
-                                <input type="checkbox" disabled class="rounded text-slate-300 border-slate-200 w-4 h-4 cursor-not-allowed opacity-40" title="Ujian sedang berlangsung">
-                            @else
-                                <input type="checkbox" class="bulk-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 cursor-pointer" value="{{ $e->id }}">
-                            @endif
-                        @endif
-                    </td>
-                    <td class="px-6 py-4 font-semibold text-slate-900 align-middle">
-                        <div class="line-clamp-2 max-w-sm">{{ $e->title }}</div>
-                        <div class="mt-1 flex items-center gap-1.5 text-[11px]">
-                            @if($e->created_by === auth()->id())
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1"></span> Ujian Anda
-                                </span>
-                            @elseif($e->creator && $e->creator->isAdmin())
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200">
-                                    Ujian Sekolah (Admin)
-                                </span>
-                            @elseif($e->creator)
-                                <span class="text-slate-400">
-                                    Oleh: <span class="text-slate-600 font-medium">{{ $e->creator->name }}</span>
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200">
-                                    Ujian Sekolah (Admin)
-                                </span>
-                            @endif
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 align-middle whitespace-nowrap">
-                        @if($classCount === 0)
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                                Semua Kelas
-                            </span>
-                        @elseif($classCount <= 2)
-                            <div class="inline-flex items-center gap-1.5 flex-wrap">
-                                @foreach($e->classes as $cls)
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                                        {{ $cls->name }}
-                                    </span>
-                                @endforeach
-                            </div>
-                        @else
-                            <div class="inline-flex items-center gap-1.5">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                                    {{ $e->classes->first()->name }}
-                                </span>
-                                <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-indigo-100 text-slate-700 hover:text-indigo-800 border border-slate-200 transition-colors cursor-help" title="{{ $classList }}">
-                                    +{{ $classCount - 1 }} Kelas
-                                </span>
-                            </div>
-                        @endif
-                    </td>
-                    <td class="px-6 py-4 align-middle whitespace-nowrap">
-                        <div class="text-slate-900 font-semibold text-xs">{{ \Carbon\Carbon::parse($e->start_at)->format('d M Y') }}</div>
-                        <div class="text-slate-400 text-xs mt-0.5 font-mono">
-                            {{ \Carbon\Carbon::parse($e->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($e->end_at)->format('H:i') }} WIB
-                        </div>
-                    </td>
-                    <td class="px-6 py-4 align-middle whitespace-nowrap">
-                        <div class="font-medium text-slate-800 text-xs">{{ $e->duration }} mnt</div>
-                        <div class="text-[10px] font-semibold text-indigo-600 mt-0.5">{{ round($e->duration / 45, 1) }} JP</div>
-                    </td>
-                    <td class="px-6 py-4 align-middle whitespace-nowrap">
-                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-rose-50 text-rose-700 ring-1 ring-rose-600/20">
-                            <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                            Max {{ $e->max_violation }}x Keluar
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 align-middle whitespace-nowrap">
-                        @if($isOngoing)
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-600/30 border border-amber-200">
-                                <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping mr-0.5"></span> Berlangsung
-                            </span>
-                        @elseif($e->status === 'active')
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Aktif
-                            </span>
-                        @else
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 ring-1 ring-slate-400/20">
-                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Nonaktif
-                            </span>
-                        @endif
-                    </td>
-                    <td class="px-6 py-4 align-middle whitespace-nowrap text-right">
-                        <div class="inline-flex items-center justify-end gap-1.5">
-                            <a href="{{ route('admin.exams.show', $e->id) }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 rounded-lg text-xs font-semibold hover:bg-indigo-600 hover:text-white shadow-2xs transition-all duration-150" title="Monitor & Buka Kunci Siswa">
-                                Monitor
-                            </a>
+
+                @if($isSingle)
+                    <!-- Single Exam Row -->
+                    <tr class="exam-row hover:bg-indigo-50/20 transition-colors duration-150 group" 
+                        data-title="{{ strtolower($primary->title) }}" 
+                        data-classes="{{ strtolower($classList ?: 'semua kelas') }}" 
+                        data-status="{{ $primary->status }}"
+                        data-exam-id="{{ $primary->id }}"
+                        data-can-manage="{{ $canManage ? '1' : '0' }}"
+                        data-ongoing="{{ $isOngoing ? '1' : '0' }}">
+                        <td class="px-4 py-4 align-middle">
                             @if($canManage)
-                                <a href="{{ route('admin.exams.edit', $e->id) }}" class="inline-flex items-center justify-center px-2.5 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 shadow-2xs transition-all duration-150">Edit</a>
                                 @if($isOngoing)
-                                    <button type="button" disabled class="inline-flex items-center justify-center px-2.5 py-1.5 bg-slate-100 border border-slate-200 text-slate-400 rounded-lg text-xs font-medium cursor-not-allowed opacity-50" title="Ujian sedang berlangsung dan tidak dapat dihapus">
-                                        Hapus
-                                    </button>
+                                    <input type="checkbox" disabled class="rounded text-slate-300 border-slate-200 w-4 h-4 cursor-not-allowed opacity-40" title="Ujian sedang berlangsung">
                                 @else
-                                    <form action="{{ route('admin.exams.destroy', $e->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus ujian ini?');">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="inline-flex items-center justify-center px-2.5 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 shadow-2xs transition-all duration-150">Hapus</button>
-                                    </form>
+                                    <input type="checkbox" class="bulk-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 cursor-pointer" value="{{ $primary->id }}">
                                 @endif
                             @endif
-                        </div>
-                    </td>
-                </tr>
+                        </td>
+                        <td class="px-6 py-4 font-semibold text-slate-900 align-middle">
+                            <div class="line-clamp-2 max-w-sm font-bold text-slate-900">{{ $primary->title }}</div>
+                            <div class="mt-1 flex items-center gap-1.5 text-[11px]">
+                                @if($primary->created_by === auth()->id())
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1"></span> Ujian Anda
+                                    </span>
+                                @elseif($primary->creator && $primary->creator->isAdmin())
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200">
+                                        Ujian Sekolah (Admin)
+                                    </span>
+                                @elseif($primary->creator)
+                                    <span class="text-slate-400">
+                                        Oleh: <span class="text-slate-600 font-medium">{{ $primary->creator->name }}</span>
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200">
+                                        Ujian Sekolah (Admin)
+                                    </span>
+                                @endif
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 align-middle whitespace-nowrap">
+                            @if($classCount === 0)
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                                    Semua Kelas
+                                </span>
+                            @elseif($classCount <= 2)
+                                <div class="inline-flex items-center gap-1.5 flex-wrap">
+                                    @foreach(($isGrouped ? $grp->classes : $primary->classes) as $cls)
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                            {{ $cls->name }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="inline-flex items-center gap-1.5">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                        {{ ($isGrouped ? $grp->classes : $primary->classes)->first()->name }}
+                                    </span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-indigo-100 text-slate-700 hover:text-indigo-800 border border-slate-200 transition-colors cursor-help" title="{{ $classList }}">
+                                        +{{ $classCount - 1 }} Kelas
+                                    </span>
+                                </div>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 align-middle whitespace-nowrap">
+                            <div class="text-slate-900 font-semibold text-xs">{{ \Carbon\Carbon::parse($primary->start_at)->format('d M Y') }}</div>
+                            <div class="text-slate-400 text-xs mt-0.5 font-mono">
+                                {{ \Carbon\Carbon::parse($primary->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($primary->end_at)->format('H:i') }} WIB
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 align-middle whitespace-nowrap">
+                            <div class="font-bold text-slate-800 text-xs">{{ $primary->duration }} mnt</div>
+                            <div class="text-[10px] font-semibold text-indigo-600 mt-0.5">{{ round($primary->duration / 45, 1) }} JP</div>
+                        </td>
+                        <td class="px-6 py-4 align-middle whitespace-nowrap">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-rose-50 text-rose-700 ring-1 ring-rose-600/20">
+                                <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                Max {{ $primary->max_violation }}x Keluar
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 align-middle whitespace-nowrap">
+                            @if($isOngoing)
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-600/30 border border-amber-200">
+                                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping mr-0.5"></span> Berlangsung
+                                </span>
+                            @elseif($primary->status === 'active')
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Aktif
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 ring-1 ring-slate-400/20">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Nonaktif
+                                </span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 align-middle whitespace-nowrap text-right">
+                            <div class="inline-flex items-center justify-end gap-1.5">
+                                <a href="{{ route('admin.exams.show', $primary->id) }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 rounded-lg text-xs font-bold hover:bg-indigo-600 hover:text-white shadow-2xs transition-all duration-150" title="Monitor & Buka Kunci Siswa">
+                                    Monitor
+                                </a>
+                                @if($canManage)
+                                    <a href="{{ route('admin.exams.edit', $primary->id) }}" class="inline-flex items-center justify-center px-2.5 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 shadow-2xs transition-all duration-150">Edit</a>
+                                    @if($isOngoing)
+                                        <button type="button" disabled class="inline-flex items-center justify-center px-2.5 py-1.5 bg-slate-100 border border-slate-200 text-slate-400 rounded-lg text-xs font-medium cursor-not-allowed opacity-50" title="Ujian sedang berlangsung dan tidak dapat dihapus">
+                                            Hapus
+                                        </button>
+                                    @else
+                                        <form action="{{ route('admin.exams.destroy', $primary->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus ujian ini?');">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="inline-flex items-center justify-center px-2.5 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 shadow-2xs transition-all duration-150">Hapus</button>
+                                        </form>
+                                    @endif
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                @else
+                    <!-- Consolidated Multi-Session Master Row -->
+                    <tr class="exam-row hover:bg-indigo-50/20 transition-colors duration-150 group border-t-2 border-slate-100" 
+                        data-title="{{ strtolower($grp->title) }}" 
+                        data-classes="{{ strtolower($classList ?: 'semua kelas') }}" 
+                        data-status="{{ $isOngoing ? 'active' : ($grp->has_active ? 'active' : 'inactive') }}"
+                        data-group-id="{{ $groupId }}"
+                        data-can-manage="{{ $canManage ? '1' : '0' }}"
+                        data-ongoing="{{ $isOngoing ? '1' : '0' }}">
+                        <td class="px-4 py-4 align-middle">
+                            @if($canManage)
+                                @if($isOngoing)
+                                    <input type="checkbox" disabled class="rounded text-slate-300 border-slate-200 w-4 h-4 cursor-not-allowed opacity-40" title="Sebagian sesi ujian sedang berlangsung">
+                                @else
+                                    <input type="checkbox" class="group-master-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 cursor-pointer" data-target-group="{{ $groupId }}" title="Pilih semua sesi">
+                                @endif
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 font-semibold text-slate-900 align-middle">
+                            <div class="line-clamp-2 max-w-sm text-base font-bold text-slate-900">{{ $grp->title }}</div>
+                            <div class="mt-1 flex items-center gap-1.5 flex-wrap text-[11px]">
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-bold border border-indigo-200">
+                                    <svg class="w-3 h-3 text-indigo-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    {{ $sessionCount }} Sesi Terjadwal
+                                </span>
+                                @if($grp->created_by === auth()->id())
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1"></span> Ujian Anda
+                                    </span>
+                                @elseif($grp->creator && $grp->creator->isAdmin())
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-semibold border border-indigo-200">
+                                        Ujian Sekolah (Admin)
+                                    </span>
+                                @elseif($grp->creator)
+                                    <span class="text-slate-400">
+                                        Oleh: <span class="text-slate-600 font-medium">{{ $grp->creator->name }}</span>
+                                    </span>
+                                @endif
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 align-middle whitespace-nowrap">
+                            @if($classCount === 0)
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                                    Semua Kelas
+                                </span>
+                            @elseif($classCount <= 2)
+                                <div class="inline-flex items-center gap-1.5 flex-wrap">
+                                    @foreach($grp->classes as $cls)
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                            {{ $cls->name }}
+                                        </span>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="inline-flex items-center gap-1.5">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                        {{ $grp->classes->first()->name }}
+                                    </span>
+                                    <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-bold bg-slate-100 hover:bg-indigo-100 text-slate-700 hover:text-indigo-800 border border-slate-200 transition-colors cursor-help" title="{{ $classList }}">
+                                        +{{ $classCount - 1 }} Kelas
+                                    </span>
+                                </div>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 align-middle whitespace-nowrap">
+                            <div class="text-slate-900 font-bold text-xs">{{ $sessionCount }} Sesi Kelas</div>
+                            <div class="text-slate-400 text-xs mt-0.5 font-mono">
+                                {{ \Carbon\Carbon::parse($grp->start_at)->format('d M Y') }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 align-middle whitespace-nowrap">
+                            <div class="font-bold text-slate-800 text-xs">{{ $grp->duration }} mnt</div>
+                            <div class="text-[10px] font-semibold text-indigo-600 mt-0.5">{{ round($grp->duration / 45, 1) }} JP</div>
+                        </td>
+                        <td class="px-6 py-4 align-middle whitespace-nowrap">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-rose-50 text-rose-700 ring-1 ring-rose-600/20">
+                                Max {{ $grp->max_violation }}x Keluar
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 align-middle whitespace-nowrap">
+                            @if($isOngoing)
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-600/30 border border-amber-200">
+                                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping mr-0.5"></span> Berlangsung
+                                </span>
+                            @elseif($grp->has_active)
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Aktif
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 ring-1 ring-slate-400/20">
+                                    Nonaktif
+                                </span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 align-middle whitespace-nowrap text-right">
+                            <button type="button" onclick="toggleSessionGroup('{{ $groupId }}')" class="inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all duration-150 active:scale-95" title="Buka detail seluruh sesi">
+                                <span id="btn-text-{{ $groupId }}" data-count="{{ $sessionCount }}">Buka {{ $sessionCount }} Sesi</span>
+                                <svg id="btn-icon-{{ $groupId }}" class="w-3.5 h-3.5 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- Expandable Drawer for Multi-Session -->
+                    <tr id="session-drawer-{{ $groupId }}" class="hidden bg-slate-50/70 border-b-2 border-indigo-100/80 transition-all">
+                        <td colspan="8" class="p-3.5 sm:p-5">
+                            <div class="bg-white rounded-2xl border border-indigo-100 shadow-sm p-4 space-y-3">
+                                <div class="flex items-center justify-between pb-2.5 border-b border-slate-100">
+                                    <div class="flex items-center gap-2">
+                                        <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+                                        <h5 class="text-xs sm:text-sm font-bold text-slate-900">
+                                            Daftar {{ $sessionCount }} Sesi: <span class="text-indigo-600">{{ $grp->title }}</span>
+                                        </h5>
+                                    </div>
+                                    <span class="text-[11px] sm:text-xs text-slate-500 font-medium">Klik <strong class="text-indigo-600 font-bold">"Pantau Siswa"</strong> pada sesi kelas yang sedang berlangsung</span>
+                                </div>
+
+                                <div class="divide-y divide-slate-100">
+                                    @foreach($grp->sessions as $idx => $s)
+                                    @php
+                                        $sOngoing = $s->isOngoing();
+                                        $sClasses = $s->classes->pluck('name')->implode(', ') ?: 'Semua Kelas';
+                                    @endphp
+                                    <div class="py-3 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:bg-indigo-50/20 px-2 rounded-xl transition-colors">
+                                        <div class="flex items-center gap-3 min-w-0">
+                                            @if($canManage)
+                                                @if($sOngoing)
+                                                    <input type="checkbox" disabled class="rounded text-slate-300 border-slate-200 w-4 h-4 cursor-not-allowed opacity-40" title="Ujian sedang berlangsung">
+                                                @else
+                                                    <input type="checkbox" class="bulk-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 cursor-pointer session-cb-{{ $groupId }}" value="{{ $s->id }}">
+                                                @endif
+                                            @endif
+                                            <span class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 font-bold text-xs flex items-center justify-center shrink-0">
+                                                {{ $idx + 1 }}
+                                            </span>
+                                            <div class="min-w-0">
+                                                <div class="flex items-center gap-2 flex-wrap">
+                                                    <span class="font-bold text-slate-900 text-sm">
+                                                        {{ $sClasses }}
+                                                    </span>
+                                                    @if($sOngoing)
+                                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-600/30 border border-amber-200">
+                                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span> Berlangsung
+                                                        </span>
+                                                    @elseif($s->status === 'active')
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700">
+                                                            Aktif
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-600">
+                                                            Nonaktif
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <div class="flex items-center gap-3 text-xs text-slate-500 mt-1 flex-wrap">
+                                                    <span>📅 {{ \Carbon\Carbon::parse($s->start_at)->format('d M Y') }}</span>
+                                                    <span class="font-mono text-slate-700 font-semibold">⏰ {{ \Carbon\Carbon::parse($s->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($s->end_at)->format('H:i') }} WIB</span>
+                                                    <span class="text-indigo-600 font-semibold font-mono">({{ $s->duration }} Menit / {{ round($s->duration / 45, 1) }} JP)</span>
+                                                    <span>Batas: Max {{ $s->max_violation }}x</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center gap-2 self-end md:self-center shrink-0">
+                                            <a href="{{ route('admin.exams.show', $s->id) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all active:scale-[0.98]">
+                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                                <span>Pantau Siswa</span>
+                                            </a>
+                                            @if($canManage)
+                                                <a href="{{ route('admin.exams.edit', $s->id) }}" class="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-medium transition-all">Edit</a>
+                                                @if($sOngoing)
+                                                    <button type="button" disabled class="px-2.5 py-1.5 bg-slate-100 border border-slate-200 text-slate-400 rounded-lg text-xs font-medium cursor-not-allowed opacity-50" title="Ujian sedang berlangsung dan tidak dapat dihapus">Hapus</button>
+                                                @else
+                                                    <form action="{{ route('admin.exams.destroy', $s->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus sesi ini?');">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-rose-50 hover:text-rose-600 text-slate-700 rounded-lg text-xs font-medium transition-all">Hapus</button>
+                                                    </form>
+                                                @endif
+                                            @endif
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                @endif
                 @empty
                 <tr id="emptyStaticRow">
                     <td colspan="8" class="px-6 py-12 text-center text-slate-400">
@@ -348,137 +550,259 @@
 
 <!-- 2. Mobile Standalone Cards View (< md) -->
 <div class="md:hidden space-y-3.5" id="examMobileList">
-    @forelse($exams as $e)
+    @php $displayList = $groupedExams ?? $exams; @endphp
+    @forelse($displayList as $grp)
     @php
-        $classList = $e->classes->pluck('name')->implode(', ');
-        $classCount = $e->classes->count();
-        $canManage = auth()->user()->isAdmin() || ($e->created_by === auth()->id());
-        $isOngoing = $e->isOngoing();
+        $isGrouped = isset($grp->session_count);
+        $sessionCount = $isGrouped ? $grp->session_count : 1;
+        $isSingle = $sessionCount === 1;
+        $primary = $isGrouped ? $grp->primary : $grp;
+        $classList = $isGrouped ? $grp->classes->pluck('name')->implode(', ') : $grp->classes->pluck('name')->implode(', ');
+        $classCount = $isGrouped ? $grp->classes->count() : $grp->classes->count();
+        $canManage = auth()->user()->isAdmin() || ($primary->created_by === auth()->id());
+        $isOngoing = $isGrouped ? $grp->is_ongoing : $primary->isOngoing();
+        $status = $isOngoing ? 'ongoing' : ($isGrouped ? ($grp->has_active ? 'active' : 'inactive') : $primary->status);
+        $groupId = $isGrouped ? $grp->group_id : ('exam_' . $primary->id);
     @endphp
-    <div class="exam-card bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 shadow-xs p-4 sm:p-5 space-y-3 transition-all"
-         data-title="{{ strtolower($e->title) }}" 
-         data-classes="{{ strtolower($classList ?: 'semua kelas') }}" 
-         data-status="{{ $e->status }}"
-         data-exam-id="{{ $e->id }}"
-         data-can-manage="{{ $canManage ? '1' : '0' }}"
-         data-ongoing="{{ $isOngoing ? '1' : '0' }}">
-        <!-- Card Top Bar -->
-        <div class="flex items-start justify-between gap-3">
-            <div class="flex items-start gap-2.5 min-w-0 flex-1">
-                @if($canManage)
+
+    @if($isSingle)
+        <!-- Mobile Single Exam Card -->
+        <div class="exam-card bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 shadow-xs p-4 sm:p-5 space-y-3 transition-all"
+             data-title="{{ strtolower($primary->title) }}" 
+             data-classes="{{ strtolower($classList ?: 'semua kelas') }}" 
+             data-status="{{ $primary->status }}"
+             data-exam-id="{{ $primary->id }}"
+             data-can-manage="{{ $canManage ? '1' : '0' }}"
+             data-ongoing="{{ $isOngoing ? '1' : '0' }}">
+            <div class="flex items-start justify-between gap-3">
+                <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                    @if($canManage)
+                        @if($isOngoing)
+                            <input type="checkbox" disabled class="rounded text-slate-300 border-slate-200 w-4 h-4 cursor-not-allowed mt-1 shrink-0 opacity-40" title="Ujian sedang berlangsung">
+                        @else
+                            <input type="checkbox" class="bulk-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 cursor-pointer mt-1 shrink-0" value="{{ $primary->id }}">
+                        @endif
+                    @endif
+                    <div class="space-y-1.5 min-w-0">
+                        <h4 class="text-sm sm:text-base font-bold text-slate-900 leading-snug">{{ $primary->title }}</h4>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-lg">
+                                <svg class="w-3 h-3 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                {{ $primary->duration }} Menit ({{ round($primary->duration / 45, 1) }} JP)
+                            </span>
+                            @if($primary->created_by === auth()->id())
+                                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Ujian Anda
+                                </span>
+                            @elseif($primary->creator && $primary->creator->isAdmin())
+                                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg">
+                                    Ujian Sekolah (Admin)
+                                </span>
+                            @elseif($primary->creator)
+                                <span class="text-[11px] text-slate-500">
+                                    Oleh: <strong class="text-slate-700 font-medium">{{ $primary->creator->name }}</strong>
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                <div class="shrink-0 pt-0.5">
                     @if($isOngoing)
-                        <input type="checkbox" disabled class="rounded text-slate-300 border-slate-200 w-4 h-4 cursor-not-allowed mt-1 shrink-0 opacity-40" title="Ujian sedang berlangsung">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-600/30 border border-amber-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Berlangsung
+                        </span>
+                    @elseif($primary->status === 'active')
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/30 border border-emerald-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Aktif
+                        </span>
                     @else
-                        <input type="checkbox" class="bulk-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 cursor-pointer mt-1 shrink-0" value="{{ $e->id }}">
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 ring-1 ring-slate-400/30 border border-slate-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Nonaktif
+                        </span>
+                    @endif
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-xs py-2 px-3 bg-slate-50 rounded-xl border border-slate-100">
+                <div>
+                    <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Waktu Pelaksanaan</span>
+                    <span class="font-semibold text-slate-800">{{ \Carbon\Carbon::parse($primary->start_at)->format('d M Y') }}</span>
+                    <span class="text-slate-500 font-mono block text-[11px]">{{ \Carbon\Carbon::parse($primary->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($primary->end_at)->format('H:i') }} WIB</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Batas Toleransi</span>
+                    <span class="font-semibold text-rose-600 flex items-center gap-1 mt-0.5">
+                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        Max {{ $primary->max_violation }}x Keluar
+                    </span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-[11px] text-slate-400 font-medium">Target:</span>
+                @if($classCount === 0)
+                    <span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">Semua Kelas</span>
+                @elseif($classCount <= 3)
+                    @foreach($primary->classes as $cls)
+                        <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">{{ $cls->name }}</span>
+                    @endforeach
+                @else
+                    <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">{{ $primary->classes->first()->name }}</span>
+                    <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">+{{ $classCount - 1 }} Kelas lainnya</span>
+                @endif
+            </div>
+
+            <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
+                <a href="{{ route('admin.exams.show', $primary->id) }}" class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-[0.98]">
+                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <span>Pantau Live</span>
+                </a>
+                @if($canManage)
+                    <a href="{{ route('admin.exams.edit', $primary->id) }}" class="inline-flex items-center justify-center px-3.5 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition-all active:scale-[0.98]">
+                        Edit
+                    </a>
+                    @if($isOngoing)
+                        <button type="button" disabled class="inline-flex items-center justify-center px-3.5 py-2.5 bg-slate-100 border border-slate-200 text-slate-400 rounded-xl text-xs font-semibold cursor-not-allowed opacity-50" title="Ujian sedang berlangsung dan tidak dapat dihapus">
+                            Hapus
+                        </button>
+                    @else
+                        <form action="{{ route('admin.exams.destroy', $primary->id) }}" method="POST" class="inline-flex m-0" onsubmit="return confirm('Hapus ujian ini?');">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="inline-flex items-center justify-center px-3.5 py-2.5 bg-white border border-slate-300 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-300 text-slate-700 rounded-xl text-xs font-semibold transition-all active:scale-[0.98]">
+                                Hapus
+                            </button>
+                        </form>
                     @endif
                 @endif
-                <div class="space-y-1.5 min-w-0">
-                    <h4 class="text-sm sm:text-base font-bold text-slate-900 leading-snug">{{ $e->title }}</h4>
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-lg">
-                            <svg class="w-3 h-3 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </div>
+        </div>
+    @else
+        <!-- Mobile Multi-Session Consolidated Card -->
+        <div class="exam-card bg-white rounded-2xl border-2 border-indigo-200 hover:border-indigo-300 shadow-xs p-4 sm:p-5 space-y-3 transition-all"
+             data-title="{{ strtolower($grp->title) }}" 
+             data-classes="{{ strtolower($classList ?: 'semua kelas') }}" 
+             data-status="{{ $isOngoing ? 'active' : ($grp->has_active ? 'active' : 'inactive') }}"
+             data-group-id="{{ $groupId }}"
+             data-can-manage="{{ $canManage ? '1' : '0' }}"
+             data-ongoing="{{ $isOngoing ? '1' : '0' }}">
+            <div class="flex items-start justify-between gap-3">
+                <div class="space-y-1.5 min-w-0 flex-1">
+                    <h4 class="text-sm sm:text-base font-bold text-slate-900 leading-snug">{{ $grp->title }}</h4>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg">
+                            <svg class="w-3 h-3 text-indigo-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            {{ $e->duration }} Menit ({{ round($e->duration / 45, 1) }} JP)
+                            {{ $sessionCount }} Sesi Terjadwal
                         </span>
-                        @if($e->created_by === auth()->id())
+                        <span class="inline-flex items-center gap-1 text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-lg">
+                            {{ $grp->duration }} Menit ({{ round($grp->duration / 45, 1) }} JP)
+                        </span>
+                        @if($grp->created_by === auth()->id())
                             <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Ujian Anda
-                            </span>
-                        @elseif($e->creator && $e->creator->isAdmin())
-                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg">
-                                Ujian Sekolah (Admin)
-                            </span>
-                        @elseif($e->creator)
-                            <span class="text-[11px] text-slate-500">
-                                Oleh: <strong class="text-slate-700 font-medium">{{ $e->creator->name }}</strong>
-                            </span>
-                        @else
-                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg">
-                                Ujian Sekolah (Admin)
                             </span>
                         @endif
                     </div>
                 </div>
+                <div class="shrink-0 pt-0.5">
+                    @if($isOngoing)
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-600/30 border border-amber-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Berlangsung
+                        </span>
+                    @elseif($grp->has_active)
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/30 border border-emerald-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Aktif
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 ring-1 ring-slate-400/30 border border-slate-200">
+                            Nonaktif
+                        </span>
+                    @endif
+                </div>
             </div>
-            <div class="shrink-0 pt-0.5">
-                @if($isOngoing)
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-600/30 border border-amber-200">
-                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Berlangsung
-                    </span>
-                @elseif($e->status === 'active')
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/30 border border-emerald-200">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Aktif
-                    </span>
+
+            <div class="flex items-center gap-1.5 flex-wrap text-xs">
+                <span class="text-slate-400 font-medium">Kelas:</span>
+                @if($classCount === 0)
+                    <span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">Semua Kelas</span>
+                @elseif($classCount <= 3)
+                    @foreach($grp->classes as $cls)
+                        <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">{{ $cls->name }}</span>
+                    @endforeach
                 @else
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 ring-1 ring-slate-400/30 border border-slate-200">
-                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Nonaktif
-                    </span>
+                    <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">{{ $grp->classes->first()->name }}</span>
+                    <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">+{{ $classCount - 1 }} Kelas lainnya</span>
                 @endif
             </div>
-        </div>
 
-        <!-- Card Schedule Info -->
-        <div class="grid grid-cols-2 gap-2 text-xs py-2 px-3 bg-slate-50 rounded-xl border border-slate-100">
-            <div>
-                <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Waktu Pelaksanaan</span>
-                <span class="font-semibold text-slate-800">{{ \Carbon\Carbon::parse($e->start_at)->format('d M Y') }}</span>
-                <span class="text-slate-500 font-mono block text-[11px]">{{ \Carbon\Carbon::parse($e->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($e->end_at)->format('H:i') }} WIB</span>
-            </div>
-            <div>
-                <span class="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Batas Toleransi</span>
-                <span class="font-semibold text-rose-600 flex items-center gap-1 mt-0.5">
-                    <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    Max {{ $e->max_violation }}x Keluar
-                </span>
-            </div>
-        </div>
+            <!-- Toggle Accordion Button -->
+            <button type="button" onclick="toggleMobileSessionGroup('{{ $groupId }}')" class="w-full flex items-center justify-between px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold border border-indigo-200 transition-all active:scale-[0.99]">
+                <span>Buka {{ $sessionCount }} Sesi Kelas</span>
+                <span id="mob-btn-icon-{{ $groupId }}" class="text-base font-bold">▾</span>
+            </button>
 
-        <!-- Card Classes -->
-        <div class="flex items-center gap-1.5 flex-wrap">
-            <span class="text-[11px] text-slate-400 font-medium">Target:</span>
-            @if($classCount === 0)
-                <span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">Semua Kelas</span>
-            @elseif($classCount <= 3)
-                @foreach($e->classes as $cls)
-                    <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">{{ $cls->name }}</span>
+            <!-- Collapsible Session Sub-Cards -->
+            <div id="mob-drawer-{{ $groupId }}" class="hidden space-y-2.5 pt-2 border-t border-slate-100">
+                @foreach($grp->sessions as $idx => $s)
+                @php
+                    $sOngoing = $s->isOngoing();
+                    $sClasses = $s->classes->pluck('name')->implode(', ') ?: 'Semua Kelas';
+                @endphp
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/90 space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="w-5 h-5 rounded-md bg-indigo-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0">
+                                {{ $idx + 1 }}
+                            </span>
+                            <span class="font-bold text-slate-900 text-xs">{{ $sClasses }}</span>
+                        </div>
+                        @if($sOngoing)
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+                                Berlangsung
+                            </span>
+                        @elseif($s->status === 'active')
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">
+                                Aktif
+                            </span>
+                        @else
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-200 text-slate-700">
+                                Nonaktif
+                            </span>
+                        @endif
+                    </div>
+                    <div class="text-[11px] text-slate-600 space-y-0.5 font-mono">
+                        <div>📅 {{ \Carbon\Carbon::parse($s->start_at)->format('d M Y') }}</div>
+                        <div>⏰ {{ \Carbon\Carbon::parse($s->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($s->end_at)->format('H:i') }} WIB ({{ $s->duration }}m)</div>
+                    </div>
+                    <div class="flex items-center gap-2 pt-1">
+                        <a href="{{ route('admin.exams.show', $s->id) }}" class="flex-1 inline-flex items-center justify-center gap-1 py-1.5 px-3 bg-indigo-600 text-white rounded-lg text-xs font-bold shadow-xs">
+                            <span>Pantau Live &rarr;</span>
+                        </a>
+                        @if($canManage)
+                            <a href="{{ route('admin.exams.edit', $s->id) }}" class="px-3 py-1.5 bg-white border border-slate-300 text-slate-700 rounded-lg text-xs font-semibold">
+                                Edit
+                            </a>
+                            @if(!$sOngoing)
+                                <form action="{{ route('admin.exams.destroy', $s->id) }}" method="POST" class="inline-flex m-0" onsubmit="return confirm('Hapus sesi ini?');">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="px-2.5 py-1.5 bg-white border border-slate-300 text-rose-600 rounded-lg text-xs font-semibold">Hapus</button>
+                                </form>
+                            @endif
+                        @endif
+                    </div>
+                </div>
                 @endforeach
-            @else
-                <span class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">{{ $e->classes->first()->name }}</span>
-                <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-700 border border-slate-200">+{{ $classCount - 1 }} Kelas lainnya</span>
-            @endif
+            </div>
         </div>
-
-        <!-- Card Bottom Actions -->
-        <div class="pt-2 border-t border-slate-100 flex items-center justify-end gap-2">
-            <a href="{{ route('admin.exams.show', $e->id) }}" class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-all active:scale-[0.98]">
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                <span>Pantau Live</span>
-            </a>
-            @if($canManage)
-                <a href="{{ route('admin.exams.edit', $e->id) }}" class="inline-flex items-center justify-center px-3.5 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition-all active:scale-[0.98]">
-                    Edit
-                </a>
-                @if($isOngoing)
-                    <button type="button" disabled class="inline-flex items-center justify-center px-3.5 py-2.5 bg-slate-100 border border-slate-200 text-slate-400 rounded-xl text-xs font-semibold cursor-not-allowed opacity-50" title="Ujian sedang berlangsung dan tidak dapat dihapus">
-                        Hapus
-                    </button>
-                @else
-                    <form action="{{ route('admin.exams.destroy', $e->id) }}" method="POST" class="inline-flex m-0" onsubmit="return confirm('Hapus ujian ini?');">
-                        @csrf @method('DELETE')
-                        <button type="submit" class="inline-flex items-center justify-center px-3.5 py-2.5 bg-white border border-slate-300 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-300 text-slate-700 rounded-xl text-xs font-semibold transition-all active:scale-[0.98]">
-                            Hapus
-                        </button>
-                    </form>
-                @endif
-            @endif
-        </div>
-    </div>
+    @endif
     @empty
     <div class="p-8 text-center text-slate-400 text-xs bg-white rounded-2xl border-2 border-slate-200">
         Belum ada jadwal ujian terdaftar.
@@ -490,6 +814,42 @@
 </div>
 
 <script>
+    // Accordion Toggle Functions (Global scope for onclick attributes)
+    function toggleSessionGroup(groupId) {
+        const drawer = document.getElementById('session-drawer-' + groupId);
+        const btnText = document.getElementById('btn-text-' + groupId);
+        const btnIcon = document.getElementById('btn-icon-' + groupId);
+        if (!drawer) return;
+
+        const isHidden = drawer.classList.contains('hidden');
+        if (isHidden) {
+            drawer.classList.remove('hidden');
+            if (btnText) btnText.textContent = 'Tutup Sesi';
+            if (btnIcon) btnIcon.classList.add('rotate-180');
+        } else {
+            drawer.classList.add('hidden');
+            if (btnText) {
+                const count = btnText.getAttribute('data-count') || '';
+                btnText.textContent = 'Buka ' + count + ' Sesi';
+            }
+            if (btnIcon) btnIcon.classList.remove('rotate-180');
+        }
+    }
+
+    function toggleMobileSessionGroup(groupId) {
+        const drawer = document.getElementById('mob-drawer-' + groupId);
+        const icon = document.getElementById('mob-btn-icon-' + groupId);
+        if (!drawer) return;
+        const isHidden = drawer.classList.contains('hidden');
+        if (isHidden) {
+            drawer.classList.remove('hidden');
+            if (icon) icon.textContent = '▴';
+        } else {
+            drawer.classList.add('hidden');
+            if (icon) icon.textContent = '▾';
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.getElementById('searchExam');
         const clearBtn = document.getElementById('clearSearch');
@@ -517,13 +877,21 @@
 
                 const matchesQuery = query === '' || title.includes(query) || classes.includes(query);
                 const matchesClass = selectedClass === '' || classes.includes(selectedClass) || classes.includes('semua kelas');
-                const matchesStatus = selectedStatus === '' || status === selectedStatus;
+                const matchesStatus = selectedStatus === '' || status === selectedStatus || (selectedStatus === 'active' && status === 'ongoing');
 
                 if (matchesQuery && matchesClass && matchesStatus) {
                     el.style.display = '';
                     return true;
                 } else {
                     el.style.display = 'none';
+                    // Hide child drawer if present
+                    const groupId = el.getAttribute('data-group-id');
+                    if (groupId) {
+                        const drawer = document.getElementById('session-drawer-' + groupId);
+                        if (drawer) drawer.classList.add('hidden');
+                        const mobDrawer = document.getElementById('mob-drawer-' + groupId);
+                        if (mobDrawer) mobDrawer.classList.add('hidden');
+                    }
                     return false;
                 }
             }
@@ -571,7 +939,6 @@
         const bulkCancelBtn = document.getElementById('bulkCancelBtn');
         const bulkDeleteForm = document.getElementById('bulkDeleteForm');
         const selectAllDesktop = document.getElementById('selectAllDesktop');
-        const allCheckboxes = document.querySelectorAll('.bulk-checkbox');
 
         function updateBulkBar() {
             const checked = document.querySelectorAll('.bulk-checkbox:checked');
@@ -586,15 +953,33 @@
             }
         }
 
-        allCheckboxes.forEach(cb => cb.addEventListener('change', updateBulkBar));
+        document.querySelectorAll('.bulk-checkbox').forEach(cb => {
+            cb.addEventListener('change', updateBulkBar);
+        });
+
+        // Group master checkboxes
+        document.querySelectorAll('.group-master-checkbox').forEach(gcb => {
+            gcb.addEventListener('change', function() {
+                const targetGroupId = this.getAttribute('data-target-group');
+                const sessionCbs = document.querySelectorAll('.session-cb-' + targetGroupId);
+                sessionCbs.forEach(scb => {
+                    if (!scb.disabled) scb.checked = this.checked;
+                });
+                updateBulkBar();
+            });
+        });
 
         if (selectAllDesktop) {
             selectAllDesktop.addEventListener('change', function() {
-                // Only toggle visible rows
-                rows.forEach(row => {
-                    if (row.style.display !== 'none') {
-                        const cb = row.querySelector('.bulk-checkbox');
-                        if (cb && !cb.disabled) cb.checked = selectAllDesktop.checked;
+                // Toggle all visible bulk checkboxes
+                document.querySelectorAll('.bulk-checkbox').forEach(cb => {
+                    if (!cb.disabled) {
+                        cb.checked = selectAllDesktop.checked;
+                    }
+                });
+                document.querySelectorAll('.group-master-checkbox').forEach(gcb => {
+                    if (!gcb.disabled) {
+                        gcb.checked = selectAllDesktop.checked;
                     }
                 });
                 updateBulkBar();
@@ -602,7 +987,8 @@
         }
 
         bulkCancelBtn.addEventListener('click', function() {
-            allCheckboxes.forEach(cb => cb.checked = false);
+            document.querySelectorAll('.bulk-checkbox').forEach(cb => cb.checked = false);
+            document.querySelectorAll('.group-master-checkbox').forEach(gcb => gcb.checked = false);
             if (selectAllDesktop) selectAllDesktop.checked = false;
             updateBulkBar();
         });
@@ -611,9 +997,8 @@
             const checked = document.querySelectorAll('.bulk-checkbox:checked');
             if (checked.length === 0) return;
 
-            if (!confirm(`Yakin ingin menghapus ${checked.length} jadwal ujian yang dipilih?`)) return;
+            if (!confirm(`Yakin ingin menghapus ${checked.length} jadwal sesi ujian yang dipilih?`)) return;
 
-            // Clear old hidden inputs
             bulkDeleteForm.querySelectorAll('input[name="exam_ids[]"]').forEach(el => el.remove());
 
             checked.forEach(cb => {
