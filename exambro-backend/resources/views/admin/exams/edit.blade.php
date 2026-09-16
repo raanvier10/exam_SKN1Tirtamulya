@@ -51,6 +51,48 @@
                     </div>
                     <input type="url" name="google_form_url" value="{{ old('google_form_url', $exam->google_form_url) }}" required class="w-full bg-slate-50/50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-900 font-mono placeholder-slate-400 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 transition-all">
                 </div>
+
+                @php
+                    $sebWebUrl = route('seb.exam.show', $exam);
+                    $sebSchemeUrl = preg_replace('/^https:\/\//i', 'sebs://', $sebWebUrl);
+                    if ($sebSchemeUrl === $sebWebUrl) {
+                        $sebSchemeUrl = preg_replace('/^http:\/\//i', 'seb://', $sebWebUrl);
+                    }
+                @endphp
+                <!-- Card Akses Safe Exam Browser (iOS / SEB) -->
+                <div class="mt-4 p-4 rounded-xl bg-purple-50/70 border border-purple-200/80 flex flex-col gap-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-purple-600 text-white text-xs font-bold tracking-wider shrink-0 shadow-2xs">
+                                SEB
+                            </span>
+                            <div>
+                                <div class="text-purple-900 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                    Akses Ujian Siswa iOS (Safe Exam Browser)
+                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-200/60 text-purple-800">Khusus iPhone</span>
+                                </div>
+                                <div class="text-[11px] text-purple-600">Siswa iPhone/iPad mengerjakan via aplikasi SEB tanpa perlu install APK.</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="openSebQrModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-purple-700 hover:bg-purple-100/60 border border-purple-200 rounded-xl text-xs font-semibold shadow-2xs transition-all active:scale-[0.98]">
+                                <svg class="w-3.5 h-3.5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                                Tampilkan QR
+                            </button>
+                            <a href="{{ route('seb.exam.config', $exam) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-purple-700 hover:bg-purple-100/60 border border-purple-200 rounded-xl text-xs font-semibold shadow-2xs transition-all active:scale-[0.98]">
+                                <svg class="w-3.5 h-3.5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                Unduh .seb
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2 bg-white p-2 sm:p-2.5 rounded-xl border border-purple-100">
+                        <span class="text-[11px] font-mono text-purple-900 truncate select-all flex-1 pl-1">{{ $sebSchemeUrl }}</span>
+                        <button type="button" onclick="navigator.clipboard.writeText('{{ $sebSchemeUrl }}'); alert('Link SEB berhasil disalin!');" class="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold shrink-0 transition-colors shadow-2xs">
+                            Salin Link SEB
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -504,6 +546,31 @@
         if (liveText) {
             liveText.textContent = `${num} kali`;
         }
+    }
+</script>
+
+<!-- Modal QR Code Safe Exam Browser -->
+<dialog id="sebQrModal" class="backdrop:bg-slate-900/40 backdrop:backdrop-blur-xs p-0 rounded-2xl border border-slate-200 shadow-2xl w-full max-w-sm m-auto overflow-hidden">
+    <div class="px-5 py-4 border-b border-slate-100 bg-white flex items-center justify-between">
+        <div>
+            <h3 class="text-base font-bold text-slate-900">QR Code Ujian (SEB iOS)</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Scan dengan kamera iPhone untuk membuka SEB.</p>
+        </div>
+        <button type="button" onclick="document.getElementById('sebQrModal').close()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+    </div>
+    <div class="p-6 bg-white text-center">
+        <div class="inline-block p-3 bg-white border-2 border-dashed border-purple-300 rounded-2xl shadow-sm mb-3">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data={{ urlencode($sebSchemeUrl) }}" alt="QR Code Safe Exam Browser" class="w-48 h-48 block mx-auto">
+        </div>
+        <div class="text-xs font-bold text-slate-800">{{ $exam->title }}</div>
+        <p class="text-[11px] text-slate-500 mt-1">Arahkan kamera iPhone siswa langsung ke kode QR di atas untuk membuka aplikasi Safe Exam Browser.</p>
+    </div>
+</dialog>
+<script>
+    function openSebQrModal() {
+        document.getElementById('sebQrModal').showModal();
     }
 </script>
 @endsection

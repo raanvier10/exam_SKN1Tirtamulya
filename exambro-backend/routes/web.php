@@ -7,9 +7,18 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\AdminAuthController;
+use App\Http\Controllers\SebExamController;
 
 Route::get('/', function () {
     return redirect()->route('admin.login');
+});
+
+// Portal Ujian Siswa via Safe Exam Browser (SEB) / iOS
+Route::prefix('seb')->name('seb.')->group(function () {
+    Route::get('/exam/{exam}', [SebExamController::class, 'show'])->name('exam.show');
+    Route::post('/exam/{exam}/auth', [SebExamController::class, 'authenticate'])->name('exam.auth');
+    Route::post('/exam/{exam}/finish', [SebExamController::class, 'finish'])->name('exam.finish');
+    Route::get('/exam/{exam}/config', [SebExamController::class, 'downloadConfig'])->name('exam.config');
 });
 
 Route::prefix('admin')->name('admin.')->group(function () {
