@@ -377,7 +377,7 @@
         function formatJP(mins) {
             const num = parseInt(mins) || 0;
             if (num <= 0) return '0 JP';
-            const jp = num / 45;
+            const jp = num / 35;
             const formatted = Number.isInteger(jp) ? jp : parseFloat(jp.toFixed(1));
             return `${formatted} JP`;
         }
