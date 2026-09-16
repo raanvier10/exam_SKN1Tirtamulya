@@ -211,7 +211,32 @@ class ExamController extends Controller
                 $participant->violation_count = $activeViolationCount;
                 $participant->total_violation_count = $totalViolations;
                 return $participant;
-            });
+            })
+            ->sortBy(function ($participant) {
+                $isLocked = ($participant->status === 'locked' || (isset($participant->session) && $participant->session->status === 'LOCKED'));
+
+                // Prioritas urutan:
+                // 0 = TERKUNCI (LOCKED) -> Selalu di paling atas agar proctor/guru langsung lihat tanpa repot cari
+                // 1 = Sedang Mengerjakan dengan pelanggaran (makin banyak pelanggaran makin di atas)
+                // 2 = Sedang Mengerjakan normal
+                // 3 = Belum Mulai (registered)
+                // 4 = Selesai (finished)
+                if ($isLocked) {
+                    $rank = 0;
+                } elseif ($participant->status === 'working') {
+                    $rank = $participant->violation_count > 0 ? 1 : 2;
+                } elseif ($participant->status === 'registered') {
+                    $rank = 3;
+                } else {
+                    $rank = 4;
+                }
+
+                $violationScore = 999 - min(999, (int)($participant->violation_count ?? 0));
+                $name = strtolower($participant->user->name ?? '');
+
+                return sprintf('%d_%03d_%s', $rank, $violationScore, $name);
+            })
+            ->values();
 
         $violations = \App\Models\Violation::where('exam_id', $exam->id)
             ->with(['user.class', 'session'])
@@ -222,7 +247,9 @@ class ExamController extends Controller
             'total_participants' => $participants->count(),
             'registered' => $participants->where('status', 'registered')->count(),
             'working' => $participants->where('status', 'working')->count(),
-            'locked' => $participants->where('status', 'locked')->count(),
+            'locked' => $participants->filter(function ($p) {
+                return $p->status === 'locked' || (isset($p->session) && $p->session->status === 'LOCKED');
+            })->count(),
             'finished' => $participants->where('status', 'finished')->count(),
             'total_violations' => $violations->count(),
         ];
