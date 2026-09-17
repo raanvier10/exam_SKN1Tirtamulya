@@ -463,7 +463,9 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pop(dialogContext);
-                      Navigator.of(context).popUntil((route) => route.isFirst);
+                      if (mounted) {
+                        Navigator.pop(context, 'locked');
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFEF4444),
@@ -876,7 +878,9 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                     onPressed: () {
                       Navigator.pop(dialogContext);
                       if (_isLocked || _violationCount >= maxViolations) {
-                        Navigator.of(context).popUntil((route) => route.isFirst);
+                        if (mounted) {
+                          Navigator.pop(context, 'locked');
+                        }
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -1379,7 +1383,9 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                                   const SizedBox(height: 24),
                                   ElevatedButton.icon(
                                     onPressed: () {
-                                      Navigator.of(context).popUntil((route) => route.isFirst);
+                                      if (mounted) {
+                                        Navigator.pop(context, 'locked');
+                                      }
                                     },
                                     icon: const Icon(Icons.home_rounded, size: 18),
                                     label: const Text(

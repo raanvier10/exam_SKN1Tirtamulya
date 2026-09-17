@@ -56,6 +56,22 @@ class ExamController extends Controller
             }
         }
 
+        // Otomatis sinkronkan siswa dan sesi ujian yang telah berakhir menjadi finished/FINISHED
+        $expiredExamIds = Exam::where('status', 'active')
+            ->whereNotNull('end_at')
+            ->where('end_at', '<', now())
+            ->pluck('id');
+
+        if ($expiredExamIds->isNotEmpty()) {
+            \App\Models\ExamParticipant::whereIn('exam_id', $expiredExamIds)
+                ->whereIn('status', ['working', 'locked'])
+                ->update(['status' => 'finished']);
+
+            \App\Models\ExamSession::whereIn('exam_id', $expiredExamIds)
+                ->whereIn('status', ['ACTIVE', 'LOCKED'])
+                ->update(['status' => 'FINISHED']);
+        }
+
         $exams = $query->get();
 
         // Group exams by title + google_form_url + creator (Ponytail: native Laravel collection grouping)
@@ -64,9 +80,10 @@ class ExamController extends Controller
         })->map(function ($group) {
             $sortedSessions = $group->sortBy('start_at')->values();
             $primary = $sortedSessions->first();
-            $allClasses = $sortedSessions->flatMap->classes->unique('id')->values();
+            $allClasses = $sortedSessions->flatMap->classes->unique('id')->sortBy('name')->values();
             $hasOngoing = $sortedSessions->contains(fn($e) => $e->isOngoing());
-            $hasActive = $sortedSessions->contains(fn($e) => $e->status === 'active');
+            $allExpired = $sortedSessions->every(fn($e) => $e->isExpired());
+            $hasActive = $sortedSessions->contains(fn($e) => $e->status === 'active' && (!$e->end_at || now()->lte($e->end_at)));
             
             return (object) [
                 'group_id' => 'grp_' . $primary->id,
@@ -79,6 +96,7 @@ class ExamController extends Controller
                 'session_count' => $sortedSessions->count(),
                 'classes' => $allClasses,
                 'is_ongoing' => $hasOngoing,
+                'is_expired' => $allExpired,
                 'has_active' => $hasActive,
                 'max_violation' => $primary->max_violation,
                 'duration' => $primary->duration,
@@ -176,14 +194,14 @@ class ExamController extends Controller
 
         $exam->load('classes');
 
-        // Jika waktu ujian sudah berakhir, otomatis ubah siswa yang masih 'working' menjadi 'finished'
+        // Jika waktu ujian sudah berakhir, otomatis ubah siswa yang masih 'working' atau 'locked' menjadi 'finished'
         if ($exam->end_at && now()->gt($exam->end_at)) {
             \App\Models\ExamParticipant::where('exam_id', $exam->id)
-                ->where('status', 'working')
+                ->whereIn('status', ['working', 'locked'])
                 ->update(['status' => 'finished']);
 
             \App\Models\ExamSession::where('exam_id', $exam->id)
-                ->where('status', 'ACTIVE')
+                ->whereIn('status', ['ACTIVE', 'LOCKED'])
                 ->update(['status' => 'FINISHED']);
         }
 
@@ -231,10 +249,11 @@ class ExamController extends Controller
                     $rank = 4;
                 }
 
+                $className = strtolower($participant->user->class->name ?? 'tanpa_kelas');
                 $violationScore = 999 - min(999, (int)($participant->violation_count ?? 0));
                 $name = strtolower($participant->user->name ?? '');
 
-                return sprintf('%d_%03d_%s', $rank, $violationScore, $name);
+                return sprintf('%d_%s_%03d_%s', $rank, $className, $violationScore, $name);
             })
             ->values();
 
@@ -557,12 +576,22 @@ class ExamController extends Controller
                             $students = \App\Models\User::where('role', 'siswa')
                                 ->where('status', 'active')
                                 ->whereIn('class_id', $classIds)
+                                ->orderBy('class_id')
+                                ->orderBy('name')
                                 ->get();
                         } else {
-                            $students = \App\Models\User::where('role', 'siswa')->where('status', 'active')->get();
+                            $students = \App\Models\User::where('role', 'siswa')
+                                ->where('status', 'active')
+                                ->orderBy('class_id')
+                                ->orderBy('name')
+                                ->get();
                         }
                     } else {
-                        $students = \App\Models\User::where('role', 'siswa')->where('status', 'active')->get();
+                        $students = \App\Models\User::where('role', 'siswa')
+                            ->where('status', 'active')
+                            ->orderBy('class_id')
+                            ->orderBy('name')
+                            ->get();
                     }
 
                     // Register peserta ujian

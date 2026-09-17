@@ -353,6 +353,7 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
                       child: ElevatedButton(
                         onPressed: () async {
                           final nav = Navigator.of(context);
+                          final currentRoute = ModalRoute.of(context);
                           final result = await nav.push(
                             MaterialPageRoute(
                               builder: (context) => ExamScreen(
@@ -362,7 +363,7 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
                               ),
                             ),
                           );
-                          if (mounted) {
+                          if (mounted && (currentRoute?.isCurrent ?? false)) {
                             nav.pop(result);
                           }
                         },

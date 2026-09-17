@@ -11,26 +11,31 @@ class StudentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::where('role', 'siswa')->with('class')->latest('id');
+        $query = User::where('users.role', 'siswa')
+            ->with('class')
+            ->leftJoin('classes', 'users.class_id', '=', 'classes.id')
+            ->select('users.*')
+            ->orderByRaw('classes.name IS NULL, classes.name ASC')
+            ->orderBy('users.name', 'asc');
 
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('username', 'like', "%{$search}%");
+                $q->where('users.name', 'like', "%{$search}%")
+                  ->orWhere('users.username', 'like', "%{$search}%");
             });
         }
 
         if ($request->filled('class_id')) {
-            $query->where('class_id', $request->class_id);
+            $query->where('users.class_id', $request->class_id);
         }
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $query->where('users.status', $request->status);
         }
 
         if ($request->filled('is_pkl')) {
-            $query->where('is_pkl', $request->boolean('is_pkl'));
+            $query->where('users.is_pkl', $request->boolean('is_pkl'));
         }
 
         $students = $query->paginate(25)->withQueryString();

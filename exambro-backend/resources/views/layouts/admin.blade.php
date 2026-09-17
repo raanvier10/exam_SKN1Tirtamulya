@@ -155,7 +155,7 @@
         </header>
 
         <!-- Content Area -->
-        <div class="p-4 sm:p-6 lg:p-10 flex-1 max-w-7xl w-full mx-auto">
+        <div class="p-4 sm:p-6 lg:p-8 flex-1 w-full">
             @if(session('success'))
                 <div class="mb-6 sm:mb-8 p-4 rounded-xl bg-emerald-50/80 border border-emerald-200/80 text-emerald-900 text-sm flex items-center gap-3 shadow-xs animate-fade-in">
                     <div class="w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-100 shrink-0"></div>

@@ -150,6 +150,8 @@
                 <select id="filterStatus" class="w-full appearance-none pl-3 pr-7 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs sm:text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all cursor-pointer">
                     <option value="">Semua Status</option>
                     <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Aktif</option>
+                    <option value="ongoing" {{ request('status') == 'ongoing' ? 'selected' : '' }}>Berlangsung</option>
+                    <option value="finished" {{ request('status') == 'finished' ? 'selected' : '' }}>Selesai</option>
                     <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Nonaktif</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
@@ -193,16 +195,16 @@
         <table class="w-full text-left text-sm text-slate-600">
             <thead class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                 <tr>
-                    <th class="px-4 py-4 w-10">
+                    <th class="px-3.5 py-3.5 w-10">
                         <input type="checkbox" id="selectAllDesktop" class="rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 cursor-pointer">
                     </th>
-                    <th class="px-6 py-4 min-w-[200px]">Judul Ujian</th>
-                    <th class="px-6 py-4 whitespace-nowrap min-w-[170px]">Target Kelas</th>
-                    <th class="px-6 py-4 whitespace-nowrap min-w-[150px]">Waktu</th>
-                    <th class="px-6 py-4 whitespace-nowrap min-w-[90px]">Durasi</th>
-                    <th class="px-6 py-4 whitespace-nowrap min-w-[130px]">Toleransi</th>
-                    <th class="px-6 py-4 whitespace-nowrap min-w-[100px]">Status</th>
-                    <th class="px-6 py-4 whitespace-nowrap text-right min-w-[180px]">Aksi</th>
+                    <th class="px-3.5 sm:px-4 py-3.5 min-w-[180px]">Judul Ujian</th>
+                    <th class="px-3.5 sm:px-4 py-3.5 whitespace-nowrap min-w-[120px]">Target Kelas</th>
+                    <th class="px-3.5 sm:px-4 py-3.5 whitespace-nowrap min-w-[120px]">Waktu</th>
+                    <th class="px-3.5 sm:px-4 py-3.5 whitespace-nowrap min-w-[75px]">Durasi</th>
+                    <th class="px-3.5 sm:px-4 py-3.5 whitespace-nowrap min-w-[110px]">Toleransi</th>
+                    <th class="px-3.5 sm:px-4 py-3.5 whitespace-nowrap min-w-[90px]">Status</th>
+                    <th class="px-3.5 sm:px-4 py-3.5 whitespace-nowrap text-right min-w-[150px]">Aksi</th>
                 </tr>
             </thead>
             <tbody id="examTableBody" class="divide-y divide-slate-100">
@@ -216,8 +218,9 @@
                     $classList = $isGrouped ? $grp->classes->pluck('name')->implode(', ') : $grp->classes->pluck('name')->implode(', ');
                     $classCount = $isGrouped ? $grp->classes->count() : $grp->classes->count();
                     $canManage = auth()->user()->isAdmin() || ($primary->created_by === auth()->id());
+                    $isExpired = $isGrouped ? ($grp->is_expired ?? false) : $primary->isExpired();
                     $isOngoing = $isGrouped ? $grp->is_ongoing : $primary->isOngoing();
-                    $status = $isOngoing ? 'ongoing' : ($isGrouped ? ($grp->has_active ? 'active' : 'inactive') : $primary->status);
+                    $status = $isOngoing ? 'ongoing' : ($isExpired ? 'finished' : ($isGrouped ? ($grp->has_active ? 'active' : 'inactive') : $primary->status));
                     $groupId = $isGrouped ? $grp->group_id : ('exam_' . $primary->id);
                 @endphp
 
@@ -226,11 +229,11 @@
                     <tr class="exam-row hover:bg-indigo-50/20 transition-colors duration-150 group" 
                         data-title="{{ strtolower($primary->title) }}" 
                         data-classes="{{ strtolower($classList ?: 'semua kelas') }}" 
-                        data-status="{{ $primary->status }}"
+                        data-status="{{ $status }}"
                         data-exam-id="{{ $primary->id }}"
                         data-can-manage="{{ $canManage ? '1' : '0' }}"
                         data-ongoing="{{ $isOngoing ? '1' : '0' }}">
-                        <td class="px-4 py-4 align-middle">
+                        <td class="px-3.5 py-3.5 align-middle">
                             @if($canManage)
                                 @if($isOngoing)
                                     <input type="checkbox" disabled class="rounded text-slate-300 border-slate-200 w-4 h-4 cursor-not-allowed opacity-40" title="Ujian sedang berlangsung">
@@ -239,7 +242,7 @@
                                 @endif
                             @endif
                         </td>
-                        <td class="px-6 py-4 font-semibold text-slate-900 align-middle">
+                        <td class="px-3.5 sm:px-4 py-3.5 font-semibold text-slate-900 align-middle">
                             <div class="line-clamp-2 max-w-sm font-bold text-slate-900">{{ $primary->title }}</div>
                             <div class="mt-1 flex items-center gap-1.5 text-[11px]">
                                 @if($primary->created_by === auth()->id())
@@ -261,7 +264,7 @@
                                 @endif
                             </div>
                         </td>
-                        <td class="px-6 py-4 align-middle whitespace-nowrap">
+                        <td class="px-3.5 sm:px-4 py-3.5 align-middle whitespace-nowrap">
                             @if($classCount === 0)
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
                                     Semua Kelas
@@ -285,17 +288,17 @@
                                 </div>
                             @endif
                         </td>
-                        <td class="px-6 py-4 align-middle whitespace-nowrap">
+                        <td class="px-3.5 sm:px-4 py-3.5 align-middle whitespace-nowrap">
                             <div class="text-slate-900 font-semibold text-xs">{{ \Carbon\Carbon::parse($primary->start_at)->format('d M Y') }}</div>
                             <div class="text-slate-400 text-xs mt-0.5 font-mono">
                                 {{ \Carbon\Carbon::parse($primary->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($primary->end_at)->format('H:i') }} WIB
                             </div>
                         </td>
-                        <td class="px-6 py-4 align-middle whitespace-nowrap">
+                        <td class="px-3.5 sm:px-4 py-3.5 align-middle whitespace-nowrap">
                             <div class="font-bold text-slate-800 text-xs">{{ $primary->duration }} mnt</div>
                             <div class="text-[10px] font-semibold text-indigo-600 mt-0.5">{{ round($primary->duration / 45, 1) }} JP</div>
                         </td>
-                        <td class="px-6 py-4 align-middle whitespace-nowrap">
+                        <td class="px-3.5 sm:px-4 py-3.5 align-middle whitespace-nowrap">
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-rose-50 text-rose-700 ring-1 ring-rose-600/20">
                                 <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -303,10 +306,14 @@
                                 Max {{ $primary->max_violation }}x Keluar
                             </span>
                         </td>
-                        <td class="px-6 py-4 align-middle whitespace-nowrap">
+                        <td class="px-3.5 sm:px-4 py-3.5 align-middle whitespace-nowrap">
                             @if($isOngoing)
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-600/30 border border-amber-200">
                                     <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping mr-0.5"></span> Berlangsung
+                                </span>
+                            @elseif($primary->isExpired())
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 ring-1 ring-slate-400/20">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Selesai
                                 </span>
                             @elseif($primary->status === 'active')
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
@@ -318,7 +325,7 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 align-middle whitespace-nowrap text-right">
+                        <td class="px-3.5 sm:px-4 py-3.5 align-middle whitespace-nowrap text-right">
                             <div class="inline-flex items-center justify-end gap-1.5">
                                 <a href="{{ route('admin.exams.show', $primary->id) }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-indigo-50 border border-indigo-100 text-indigo-700 rounded-lg text-xs font-bold hover:bg-indigo-600 hover:text-white shadow-2xs transition-all duration-150" title="Monitor & Buka Kunci Siswa">
                                     Monitor
@@ -344,11 +351,11 @@
                     <tr class="exam-row hover:bg-indigo-50/20 transition-colors duration-150 group border-t-2 border-slate-100" 
                         data-title="{{ strtolower($grp->title) }}" 
                         data-classes="{{ strtolower($classList ?: 'semua kelas') }}" 
-                        data-status="{{ $isOngoing ? 'active' : ($grp->has_active ? 'active' : 'inactive') }}"
+                        data-status="{{ $status }}"
                         data-group-id="{{ $groupId }}"
                         data-can-manage="{{ $canManage ? '1' : '0' }}"
                         data-ongoing="{{ $isOngoing ? '1' : '0' }}">
-                        <td class="px-4 py-4 align-middle">
+                        <td class="px-3.5 py-3.5 align-middle">
                             @if($canManage)
                                 @if($isOngoing)
                                     <input type="checkbox" disabled class="rounded text-slate-300 border-slate-200 w-4 h-4 cursor-not-allowed opacity-40" title="Sebagian sesi ujian sedang berlangsung">
@@ -357,7 +364,7 @@
                                 @endif
                             @endif
                         </td>
-                        <td class="px-6 py-4 font-semibold text-slate-900 align-middle">
+                        <td class="px-3.5 sm:px-4 py-3.5 font-semibold text-slate-900 align-middle">
                             <div class="line-clamp-2 max-w-sm text-base font-bold text-slate-900">{{ $grp->title }}</div>
                             <div class="mt-1 flex items-center gap-1.5 flex-wrap text-[11px]">
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-bold border border-indigo-200">
@@ -381,7 +388,7 @@
                                 @endif
                             </div>
                         </td>
-                        <td class="px-6 py-4 align-middle whitespace-nowrap">
+                        <td class="px-3.5 sm:px-4 py-3.5 align-middle whitespace-nowrap">
                             @if($classCount === 0)
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
                                     Semua Kelas
@@ -405,25 +412,29 @@
                                 </div>
                             @endif
                         </td>
-                        <td class="px-6 py-4 align-middle whitespace-nowrap">
+                        <td class="px-3.5 sm:px-4 py-3.5 align-middle whitespace-nowrap">
                             <div class="text-slate-900 font-bold text-xs">{{ $sessionCount }} Sesi Kelas</div>
                             <div class="text-slate-400 text-xs mt-0.5 font-mono">
                                 {{ \Carbon\Carbon::parse($grp->start_at)->format('d M Y') }}
                             </div>
                         </td>
-                        <td class="px-6 py-4 align-middle whitespace-nowrap">
+                        <td class="px-3.5 sm:px-4 py-3.5 align-middle whitespace-nowrap">
                             <div class="font-bold text-slate-800 text-xs">{{ $grp->duration }} mnt</div>
                             <div class="text-[10px] font-semibold text-indigo-600 mt-0.5">{{ round($grp->duration / 45, 1) }} JP</div>
                         </td>
-                        <td class="px-6 py-4 align-middle whitespace-nowrap">
+                        <td class="px-3.5 sm:px-4 py-3.5 align-middle whitespace-nowrap">
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-rose-50 text-rose-700 ring-1 ring-rose-600/20">
                                 Max {{ $grp->max_violation }}x Keluar
                             </span>
                         </td>
-                        <td class="px-6 py-4 align-middle whitespace-nowrap">
+                        <td class="px-3.5 sm:px-4 py-3.5 align-middle whitespace-nowrap">
                             @if($isOngoing)
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-600/30 border border-amber-200">
                                     <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping mr-0.5"></span> Berlangsung
+                                </span>
+                            @elseif($isExpired)
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 ring-1 ring-slate-400/20">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Selesai
                                 </span>
                             @elseif($grp->has_active)
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
@@ -435,7 +446,7 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 align-middle whitespace-nowrap text-right">
+                        <td class="px-3.5 sm:px-4 py-3.5 align-middle whitespace-nowrap text-right">
                             <button type="button" onclick="toggleSessionGroup('{{ $groupId }}')" class="inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs transition-all duration-150 active:scale-95" title="Buka detail seluruh sesi">
                                 <span id="btn-text-{{ $groupId }}" data-count="{{ $sessionCount }}">Buka {{ $sessionCount }} Sesi</span>
                                 <svg id="btn-icon-{{ $groupId }}" class="w-3.5 h-3.5 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -485,6 +496,10 @@
                                                     @if($sOngoing)
                                                         <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-600/30 border border-amber-200">
                                                             <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span> Berlangsung
+                                                        </span>
+                                                    @elseif($s->isExpired())
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 ring-1 ring-slate-300">
+                                                            Selesai
                                                         </span>
                                                     @elseif($s->status === 'active')
                                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700">
@@ -560,8 +575,9 @@
         $classList = $isGrouped ? $grp->classes->pluck('name')->implode(', ') : $grp->classes->pluck('name')->implode(', ');
         $classCount = $isGrouped ? $grp->classes->count() : $grp->classes->count();
         $canManage = auth()->user()->isAdmin() || ($primary->created_by === auth()->id());
+        $isExpired = $isGrouped ? ($grp->is_expired ?? false) : $primary->isExpired();
         $isOngoing = $isGrouped ? $grp->is_ongoing : $primary->isOngoing();
-        $status = $isOngoing ? 'ongoing' : ($isGrouped ? ($grp->has_active ? 'active' : 'inactive') : $primary->status);
+        $status = $isOngoing ? 'ongoing' : ($isExpired ? 'finished' : ($isGrouped ? ($grp->has_active ? 'active' : 'inactive') : $primary->status));
         $groupId = $isGrouped ? $grp->group_id : ('exam_' . $primary->id);
     @endphp
 
@@ -570,7 +586,7 @@
         <div class="exam-card bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 shadow-xs p-4 sm:p-5 space-y-3 transition-all"
              data-title="{{ strtolower($primary->title) }}" 
              data-classes="{{ strtolower($classList ?: 'semua kelas') }}" 
-             data-status="{{ $primary->status }}"
+             data-status="{{ $status }}"
              data-exam-id="{{ $primary->id }}"
              data-can-manage="{{ $canManage ? '1' : '0' }}"
              data-ongoing="{{ $isOngoing ? '1' : '0' }}">
@@ -601,8 +617,12 @@
                                     Ujian Sekolah (Admin)
                                 </span>
                             @elseif($primary->creator)
-                                <span class="text-[11px] text-slate-500">
-                                    Oleh: <strong class="text-slate-700 font-medium">{{ $primary->creator->name }}</strong>
+                                <span class="text-[11px] text-slate-400">
+                                    Oleh: <span class="text-slate-600 font-medium">{{ $primary->creator->name }}</span>
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg">
+                                    Ujian Sekolah (Admin)
                                 </span>
                             @endif
                         </div>
@@ -612,6 +632,10 @@
                     @if($isOngoing)
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-600/30 border border-amber-200">
                             <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Berlangsung
+                        </span>
+                    @elseif($primary->isExpired())
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 ring-1 ring-slate-400/30 border border-slate-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Selesai
                         </span>
                     @elseif($primary->status === 'active')
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/30 border border-emerald-200">
@@ -688,7 +712,7 @@
         <div class="exam-card bg-white rounded-2xl border-2 border-indigo-200 hover:border-indigo-300 shadow-xs p-4 sm:p-5 space-y-3 transition-all"
              data-title="{{ strtolower($grp->title) }}" 
              data-classes="{{ strtolower($classList ?: 'semua kelas') }}" 
-             data-status="{{ $isOngoing ? 'active' : ($grp->has_active ? 'active' : 'inactive') }}"
+             data-status="{{ $status }}"
              data-group-id="{{ $groupId }}"
              data-can-manage="{{ $canManage ? '1' : '0' }}"
              data-ongoing="{{ $isOngoing ? '1' : '0' }}">
@@ -709,6 +733,14 @@
                             <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Ujian Anda
                             </span>
+                        @elseif($grp->creator && $grp->creator->isAdmin())
+                            <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-lg">
+                                Ujian Sekolah (Admin)
+                            </span>
+                        @elseif($grp->creator)
+                            <span class="text-[11px] text-slate-400">
+                                Oleh: <span class="text-slate-600 font-medium">{{ $grp->creator->name }}</span>
+                            </span>
                         @endif
                     </div>
                 </div>
@@ -716,6 +748,10 @@
                     @if($isOngoing)
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-600/30 border border-amber-200">
                             <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Berlangsung
+                        </span>
+                    @elseif($isExpired)
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 ring-1 ring-slate-400/30 border border-slate-200">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Selesai
                         </span>
                     @elseif($grp->has_active)
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/30 border border-emerald-200">
@@ -767,6 +803,10 @@
                         @if($sOngoing)
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
                                 Berlangsung
+                            </span>
+                        @elseif($s->isExpired())
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-200 text-slate-700">
+                                Selesai
                             </span>
                         @elseif($s->status === 'active')
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-800">
