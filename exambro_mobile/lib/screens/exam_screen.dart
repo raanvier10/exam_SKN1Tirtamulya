@@ -29,6 +29,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
   int _violationCount = 0;
   bool _isLocked = false;
   int? _sessionId;
+  String? _originalFormUrl;
   Timer? _examTimer;
   late DateTime _endTime;
 
@@ -126,15 +127,32 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                           host == 'google.co.id' ||
                           host == 'www.google.co.id'));
 
-              if (isYoutubeVideo || isSearch) {
+              // Blokir halaman Google non-form (webhp, sorry, settings, dll)
+              final isGoogleHost = host == 'google.com' ||
+                  host == 'www.google.com' ||
+                  host == 'google.co.id' ||
+                  host == 'www.google.co.id';
+              final isGoogleJunkPage = isGoogleHost &&
+                  (path.startsWith('/webhp') ||
+                   path.startsWith('/sorry') ||
+                   path.startsWith('/settings') ||
+                   path.startsWith('/preferences') ||
+                   path.startsWith('/intl') ||
+                   path.startsWith('/about'));
+
+              if (isYoutubeVideo || isSearch || isGoogleJunkPage) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Akses ke pencarian atau YouTube diblokir.'),
+                    content: Text('Akses ke pencarian atau halaman Google di luar form diblokir.'),
                     backgroundColor: Color(0xFFEF4444),
                     duration: Duration(seconds: 2),
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
+                // Auto-reload ke form URL asli jika terjebak di halaman Google
+                if (_originalFormUrl != null) {
+                  _controller.loadRequest(Uri.parse(_originalFormUrl!));
+                }
                 return NavigationDecision.prevent;
               }
 
@@ -292,6 +310,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
             final sep = formUrl.contains('?') ? '&' : '?';
             formUrl = '$formUrl${sep}embedded=true';
           }
+          _originalFormUrl = formUrl;
           _controller.loadRequest(Uri.parse(formUrl));
         }
       } else if (response['locked'] == true) {
@@ -321,6 +340,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
           final sep = fallbackUrl.contains('?') ? '&' : '?';
           fallbackUrl = '$fallbackUrl${sep}embedded=true';
         }
+        _originalFormUrl = fallbackUrl;
         _controller.loadRequest(Uri.parse(fallbackUrl));
       }
     }
@@ -561,9 +581,11 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
         final secondsAway = _awayStartTime != null
             ? DateTime.now().difference(_awayStartTime!).inSeconds
             : 0;
-        // ponytail: grace period 2s — keyboard open/close triggers
-        // inactive→resumed cycle under ~1s, real app-switch takes longer.
-        if (secondsAway >= 2) {
+        // ponytail: grace period 4s — keyboard open/close (incl. email
+        // autocomplete) triggers inactive→resumed under ~3s on slow phones;
+        // real app-switch takes longer. Raised from 2s after false-positive
+        // reports during Google Form email input.
+        if (secondsAway >= 4) {
           _handleViolation(
             'FLOATING_WINDOW',
             'Terdeteksi keluar aplikasi / beralih jendela ($secondsAway detik)',
@@ -968,7 +990,9 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _onTapFinishExam() async {
-    // 1. Cek status Google Form & otomatis klik Kirim jika belum dikirim
+    // 1. Deteksi status Google Form (TANPA auto-click submit)
+    // ponytail: auto-click dihapus karena menyebabkan form kosong ter-submit
+    // saat siswa baru masuk lalu keluar. Siswa harus klik Kirim sendiri.
     String formState = 'UNKNOWN';
     try {
       final result = await _controller.runJavaScriptReturningResult("""
@@ -983,17 +1007,6 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
             return 'ALREADY_SUBMITTED';
           }
 
-          const buttons = Array.from(document.querySelectorAll('div[role="button"], button, [role="button"]'));
-          const submitBtn = buttons.find(b => {
-            const t = (b.innerText || '').trim().toLowerCase();
-            return t === 'kirim' || t === 'submit' || t === 'kirimkan' || t === 'send';
-          });
-
-          if (submitBtn) {
-            submitBtn.click();
-            return 'AUTO_CLICKED';
-          }
-
           return 'NOT_SUBMITTED';
         })();
       """);
@@ -1002,30 +1015,95 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
       // Ignored
     }
 
-    if (formState == 'AUTO_CLICKED') {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.touch_app_rounded, color: Colors.white, size: 18),
-              SizedBox(width: 8),
-              Text('Otomatis menekan tombol "Kirim" di Google Form...'),
-            ],
-          ),
-          backgroundColor: const Color(0xFF2563EB),
-          duration: const Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      );
-      await Future.delayed(const Duration(milliseconds: 1000));
-    }
-
     if (!mounted) return;
 
     bool isAlreadySubmitted = formState == 'ALREADY_SUBMITTED';
 
+    // Jika BELUM submit: tampilkan peringatan keras, jangan izinkan langsung akhiri
+    if (!isAlreadySubmitted) {
+      final bool? forceFinish = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => Dialog(
+          backgroundColor: const Color(0xFF0F172A),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: const BorderSide(color: Color(0xFFF59E0B), width: 1.2),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(22.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Color(0xFFFBBF24),
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Jawaban Belum Dikirim!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 17,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Anda BELUM menekan tombol "Kirim" di Google Form. Jawaban Anda belum terekam. Kembali ke form dan klik tombol "Kirim" terlebih dahulu.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Color(0xFFFDE68A), fontSize: 12.5, height: 1.4),
+                ),
+                const SizedBox(height: 22),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(dialogContext, false),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF59E0B),
+                      foregroundColor: const Color(0xFF0F172A),
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text('KEMBALI KE FORM', style: TextStyle(fontWeight: FontWeight.w800)),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(dialogContext, true),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFF64748B),
+                    ),
+                    child: const Text('Tetap akhiri tanpa kirim', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // Jika siswa memilih kembali ke form, batalkan
+      if (forceFinish != true || !mounted) return;
+    }
+
+    // Form sudah di-submit ATAU siswa force-finish: konfirmasi akhiri sesi
     bool? confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => Dialog(
@@ -1043,15 +1121,15 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: (isAlreadySubmitted ? const Color(0xFF10B981) : const Color(0xFF38BDF8)).withValues(alpha: 0.15),
+                  color: const Color(0xFF10B981).withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: (isAlreadySubmitted ? const Color(0xFF10B981) : const Color(0xFF38BDF8)).withValues(alpha: 0.3),
+                    color: const Color(0xFF10B981).withValues(alpha: 0.3),
                   ),
                 ),
-                child: Icon(
-                  isAlreadySubmitted ? Icons.verified_rounded : Icons.check_circle_outline_rounded,
-                  color: isAlreadySubmitted ? const Color(0xFF34D399) : const Color(0xFF38BDF8),
+                child: const Icon(
+                  Icons.verified_rounded,
+                  color: Color(0xFF34D399),
                   size: 28,
                 ),
               ),
@@ -1070,7 +1148,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
               Text(
                 isAlreadySubmitted
                     ? 'Tanggapan Google Form Anda telah terekam di sistem. Tekan tombol di bawah untuk mengakhiri sesi.'
-                    : 'Sistem sudah otomatis memicu tombol "Kirim". Pastikan semua soal wajib telah lengkap di Google Form.',
+                    : 'Anda memilih mengakhiri sesi tanpa mengirim jawaban. Sesi akan ditutup.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12.5, height: 1.4),
               ),
@@ -1086,7 +1164,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text('Periksa Lagi', style: TextStyle(fontWeight: FontWeight.w700)),
+                      child: const Text('Batal', style: TextStyle(fontWeight: FontWeight.w700)),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -1267,7 +1345,14 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                         padding: const EdgeInsets.all(6),
                         constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                         onPressed: () {
-                          _controller.reload();
+                          // Reload ke form URL asli (bukan current URL)
+                          // agar siswa yang terjebak di halaman Google
+                          // langsung kembali ke soal ujian
+                          if (_originalFormUrl != null) {
+                            _controller.loadRequest(Uri.parse(_originalFormUrl!));
+                          } else {
+                            _controller.reload();
+                          }
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('Memuat ulang soal...'),

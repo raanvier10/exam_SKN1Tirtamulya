@@ -18,7 +18,7 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
   // Koordinat Sekolah & Batas Radius (450 meter untuk toleransi sinyal di dalam ruangan/gedung kelas)
   static const double schoolLatitude = -6.3400545;
   static const double schoolLongitude = 107.4686982;
-  static const double maxRadiusMeters = 450.0;
+  static const double maxRadiusMeters = 600.0;
 
   late AnimationController _controller;
   late Animation<double> _shackleAnimation;

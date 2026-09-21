@@ -128,7 +128,7 @@ class ApiExamController extends Controller
 
             $schoolLat = -6.3400545;
             $schoolLng = 107.4686982;
-            $maxRadius = 450; // meter (toleransi akurasi sinyal di dalam ruangan/gedung kelas)
+            $maxRadius = 600; // meter (toleransi akurasi sinyal di dalam ruangan/gedung kelas)
 
             $earthRadius = 6371000;
             $latFrom = deg2rad($schoolLat);
