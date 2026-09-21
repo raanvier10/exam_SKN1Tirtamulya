@@ -54,6 +54,10 @@ class _LoginScreenState extends State<LoginScreen> {
             'is_pkl',
             user['is_pkl'] == true || user['is_pkl'] == 1,
           );
+          await prefs.setBool(
+            'is_google_connected',
+            user['google_connected'] == true || user['google_connected'] == 1,
+          );
         }
 
         if (!mounted) return;

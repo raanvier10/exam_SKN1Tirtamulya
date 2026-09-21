@@ -28,6 +28,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
   bool _isLoading = true;
   int _violationCount = 0;
   bool _isLocked = false;
+  bool _timeExpiredHandled = false;
   int? _sessionId;
   String? _originalFormUrl;
   Timer? _examTimer;
@@ -70,7 +71,8 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
     _examTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
         setState(() {});
-        if (DateTime.now().isAfter(_endTime) && !_isLocked) {
+        if (DateTime.now().isAfter(_endTime) && !_isLocked && !_timeExpiredHandled) {
+          timer.cancel();
           _handleTimeExpired();
         }
       }
@@ -596,6 +598,9 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
   }
 
   void _handleTimeExpired() {
+    if (_timeExpiredHandled) return;
+    _timeExpiredHandled = true;
+    _examTimer?.cancel();
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -633,7 +638,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Durasi pengerjaan ujian telah selesai. Sesi Anda akan otomatis diakhiri dan jawaban tersimpan.',
+                'Durasi pengerjaan ujian telah habis. Sesi ujian Anda telah berakhir.',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13, height: 1.4),
               ),
@@ -644,7 +649,9 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                 child: ElevatedButton(
                   onPressed: () async {
                     Navigator.pop(dialogContext);
-                    await ApiService.finishExamSession(widget.exam['id']);
+                    try {
+                      await ApiService.finishExamSession(widget.exam['id']);
+                    } catch (_) {}
                     if (!mounted) return;
                     Navigator.pop(context);
                   },
@@ -654,7 +661,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                     elevation: 0,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  child: const Text('KEMBALI KE PORTAL', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
+                  child: const Text('KEMBALI KE BERANDA', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
                 ),
               ),
             ],
