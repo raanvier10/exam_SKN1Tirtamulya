@@ -15,10 +15,10 @@ class SecurityCheckScreen extends StatefulWidget {
 
 class _SecurityCheckScreenState extends State<SecurityCheckScreen>
     with SingleTickerProviderStateMixin {
-  // Koordinat Sekolah & Batas Radius (250 meter)
+  // Koordinat Sekolah & Batas Radius (450 meter untuk toleransi sinyal di dalam ruangan/gedung kelas)
   static const double schoolLatitude = -6.3400545;
   static const double schoolLongitude = 107.4686982;
-  static const double maxRadiusMeters = 250.0;
+  static const double maxRadiusMeters = 450.0;
 
   late AnimationController _controller;
   late Animation<double> _shackleAnimation;
@@ -150,7 +150,11 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
 
       Position? position;
       try {
-        position = await Geolocator.getLastKnownPosition();
+        final lastPos = await Geolocator.getLastKnownPosition();
+        // Hanya gunakan posisi terakhir jika masih segar (< 2 menit lalu) agar tidak membaca lokasi lama di rumah
+        if (lastPos != null && DateTime.now().difference(lastPos.timestamp).inMinutes < 2) {
+          position = lastPos;
+        }
       } catch (_) {}
 
       if (position == null) {
@@ -158,10 +162,19 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
           position = await Geolocator.getCurrentPosition(
             locationSettings: const LocationSettings(
               accuracy: LocationAccuracy.high,
+              timeLimit: Duration(seconds: 8),
             ),
           );
         } catch (e) {
-          debugPrint('Gagal mengambil posisi saat ini: $e');
+          // Fallback akurasi medium untuk ruangan kelas dengan sinyal satelit terbatas
+          try {
+            position = await Geolocator.getCurrentPosition(
+              locationSettings: const LocationSettings(
+                accuracy: LocationAccuracy.medium,
+                timeLimit: Duration(seconds: 6),
+              ),
+            );
+          } catch (_) {}
         }
       }
 

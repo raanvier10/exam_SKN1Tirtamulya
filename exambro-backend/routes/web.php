@@ -10,7 +10,38 @@ use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\SebExamController;
 
 Route::get('/', function () {
-    return redirect()->route('admin.login');
+    return redirect()->route('student.portal');
+});
+
+// Portal Unduh Aplikasi & Akses Ujian Siswa (Android & iOS)
+Route::get('/portal', function () {
+    $now = \Carbon\Carbon::now();
+    $todayExams = \App\Models\Exam::where('status', 'active')
+        ->whereDate('start_at', $now->toDateString())
+        ->orderBy('start_at', 'asc')
+        ->get();
+
+    return view('portal.index', compact('todayExams'));
+})->name('student.portal');
+
+Route::get('/download/apk', function () {
+    $apkPath = public_path('downloads/ExaSatrya.apk');
+    if (!file_exists($apkPath)) {
+        $flutterApk = base_path('../exambro_mobile/build/app/outputs/flutter-apk/app-release.apk');
+        if (file_exists($flutterApk)) {
+            return response()->download($flutterApk, 'ExaSatrya_Ujian_SMKN1Tirtamulya.apk', [
+                'Content-Type' => 'application/vnd.android.package-archive',
+            ]);
+        }
+        return response("File APK sedang diproses oleh server. Silakan refresh halaman.", 404);
+    }
+    return response()->download($apkPath, 'ExaSatrya_Ujian_SMKN1Tirtamulya.apk', [
+        'Content-Type' => 'application/vnd.android.package-archive',
+    ]);
+})->name('download.apk');
+
+Route::get('/download', function () {
+    return redirect()->route('student.portal');
 });
 
 // Portal Ujian Siswa via Safe Exam Browser (SEB) / iOS

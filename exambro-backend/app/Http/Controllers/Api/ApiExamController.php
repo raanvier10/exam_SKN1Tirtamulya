@@ -128,7 +128,7 @@ class ApiExamController extends Controller
 
             $schoolLat = -6.3400545;
             $schoolLng = 107.4686982;
-            $maxRadius = 250; // meter
+            $maxRadius = 450; // meter (toleransi akurasi sinyal di dalam ruangan/gedung kelas)
 
             $earthRadius = 6371000;
             $latFrom = deg2rad($schoolLat);
@@ -166,9 +166,9 @@ class ApiExamController extends Controller
             ], 403);
         }
 
-        // Validate Schedule
+        // Validate Schedule (dengan toleransi 2 menit untuk desinkronisasi jam HP siswa)
         $now = Carbon::now();
-        if ($now->lt($exam->start_at)) {
+        if ($now->copy()->addMinutes(2)->lt($exam->start_at)) {
             return response()->json(['success' => false, 'message' => 'Ujian belum dimulai'], 400);
         }
 
@@ -176,26 +176,58 @@ class ApiExamController extends Controller
         $calculatedExpiry = $now->copy()->addMinutes((int)$exam->duration);
         $expiredAt = ($exam->end_at && $calculatedExpiry->gt($exam->end_at)) ? $exam->end_at : $calculatedExpiry;
 
-        // Create Session
-        $session = ExamSession::create([
-            'exam_id' => $exam->id,
-            'user_id' => $user->id,
-            'device_id' => $request->device_id,
-            'session_token' => Str::random(40),
-            'started_at' => $now,
-            'expired_at' => $expiredAt,
-            'status' => 'ACTIVE'
-        ]);
+        // Cek atau buat sesi ujian (Reuse sesi AKTIF jika ada agar tidak membuat sesi ganda saat restart aplikasi)
+        $session = ExamSession::where('exam_id', $exam->id)
+            ->where('user_id', $user->id)
+            ->where('status', 'ACTIVE')
+            ->latest('id')
+            ->first();
+
+        if (!$session) {
+            $session = ExamSession::create([
+                'exam_id' => $exam->id,
+                'user_id' => $user->id,
+                'device_id' => $request->device_id,
+                'session_token' => Str::random(40),
+                'started_at' => $now,
+                'expired_at' => $expiredAt,
+                'status' => 'ACTIVE'
+            ]);
+        }
 
         // Update Participant Status
         $exam->participants()->where('user_id', $user->id)->update([
             'status' => 'working',
-            'started_at' => $now,
+            'started_at' => $session->started_at ?? $now,
         ]);
+
+        // Hitung akumulasi pelanggaran aktif siswa untuk ujian ini (memperhitungkan waktu buka kunci)
+        $activeViolationQuery = Violation::where('exam_id', $exam->id)
+            ->where('user_id', $user->id);
+        if ($session && $session->unlocked_at) {
+            $activeViolationQuery->where('created_at', '>=', $session->unlocked_at);
+        }
+        $currentViolations = $activeViolationQuery->count();
+        $maxViolation = (int)($exam->max_violation ?? 3);
+
+        if ($currentViolations >= $maxViolation) {
+            $session->update(['status' => 'LOCKED']);
+            $exam->participants()->where('user_id', $user->id)->update(['status' => 'locked']);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Ujian Anda sedang dikunci karena melebihi batas pelanggaran. Silakan hubungi pengawas / operator untuk membuka kunci.',
+                'locked' => true,
+                'violation_count' => $currentViolations,
+                'max_violation' => $maxViolation,
+            ], 403);
+        }
 
         $sessionData = $session->toArray();
         $sessionData['google_form_url'] = $exam->google_form_url;
         $sessionData['server_time'] = $now->toIso8601String();
+        $sessionData['violation_count'] = $currentViolations;
+        $sessionData['max_violation'] = $maxViolation;
 
         return response()->json([
             'success' => true,
@@ -248,7 +280,9 @@ class ApiExamController extends Controller
         $exam = Exam::find($request->exam_id);
         $session = ExamSession::find($request->session_id);
         
-        $violationQuery = Violation::where('session_id', $request->session_id);
+        // Konsisten dengan dashboard admin: hitung pelanggaran berdasarkan exam_id dan user_id
+        $violationQuery = Violation::where('exam_id', $request->exam_id)
+            ->where('user_id', $request->user()->id);
         if ($session && $session->unlocked_at) {
             $violationQuery->where('created_at', '>=', $session->unlocked_at);
         }

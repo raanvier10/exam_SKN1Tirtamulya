@@ -19,7 +19,7 @@ class SebExamController extends Controller
      */
     public const SCHOOL_LAT = -6.3400545;
     public const SCHOOL_LNG = 107.4686982;
-    public const MAX_RADIUS = 250;
+    public const MAX_RADIUS = 450;
 
     /**
      * Cek apakah request berasal dari Safe Exam Browser

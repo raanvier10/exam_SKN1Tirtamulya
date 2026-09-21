@@ -15,13 +15,16 @@ class MainActivity: FlutterActivity() {
         channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
         channel?.setMethodCallHandler { call, result ->
             if (call.method == "secureScreen") {
-                isSecured = true
                 window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
                 try {
                     startLockTask()
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
+                // Beri jeda 4 detik agar dialog sistem Android (Sematkan Aplikasi / Immersive) tidak dianggap pelanggaran
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    isSecured = true
+                }, 4000)
                 result.success(true)
             } else if (call.method == "clearSecureScreen") {
                 isSecured = false

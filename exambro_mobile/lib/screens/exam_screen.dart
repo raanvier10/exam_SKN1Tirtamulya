@@ -34,10 +34,13 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
 
   bool _wasAway = false;
   DateTime? _awayStartTime;
+  DateTime? _entryTime;
+  DateTime? _lastViolationTime;
 
   @override
   void initState() {
     super.initState();
+    _entryTime = DateTime.now();
     WidgetsBinding.instance.addObserver(this);
 
     if (!kIsWeb) {
@@ -90,22 +93,40 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
               _injectAntiCopyProtection();
             },
             onWebResourceError: (WebResourceError error) {
-              if (mounted) setState(() => _isLoading = false);
+              if (mounted) {
+                setState(() => _isLoading = false);
+                if (error.isForMainFrame ?? true) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Koneksi terganggu. Tekan tombol refresh di kanan atas jika soal belum termuat.'),
+                      backgroundColor: Color(0xFFD97706),
+                      duration: Duration(seconds: 4),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              }
             },
             onNavigationRequest: (NavigationRequest request) {
               final uri = Uri.tryParse(request.url);
               final host = uri?.host.toLowerCase() ?? '';
               final path = uri?.path.toLowerCase() ?? '';
 
-              // Explicitly block YouTube and Google Search
-              if (host.contains('youtube.com') ||
-                  host.contains('youtu.be') ||
-                  path.startsWith('/search') ||
+              // Blokir streaming video YouTube & pencarian Google
+              // CATATAN: accounts.youtube.com TIDAK diblokir karena digunakan Google SSO untuk SetSID sinkronisasi session
+              final isYoutubeVideo = host == 'www.youtube.com' ||
+                  host == 'm.youtube.com' ||
+                  host == 'youtube.com' ||
+                  host == 'youtu.be';
+
+              final isSearch = path.startsWith('/search') ||
                   ((path == '/' || path.isEmpty) &&
                       (host == 'google.com' ||
                           host == 'www.google.com' ||
                           host == 'google.co.id' ||
-                          host == 'www.google.co.id'))) {
+                          host == 'www.google.co.id'));
+
+              if (isYoutubeVideo || isSearch) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Akses ke pencarian atau YouTube diblokir.'),
@@ -134,10 +155,15 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                   host == 'google.com' ||
                   host.endsWith('.google.co.id') ||
                   host == 'google.co.id' ||
-                  host.endsWith('gstatic.com') ||
-                  host.endsWith('googleusercontent.com') ||
-                  host.endsWith('googleapis.com') ||
-                  host.endsWith('1e100.net');
+                  host.endsWith('.gstatic.com') ||
+                  host == 'gstatic.com' ||
+                  host.endsWith('.googleusercontent.com') ||
+                  host == 'googleusercontent.com' ||
+                  host.endsWith('.googleapis.com') ||
+                  host == 'googleapis.com' ||
+                  host.endsWith('.1e100.net') ||
+                  host == '1e100.net' ||
+                  host == 'accounts.youtube.com';
 
               if (!isAllowed) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -247,12 +273,24 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
         _sessionId = response['data']?['id'] != null
             ? int.tryParse(response['data']['id'].toString())
             : null;
+        if (response['data']?['violation_count'] != null) {
+          final serverViolations = int.tryParse(response['data']['violation_count'].toString()) ?? 0;
+          if (mounted) {
+            setState(() {
+              _violationCount = serverViolations;
+            });
+          }
+        }
         String? formUrl = response['data']?['google_form_url']?.toString() ??
             widget.exam['google_form_url']?.toString();
         if (formUrl != null && formUrl.trim().isNotEmpty) {
           formUrl = formUrl.trim();
           if (!formUrl.startsWith('http://') && !formUrl.startsWith('https://')) {
             formUrl = 'https://$formUrl';
+          }
+          if (formUrl.contains('docs.google.com/forms') && !formUrl.contains('embedded=true')) {
+            final sep = formUrl.contains('?') ? '&' : '?';
+            formUrl = '$formUrl${sep}embedded=true';
           }
           _controller.loadRequest(Uri.parse(formUrl));
         }
@@ -278,6 +316,10 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
         fallbackUrl = fallbackUrl.trim();
         if (!fallbackUrl.startsWith('http://') && !fallbackUrl.startsWith('https://')) {
           fallbackUrl = 'https://$fallbackUrl';
+        }
+        if (fallbackUrl.contains('docs.google.com/forms') && !fallbackUrl.contains('embedded=true')) {
+          final sep = fallbackUrl.contains('?') ? '&' : '?';
+          fallbackUrl = '$fallbackUrl${sep}embedded=true';
         }
         _controller.loadRequest(Uri.parse(fallbackUrl));
       }
@@ -603,6 +645,19 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
   Future<void> _handleViolation(String type, String desc) async {
     if (_isLocked) return;
 
+    final now = DateTime.now();
+    // 1. Grace period saat pertama kali masuk (5 detik pertama)
+    // Cegah dialog sistem Android (Sematkan Aplikasi / Immersive Mode / Keyboard) dihitung pelanggaran
+    if (_entryTime != null && now.difference(_entryTime!).inSeconds < 5) {
+      return;
+    }
+
+    // 2. Cooldown antar-pelanggaran (minimal 4 detik jeda agar 1 kali beralih tidak terhitung ganda)
+    if (_lastViolationTime != null && now.difference(_lastViolationTime!).inSeconds < 4) {
+      return;
+    }
+    _lastViolationTime = now;
+
     HapticFeedback.heavyImpact();
 
     final int maxViolations = int.tryParse(widget.exam['max_violation']?.toString() ?? '3') ?? 3;
@@ -913,91 +968,6 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _onTapFinishExam() async {
-    final now = DateTime.now();
-    final remainingDiff = _endTime.difference(now);
-    final duration = widget.exam['duration'] ?? 60;
-
-    // Aturan 10 Menit Terakhir (hanya bisa selesai di 10 menit terakhir ujian)
-    bool canFinish = (duration <= 10) || (remainingDiff.inMinutes < 10) || (remainingDiff.inSeconds <= 600);
-
-    if (!canFinish) {
-      int minutesToWait = remainingDiff.inMinutes - 9;
-      showDialog(
-        context: context,
-        builder: (dialogContext) => Dialog(
-          backgroundColor: const Color(0xFF0F172A),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-            side: const BorderSide(color: Color(0xFF334155), width: 1.2),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(22.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFD97706).withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFD97706).withValues(alpha: 0.3)),
-                  ),
-                  child: const Icon(Icons.lock_clock_rounded, color: Color(0xFFFBBF24), size: 28),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Tombol Belum Dapat Digunakan',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16.5,
-                    letterSpacing: -0.3,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Sesuai tata tertib, tombol "Selesai" baru dapat diakses pada 10 menit terakhir sebelum ujian berakhir. Silakan periksa kembali jawaban Anda.',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12.5, height: 1.4),
-                ),
-                const SizedBox(height: 14),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1E293B),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFF334155)),
-                  ),
-                  child: Text(
-                    'Dapat diakses dalam ~$minutesToWait menit lagi',
-                    style: const TextStyle(color: Color(0xFF38BDF8), fontSize: 12, fontWeight: FontWeight.w700),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  height: 44,
-                  child: ElevatedButton(
-                    onPressed: () => Navigator.pop(dialogContext),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF2563EB),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    ),
-                    child: const Text('KEMBALI MENGERJAKAN', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5)),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-      return;
-    }
-
     // 1. Cek status Google Form & otomatis klik Kirim jika belum dikirim
     String formState = 'UNKNOWN';
     try {
@@ -1172,8 +1142,6 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
     final now = DateTime.now();
     final remainingDiff = _endTime.difference(now);
     final isLowTime = remainingDiff.inMinutes < 5 && !now.isAfter(_endTime);
-    final int duration = int.tryParse(widget.exam['duration']?.toString() ?? '60') ?? 60;
-    final bool canFinish = (duration <= 10) || (remainingDiff.inMinutes < 10) || (remainingDiff.inSeconds <= 600);
 
     return PopScope(
       canPop: false,
@@ -1284,34 +1252,55 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                       ),
                     ),
 
+                    const SizedBox(width: 6),
+
+                    // Tombol Muat Ulang / Reload Soal
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF112238),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFF233B5D), width: 1),
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.refresh_rounded, size: 16, color: Color(0xFF38BDF8)),
+                        tooltip: 'Muat Ulang Soal',
+                        padding: const EdgeInsets.all(6),
+                        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                        onPressed: () {
+                          _controller.reload();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Memuat ulang soal...'),
+                              duration: Duration(seconds: 2),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+
                     const SizedBox(width: 8),
 
-                    // Right: Selesai Button with Auto-Submit & 10-Minute Lock Rule
+                    // Right: Selesai Button
                     ElevatedButton.icon(
                       onPressed: _onTapFinishExam,
-                      icon: Icon(
-                        canFinish ? Icons.check_circle_rounded : Icons.lock_outline_rounded,
-                        size: 13,
-                      ),
-                      label: Text(
+                      icon: const Icon(Icons.check_circle_rounded, size: 13),
+                      label: const Text(
                         'Selesai',
                         style: TextStyle(
                           fontWeight: FontWeight.w800,
                           fontSize: 12,
-                          color: canFinish ? Colors.white : const Color(0xFF94A3B8),
+                          color: Colors.white,
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: canFinish ? const Color(0xFF10B981) : const Color(0xFF1E293B),
-                        foregroundColor: canFinish ? Colors.white : const Color(0xFF94A3B8),
+                        backgroundColor: const Color(0xFF10B981),
+                        foregroundColor: Colors.white,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                         minimumSize: const Size(60, 32),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
-                          side: canFinish
-                              ? BorderSide.none
-                              : const BorderSide(color: Color(0xFF334155)),
                         ),
                       ),
                     ),
