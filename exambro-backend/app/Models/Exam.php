@@ -18,7 +18,7 @@ class Exam extends Model
 
     public function isUas(): bool
     {
-        return strtolower($this->type ?? '') === 'uas' || (!strtolower($this->type ?? '') === 'uts' && !preg_match('/\b(uts|pts|tengah)/i', $this->title ?? ''));
+        return strtolower($this->type ?? '') === 'uas' || (strtolower($this->type ?? '') !== 'uts' && !preg_match('/\b(uts|pts|tengah)/i', $this->title ?? ''));
     }
 
     public function isUts(): bool
