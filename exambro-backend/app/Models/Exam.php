@@ -13,8 +13,18 @@ class Exam extends Model
     use HasFactory;
 
     protected $fillable = [
-        'title', 'description', 'google_form_url', 'start_at', 'end_at', 'duration', 'max_violation', 'status', 'created_by'
+        'title', 'type', 'description', 'google_form_url', 'start_at', 'end_at', 'duration', 'max_violation', 'status', 'created_by'
     ];
+
+    public function isUas(): bool
+    {
+        return strtolower($this->type ?? '') === 'uas' || (!strtolower($this->type ?? '') === 'uts' && !preg_match('/\b(uts|pts|tengah)/i', $this->title ?? ''));
+    }
+
+    public function isUts(): bool
+    {
+        return strtolower($this->type ?? '') === 'uts' || preg_match('/\b(uts|pts|tengah)/i', $this->title ?? '');
+    }
 
     protected function casts(): array
     {

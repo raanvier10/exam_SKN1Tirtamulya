@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import '../api_service.dart';
 import 'google_auth_screen.dart';
 import 'login_screen.dart';
@@ -44,19 +46,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
       });
     }
 
-    // Sinkronisasi status dari Database Server
+    // Sinkronisasi status dengan Database Server:
+    // Database server adalah single source of truth untuk akun siswa yang sedang login.
     try {
       final userRes = await ApiService.getMe();
       if (userRes['success'] == true && userRes['data'] != null) {
         final userData = userRes['data'];
         bool dbConnected = (userData['google_connected'] == true || userData['google_connected'] == 1);
-        if (dbConnected != localConnected) {
-          await prefs.setBool('is_google_connected', dbConnected);
-          if (mounted) {
-            setState(() {
-              _isGoogleConnected = dbConnected;
-            });
-          }
+
+        // Selalu samakan status lokal HP dengan status asli akun siswa dari database
+        await prefs.setBool('is_google_connected', dbConnected);
+        localConnected = dbConnected;
+
+        if (mounted && _isGoogleConnected != localConnected) {
+          setState(() {
+            _isGoogleConnected = localConnected;
+          });
         }
         await prefs.setBool('is_pkl', userData['is_pkl'] == true || userData['is_pkl'] == 1);
       }
@@ -79,7 +84,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         if (mounted) {
           setState(() => _isLoading = false);
           if (response['message'] == 'Unauthenticated.') {
-            await ApiService.removeToken();
+            await ApiService.logout();
             if (!mounted) return;
             Navigator.pushReplacement(
               context,
@@ -230,7 +235,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: ElevatedButton(
                         onPressed: () async {
                           Navigator.pop(dialogContext);
-                          await ApiService.removeToken();
+                          // 1. Bersihkan cookies & data WebView agar akun Google & sesi siswa sebelumnya tidak bocor ke siswa lain
+                          try {
+                            const platform = MethodChannel('exam.bro/secure');
+                            await platform.invokeMethod('clearCookies');
+                            await WebViewCookieManager().clearCookies();
+                          } catch (_) {}
+
+                          // 2. Logout dari server & bersihkan seluruh data lokal siswa
+                          await ApiService.logout();
                           if (!mounted) return;
                           Navigator.pushReplacement(
                             context,
@@ -400,6 +413,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return '$dayName, ${now.day} $monthName ${now.year}';
   }
 
+  String _formatExamDate(DateTime dt) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final examDay = DateTime(dt.year, dt.month, dt.day);
+    final diffDays = examDay.difference(today).inDays;
+
+    final hour = dt.hour.toString().padLeft(2, '0');
+    final minute = dt.minute.toString().padLeft(2, '0');
+    final timeStr = '$hour:$minute';
+
+    const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    final dayName = days[dt.weekday - 1];
+    final monthName = months[dt.month - 1];
+
+    if (diffDays == 0) {
+      return 'Hari Ini • $timeStr WIB';
+    } else if (diffDays == -1) {
+      return 'Kemarin • $timeStr WIB';
+    } else if (diffDays == 1) {
+      return 'Besok • $timeStr WIB';
+    } else {
+      return '$dayName, ${dt.day} $monthName • $timeStr WIB';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -545,7 +587,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 ),
                                 const SizedBox(width: 5),
                                 const Text(
-                                  'SMKN 1 Tirtamulya • CBT Engine',
+                                  'SMKN 1 Tirtamulya',
                                   style: TextStyle(
                                     color: Color(0xFF94A3B8),
                                     fontSize: 10.5,
@@ -655,7 +697,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 12),
 
                 const Text(
-                  'Jadwal Ujian Hari Ini',
+                  'Jadwal & Riwayat Ujian',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 24,
@@ -667,7 +709,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 4),
 
                 const Text(
-                  'Pilih sesi ujian dan pastikan koneksi internet stabil sebelum mulai.',
+                  'Pantau jadwal aktif hari ini dan riwayat ujian pekan ini',
                   style: TextStyle(
                     color: Color(0xFF94A3B8),
                     fontSize: 13,
@@ -697,7 +739,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       const SizedBox(width: 9),
                       const Expanded(
                         child: Text(
-                          'Kiosk Lock & Anti-Cheat Engine Aktif',
+                          'Pengamanan',
                           style: TextStyle(
                             color: Color(0xFFF1F5F9),
                             fontSize: 12,
@@ -847,7 +889,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
     bool isCompletedByStudent = (exam['student_status'] == 'finished');
     bool isLockedByViolation = (exam['student_status'] == 'locked');
     bool isStarted = now.isAfter(startTime);
-    bool isFinished = now.isAfter(endTime) || isCompletedByStudent;
+    bool isPastExamDay = now.year > endTime.year ||
+        (now.year == endTime.year && now.month > endTime.month) ||
+        (now.year == endTime.year && now.month == endTime.month && now.day > endTime.day);
+    bool isFinished = isCompletedByStudent || isPastExamDay || now.isAfter(endTime);
 
     Duration diff = startTime.difference(now);
     String countdown = "";
@@ -910,6 +955,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           color: Color(0xFF0F172A),
                           letterSpacing: -0.4,
                         ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.event_outlined, size: 12.5, color: Color(0xFF64748B)),
+                          const SizedBox(width: 4),
+                          Text(
+                            _formatExamDate(startTime),
+                            style: const TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
                       ),
                       if (exam['description'] != null && exam['description'].toString().isNotEmpty) ...[
                         const SizedBox(height: 4),
@@ -1080,9 +1140,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.check_circle_outline_rounded, size: 17),
+                                  Icon(Icons.schedule_rounded, size: 17),
                                   SizedBox(width: 6),
-                                  Text('UJIAN SELESAI', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700)),
+                                  Text('WAKTU UJIAN BERAKHIR', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
                                 ],
                               ),
                             )
@@ -1126,14 +1186,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     elevation: 0,
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   ),
-                                  child: const Row(
+                                  child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.play_arrow_rounded, size: 19),
-                                      SizedBox(width: 4),
+                                      const Icon(Icons.play_arrow_rounded, size: 19),
+                                      const SizedBox(width: 4),
                                       Text(
-                                        'KERJAKAN UJIAN',
-                                        style: TextStyle(
+                                        exam['student_status'] == 'working'
+                                            ? 'LANJUTKAN UJIAN'
+                                            : 'KERJAKAN UJIAN',
+                                        style: const TextStyle(
                                           fontSize: 13.5,
                                           fontWeight: FontWeight.w800,
                                           letterSpacing: 0.3,
@@ -1206,7 +1268,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           borderRadius: BorderRadius.circular(6),
         ),
         child: const Text(
-          'Selesai',
+          'Waktu Habis',
           style: TextStyle(color: Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.w700),
         ),
       );
@@ -1327,7 +1389,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 18),
             const Text(
-              'Tidak Ada Ujian Hari Ini',
+              'Tidak Ada Jadwal Ujian',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 17,
@@ -1338,7 +1400,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             const SizedBox(height: 6),
             const Text(
-              'Belum ada jadwal ujian yang dijadwalkan untuk hari ini. Silakan hubungi proktor atau guru jika jadwal belum muncul.',
+              'Belum ada jadwal ujian aktif atau riwayat pekan ini. Silakan hubungi proktor atau guru jika jadwal belum muncul.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 13,

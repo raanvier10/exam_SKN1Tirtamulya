@@ -68,7 +68,14 @@
 	</array>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Aplikasi memerlukan izin lokasi untuk memverifikasi bahwa siswa berada di dalam radius area ujian sekolah.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Aplikasi memerlukan izin lokasi untuk memverifikasi bahwa siswa berada di dalam radius area ujian sekolah.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>Aplikasi memerlukan izin lokasi untuk memverifikasi bahwa siswa berada di dalam radius area ujian sekolah.</string>
+	<key>NSLocationTemporaryUsageDescriptionDictionary</key>
+	<dict>
+		<key>ExamLocationCheck</key>
+		<string>Aplikasi memerlukan akses lokasi presisi (tepat) untuk memverifikasi bahwa siswa berada di dalam radius area ujian sekolah.</string>
+	</dict>
 </dict>
 </plist>

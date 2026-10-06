@@ -16,7 +16,8 @@ class ApiExamController extends Controller
     {
         $user = $request->user();
         $now = Carbon::now();
-        $today = Carbon::today();
+        // Rentang 1 pekan (7 hari terakhir untuk riwayat ujian, serta jadwal hari ini dan mendatang)
+        $oneWeekAgo = Carbon::now()->subDays(7)->startOfDay();
         
         $exams = Exam::where('status', 'active')
             ->where(function ($query) use ($user) {
@@ -34,8 +35,9 @@ class ApiExamController extends Controller
                     $q->doesntHave('classes');
                 });
             })
-            ->where(function ($q) use ($today, $now) {
-                $q->whereDate('start_at', $today)
+            ->where(function ($q) use ($oneWeekAgo, $now) {
+                $q->where('start_at', '>=', $oneWeekAgo)
+                  ->orWhere('end_at', '>=', $oneWeekAgo)
                   ->orWhere(function ($sub) use ($now) {
                       $sub->where('start_at', '<=', $now)
                           ->where(function ($endSub) use ($now) {
@@ -54,9 +56,46 @@ class ApiExamController extends Controller
             ], [
                 'status' => 'registered'
             ]);
+
+            // Sinkronisasi jika waktu sesi pengerjaan siswa telah habis saat aplikasi ditutup
+            if ($participant->status === 'working') {
+                $activeSession = ExamSession::where('exam_id', $exam->id)
+                    ->where('user_id', $user->id)
+                    ->where('status', 'ACTIVE')
+                    ->latest('id')
+                    ->first();
+                if ($activeSession && $activeSession->expired_at && $now->gt($activeSession->expired_at)) {
+                    $activeSession->update(['status' => 'COMPLETED']);
+                    $participant->update([
+                        'status' => 'finished',
+                        'finished_at' => $activeSession->expired_at,
+                    ]);
+                }
+            }
+
             $exam->student_status = $participant->status;
             $exam->makeHidden(['google_form_url']);
         }
+
+        // Urutkan prioritas tampilan:
+        // 0: Sedang aktif berlangsung & belum selesai
+        // 1: Jadwal mendatang / belum dimulai
+        // 2: Selesai / waktu habis (riwayat 7 hari terakhir, urut tanggal terbaru)
+        $exams = $exams->sortBy(function ($exam) use ($now) {
+            $isFinished = ($exam->student_status === 'finished') 
+                || ($exam->end_at && $now->gt($exam->end_at));
+            $isOngoing = ($exam->start_at && $now->gte($exam->start_at)) 
+                && (!$exam->end_at || $now->lte($exam->end_at)) 
+                && !$isFinished;
+
+            if ($isOngoing) {
+                return [0, $exam->start_at ? $exam->start_at->timestamp : 0];
+            }
+            if (!$isFinished) {
+                return [1, $exam->start_at ? $exam->start_at->timestamp : 0];
+            }
+            return [2, $exam->start_at ? -$exam->start_at->timestamp : 0];
+        })->values();
 
         return response()->json([
             'success' => true,
@@ -166,6 +205,14 @@ class ApiExamController extends Controller
             ], 403);
         }
 
+        if ($participant && $participant->status === 'finished') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda telah menyelesaikan ujian ini.',
+                'finished' => true
+            ], 400);
+        }
+
         // Validate Schedule (dengan toleransi 2 menit untuk desinkronisasi jam HP siswa)
         $now = Carbon::now();
         if ($now->copy()->addMinutes(2)->lt($exam->start_at)) {
@@ -173,7 +220,8 @@ class ApiExamController extends Controller
         }
 
         // Perhitungan waktu kedaluwarsa sesi (tidak boleh melebihi end_at ujian)
-        $calculatedExpiry = $now->copy()->addMinutes((int)$exam->duration);
+        $sessionDuration = (int)($exam->duration ?: 60);
+        $calculatedExpiry = $now->copy()->addMinutes($sessionDuration);
         $expiredAt = ($exam->end_at && $calculatedExpiry->gt($exam->end_at)) ? $exam->end_at : $calculatedExpiry;
 
         // Cek atau buat sesi ujian (Reuse sesi AKTIF jika ada agar tidak membuat sesi ganda saat restart aplikasi)
@@ -183,6 +231,22 @@ class ApiExamController extends Controller
             ->latest('id')
             ->first();
 
+        // Jika sesi siswa sebelumnya telah melebihi batas waktu (expired_at)
+        if ($session && $session->expired_at && $now->gt($session->expired_at)) {
+            $session->update(['status' => 'COMPLETED']);
+            $exam->participants()->where('user_id', $user->id)->update([
+                'status' => 'finished',
+                'finished_at' => $session->expired_at,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Waktu pengerjaan ujian Anda telah habis.',
+                'finished' => true
+            ], 400);
+        }
+
+        $resumedViolation = false;
         if (!$session) {
             $session = ExamSession::create([
                 'exam_id' => $exam->id,
@@ -193,6 +257,31 @@ class ApiExamController extends Controller
                 'expired_at' => $expiredAt,
                 'status' => 'ACTIVE'
             ]);
+        } else {
+            // Sesi aktif sudah berjalan di database! Berarti siswa keluar dari ujian sebelumnya (HP dimatikan / restart / aplikasi ditutup paksa).
+            // Cek apakah ini re-entry legal pertama tepat setelah admin membuka kunci (unlocked_at).
+            $isFreshUnlockReentry = false;
+            if ($session->unlocked_at) {
+                $violationsSinceUnlock = Violation::where('exam_id', $exam->id)
+                    ->where('user_id', $user->id)
+                    ->where('created_at', '>=', $session->unlocked_at)
+                    ->count();
+                if ($violationsSinceUnlock === 0) {
+                    $isFreshUnlockReentry = true;
+                }
+            }
+
+            if (!$isFreshUnlockReentry) {
+                // Catat pelanggaran HP dimatikan / aplikasi dimulai ulang
+                Violation::create([
+                    'exam_id' => $exam->id,
+                    'user_id' => $user->id,
+                    'session_id' => $session->id,
+                    'type' => 'APP_RESTART_OR_DEVICE_OFF',
+                    'description' => 'HP dimatikan / aplikasi dimulai ulang saat ujian sedang berlangsung',
+                ]);
+                $resumedViolation = true;
+            }
         }
 
         // Update Participant Status
@@ -228,6 +317,7 @@ class ApiExamController extends Controller
         $sessionData['server_time'] = $now->toIso8601String();
         $sessionData['violation_count'] = $currentViolations;
         $sessionData['max_violation'] = $maxViolation;
+        $sessionData['resumed_violation'] = $resumedViolation;
 
         return response()->json([
             'success' => true,

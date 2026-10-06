@@ -158,5 +158,7 @@ class SebExamAccessTest extends TestCase
         $response->assertHeader('Content-Type', 'application/seb');
         $response->assertSee('<key>startURL</key>', false);
         $response->assertSee("/seb/exam/{$exam->id}", false);
+        $response->assertSee('<key>browserViewMode</key>' . "\n    " . '<integer>0</integer>', false);
+        $response->assertSee('<key>mainBrowserWindowWidth</key>' . "\n    " . '<string>100%</string>', false);
     }
 }

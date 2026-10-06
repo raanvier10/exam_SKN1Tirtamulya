@@ -16,9 +16,20 @@ Route::get('/', function () {
 // Portal Unduh Aplikasi & Akses Ujian Siswa (Android & iOS)
 Route::get('/portal', function () {
     $now = \Carbon\Carbon::now();
+    $oneWeekAgo = \Carbon\Carbon::now()->subDays(7)->startOfDay();
     $todayExams = \App\Models\Exam::where('status', 'active')
-        ->whereDate('start_at', $now->toDateString())
-        ->orderBy('start_at', 'asc')
+        ->where(function ($q) use ($oneWeekAgo, $now) {
+            $q->where('start_at', '>=', $oneWeekAgo)
+              ->orWhere('end_at', '>=', $oneWeekAgo)
+              ->orWhere(function ($sub) use ($now) {
+                  $sub->where('start_at', '<=', $now)
+                      ->where(function ($endSub) use ($now) {
+                          $endSub->where('end_at', '>=', $now)
+                                 ->orWhereNull('end_at');
+                      });
+              });
+        })
+        ->orderBy('start_at', 'desc')
         ->get();
 
     return view('portal.index', compact('todayExams'));

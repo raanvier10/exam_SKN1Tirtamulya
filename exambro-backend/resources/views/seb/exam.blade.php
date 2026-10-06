@@ -2,26 +2,31 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Ujian: {{ $exam->title }} (Safe Exam Browser)</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #4F46E5;
+            --primary-hover: #4338CA;
             --rose: #EF4444;
+            --rose-dark: #DC2626;
             --slate-900: #0F172A;
             --slate-800: #1E293B;
             --slate-700: #334155;
+            --slate-600: #475569;
             --slate-500: #64748B;
+            --slate-400: #94A3B8;
             --slate-200: #E2E8F0;
+            --sat: env(safe-area-inset-top, 0px);
+            --sab: env(safe-area-inset-bottom, 0px);
+            --sal: env(safe-area-inset-left, 0px);
+            --sar: env(safe-area-inset-right, 0px);
         }
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             -webkit-touch-callout: none !important;
             -webkit-user-select: none !important;
             user-select: none !important;
@@ -30,85 +35,145 @@
             -webkit-user-select: text !important;
             user-select: text !important;
         }
-        body, html {
+        html, body {
             height: 100%;
             width: 100%;
             overflow: hidden;
-            background: #ffffff;
+            background: var(--slate-900);
+            margin: 0;
+            padding: 0;
+            position: fixed;
+            inset: 0;
         }
+
+        /* Container pinned to viewport boundaries on iOS */
         .exam-container {
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            width: 100vw;
-        }
-        /* Top Navigation Header */
-        .topbar {
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            height: -webkit-fill-available;
+            overflow: hidden;
+            position: relative;
             background: var(--slate-900);
-            color: #ffffff;
-            height: 54px;
-            padding: 0 16px;
+        }
+
+        /* Top Header Wrapper with iOS Notch / Dynamic Island Safe Padding */
+        .header-wrapper {
+            background: var(--slate-900);
+            border-bottom: 1px solid var(--slate-800);
+            padding-top: max(10px, var(--sat));
+            padding-left: max(12px, var(--sal));
+            padding-right: max(12px, var(--sar));
+            padding-bottom: 8px;
+            flex-shrink: 0;
+            z-index: 50;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Tier 1: Identity & Finish Button */
+        .tier-identity {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 1px solid var(--slate-800);
-            flex-shrink: 0;
-            z-index: 50;
+            gap: 10px;
+            width: 100%;
         }
-        .topbar-left {
+        .identity-left {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
             min-width: 0;
+            flex: 1;
         }
         .exam-badge {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            background: rgba(79, 70, 229, 0.2);
-            border: 1px solid rgba(79, 70, 229, 0.4);
-            color: #A5B4FC;
-            font-size: 11px;
-            font-weight: 700;
-            padding: 3px 8px;
+            gap: 4px;
+            background: rgba(79, 70, 229, 0.25);
+            border: 1px solid rgba(129, 140, 248, 0.35);
+            color: #C7D2FE;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 7px;
             border-radius: 6px;
             text-transform: uppercase;
+            letter-spacing: 0.4px;
             flex-shrink: 0;
         }
+        .exam-meta {
+            min-width: 0;
+            flex: 1;
+        }
         .exam-title-text {
-            font-size: 13px;
+            font-size: 13.5px;
             font-weight: 700;
-            color: #ffffff;
+            color: #FFFFFF;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            line-height: 1.25;
         }
         .student-info {
             font-size: 11px;
-            color: #94A3B8;
+            color: var(--slate-400);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.3;
+            margin-top: 1px;
         }
-        .topbar-right {
+        .btn-finish {
+            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-finish:active {
+            transform: scale(0.97);
+            background: #B91C1C;
+        }
+
+        /* Tier 2: Cockpit Controls & Timer */
+        .tier-controls {
             display: flex;
             align-items: center;
-            gap: 10px;
-            flex-shrink: 0;
+            justify-content: space-between;
+            gap: 8px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(51, 65, 85, 0.6);
         }
         .timer-badge {
-            background: #1E293B;
-            border: 1px solid #334155;
+            background: #112238;
+            border: 1px solid #233B5D;
             color: #F8FAFC;
             padding: 4px 10px;
             border-radius: 8px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            font-weight: 700;
-            display: flex;
+            font-family: 'JetBrains Mono', -apple-system, monospace;
+            font-size: 12.5px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            display: inline-flex;
             align-items: center;
             gap: 6px;
+            flex-shrink: 0;
         }
         .timer-badge.warning {
-            background: rgba(239, 68, 68, 0.15);
-            border-color: rgba(239, 68, 68, 0.4);
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.6);
             color: #FCA5A5;
             animation: pulse 1s infinite;
         }
@@ -116,86 +181,114 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
         }
-        .btn-finish {
-            background: var(--rose);
-            color: white;
-            border: none;
-            padding: 6px 14px;
-            border-radius: 8px;
-            font-size: 12px;
+        .controls-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .btn-tool {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            color: #E2E8F0;
+            padding: 4px 10px;
+            border-radius: 7px;
+            font-size: 11.5px;
             font-weight: 700;
-            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
             transition: all 0.2s;
+            white-space: nowrap;
+            cursor: pointer;
         }
-        .btn-finish:hover {
-            background: #DC2626;
+        .btn-tool:active {
+            background: rgba(255, 255, 255, 0.2);
+            color: #FFFFFF;
         }
-        /* Iframe Google Form */
+
+        /* Banner Notice if Google Form encounters 3rd-party cookie issues on iOS */
+        .ios-notice-banner {
+            background: #FEF3C7;
+            border-bottom: 1px solid #FDE68A;
+            padding: 6px 12px;
+            font-size: 11.5px;
+            color: #92400E;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            flex-shrink: 0;
+            z-index: 40;
+        }
+        .ios-notice-text {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+            line-height: 1.35;
+        }
+        .ios-notice-link {
+            background: #D97706;
+            color: #FFFFFF;
+            text-decoration: none;
+            padding: 3px 9px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 11px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .ios-notice-close {
+            background: none;
+            border: none;
+            color: #B45309;
+            cursor: pointer;
+            padding: 2px 4px;
+            font-size: 14px;
+            line-height: 1;
+            font-weight: bold;
+        }
+
+        /* Iframe Google Form Container (Fixed Height to prevent iOS WebKit expansion bug) */
         .frame-container {
-            flex: 1;
+            flex: 1 1 0%;
+            min-height: 0;
             position: relative;
             width: 100%;
             height: 100%;
+            overflow: hidden;
+            -webkit-overflow-scrolling: touch;
+            background: #F8FAFC;
+            padding-bottom: max(0px, var(--sab));
         }
-        iframe {
+        .frame-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
+            min-width: 100%;
+            max-width: 100%;
+            min-height: 100%;
+            max-height: 100%;
             border: none;
             display: block;
         }
-        /* GPS Lock Overlay */
-        .gps-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(8px);
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-            color: white;
-            text-align: center;
-        }
-        .gps-card {
-            background: #1E293B;
-            border: 1px solid #334155;
-            border-radius: 20px;
-            padding: 28px 24px;
-            max-width: 420px;
-            width: 100%;
-        }
-        .gps-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            background: rgba(239, 68, 68, 0.15);
-            color: var(--rose);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 16px;
-        }
-        .gps-title {
-            font-size: 18px;
-            font-weight: 800;
-            margin-bottom: 8px;
-        }
-        .gps-desc {
-            font-size: 13px;
-            color: #94A3B8;
-            line-height: 1.5;
-            margin-bottom: 20px;
-        }
-        .btn-retry-gps {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
+
+        /* Large Screen / iPad Layout */
+        @media (min-width: 640px) {
+            .header-wrapper {
+                padding-bottom: 10px;
+            }
+            .tier-identity {
+                gap: 16px;
+            }
+            .tier-controls {
+                margin-top: 10px;
+                padding-top: 10px;
+            }
         }
     </style>
 </head>
@@ -203,53 +296,82 @@
 
 <div class="exam-container">
     <!-- Top Header -->
-    <header class="topbar">
-        <div class="topbar-left">
-            <span class="exam-badge">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                SEB KIOSK
-            </span>
-            <div style="min-width: 0;">
-                <div class="exam-title-text">{{ $exam->title }}</div>
-                <div class="student-info">{{ $user->name }} ({{ $user->class?->name ?? 'Siswa' }})</div>
+    <header class="header-wrapper">
+        <!-- Tier 1: Identity & Finish Button -->
+        <div class="tier-identity">
+            <div class="identity-left">
+                <span class="exam-badge">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    SEB KIOSK
+                </span>
+                <div class="exam-meta">
+                    <div class="exam-title-text">{{ $exam->title }}</div>
+                    <div class="student-info">{{ $user->name }} • {{ $user->class?->name ?? 'Siswa' }}</div>
+                </div>
             </div>
-        </div>
 
-        <div class="topbar-right">
-            <div id="countdownBadge" class="timer-badge">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                <span id="countdownText">--:--:--</span>
-            </div>
-            
             <form action="{{ route('seb.exam.finish', $exam) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin sudah selesai mengerjakan dan ingin mengirim ujian?');">
                 @csrf
-                <button type="submit" class="btn-finish">Selesai</button>
+                <button type="submit" class="btn-finish">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <span>Selesai</span>
+                </button>
             </form>
+        </div>
+
+        <!-- Tier 2: Cockpit Bar (Countdown + Tools) -->
+        <div class="tier-controls">
+            <div id="countdownBadge" class="timer-badge">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span id="countdownText">--:--:--</span>
+            </div>
+
+            <div class="controls-right">
+                <button type="button" onclick="reloadExamFrame()" class="btn-tool" title="Muat Ulang Soal jika lembar jawaban tidak muncul">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    <span>Muat Ulang</span>
+                </button>
+
+                <a href="{{ $exam->google_form_url }}" class="btn-tool" title="Buka Google Form Langsung jika layar menampilkan Page Expired">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    <span>Buka Penuh</span>
+                </a>
+            </div>
         </div>
     </header>
 
-    <!-- Google Form Content -->
-    <div class="frame-container">
-        <iframe src="{{ $formUrl }}" id="examFrame" allow="geolocation"></iframe>
-    </div>
-</div>
-
-@if(!$user->is_pkl)
-<!-- GPS Verification Modal for Regular Students -->
-<div id="gpsModal" class="gps-overlay" style="display: none;">
-    <div class="gps-card">
-        <div class="gps-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+    <!-- Dismissible notice banner for iOS Cookie "Page Expired" issue -->
+    <div id="iosNoticeBanner" class="ios-notice-banner">
+        <div class="ios-notice-text">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink: 0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <span>Jika form error / <strong>Page Expired</strong> (kebijakan cookie iOS):</span>
         </div>
-        <h3 class="gps-title">Verifikasi Lokasi Sekolah</h3>
-        <p id="gpsMessage" class="gps-desc">Memeriksa apakah Anda berada di dalam radius area ujian sekolah...</p>
-        <button type="button" onclick="checkStudentLocation()" class="btn-retry-gps">Coba Lagi</button>
+        <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+            <a href="{{ $exam->google_form_url }}" class="ios-notice-link">Buka Penuh &rarr;</a>
+            <button type="button" onclick="document.getElementById('iosNoticeBanner').style.display='none'" class="ios-notice-close" title="Tutup pemberitahuan">&times;</button>
+        </div>
+    </div>
+
+    <!-- Google Form Content (Locked inside strictly bounded iframe container) -->
+    <div class="frame-container">
+        <iframe src="{{ $formUrl }}" id="examFrame" allow="autoplay; fullscreen"></iframe>
     </div>
 </div>
-@endif
 
 <script>
-    // 1. Hitung Mundur Sisa Waktu Ujian
+    // 1. Muat Ulang Iframe tanpa kehilangan sesi SEB
+    function reloadExamFrame() {
+        const frame = document.getElementById('examFrame');
+        if (frame) {
+            const currentSrc = frame.src;
+            frame.src = 'about:blank';
+            setTimeout(() => {
+                frame.src = currentSrc;
+            }, 100);
+        }
+    }
+
+    // 2. Hitung Mundur Sisa Waktu Ujian
     const expiredAt = new Date("{{ $session->expired_at ? $session->expired_at->toIso8601String() : $exam->end_at->toIso8601String() }}").getTime();
     const countdownEl = document.getElementById('countdownText');
     const badgeEl = document.getElementById('countdownBadge');
@@ -280,60 +402,6 @@
             badgeEl.classList.add('warning');
         }
     }, 1000);
-
-    // 2. Validasi GPS (Khusus Siswa Reguler)
-    const isPkl = {{ $user->is_pkl ? 'true' : 'false' }};
-    const schoolLat = {{ $schoolLat }};
-    const schoolLng = {{ $schoolLng }};
-    const maxRadius = {{ $maxRadius }};
-
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371000;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
-    }
-
-    function checkStudentLocation() {
-        if (isPkl) return;
-
-        const modal = document.getElementById('gpsModal');
-        const msg = document.getElementById('gpsMessage');
-
-        if (!navigator.geolocation) {
-            modal.style.display = 'flex';
-            msg.textContent = 'Perangkat Anda tidak mendukung pendeteksian lokasi GPS.';
-            return;
-        }
-
-        modal.style.display = 'flex';
-        msg.textContent = 'Memeriksa titik koordinat GPS...';
-
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                const dist = calculateDistance(schoolLat, schoolLng, pos.coords.latitude, pos.coords.longitude);
-                if (dist > maxRadius) {
-                    msg.textContent = `Anda berada di luar area sekolah (${Math.round(dist)} meter dari target, batas maksimal: ${maxRadius} meter).`;
-                    modal.style.display = 'flex';
-                } else {
-                    modal.style.display = 'none';
-                }
-            },
-            (err) => {
-                modal.style.display = 'flex';
-                msg.textContent = 'Izin lokasi (GPS) ditolak atau belum aktif. Silakan izinkan akses lokasi di Safe Exam Browser.';
-            },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-        );
-    }
-
-    if (!isPkl) {
-        checkStudentLocation();
-    }
 
     // 3. Anti-Copy & Anti-ContextMenu
     document.addEventListener('contextmenu', e => e.preventDefault());

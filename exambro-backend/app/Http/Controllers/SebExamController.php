@@ -31,18 +31,81 @@ class SebExamController extends Controller
     }
 
     /**
+     * Dapatkan Base URL server yang dapat dijangkau oleh perangkat luar (iPhone / iPad)
+     * Otomatis mendeteksi IP LAN jika diakses lewat localhost/127.0.0.1
+     */
+    public static function getPublicServerBaseUrl(): string
+    {
+        $request = request();
+        $scheme = $request ? $request->getScheme() : 'http';
+        $host = $request ? $request->getHost() : 'localhost';
+        $port = $request ? $request->getPort() : 8000;
+
+        if (in_array($host, ['localhost', '127.0.0.1', '::1'])) {
+            $configuredUrl = config('app.url');
+            if ($configuredUrl && !str_contains($configuredUrl, 'localhost') && !str_contains($configuredUrl, '127.0.0.1')) {
+                return rtrim($configuredUrl, '/');
+            }
+
+            $lanIp = getHostByName(getHostName());
+            if ($lanIp && $lanIp !== '127.0.0.1') {
+                $host = $lanIp;
+            }
+        }
+
+        $portPart = ($port && !in_array($port, [80, 443])) ? ":{$port}" : '';
+        return "{$scheme}://{$host}{$portPart}";
+    }
+
+    /**
+     * URL Web Halaman Ujian SEB (untuk dibuka di Safari / Chrome)
+     */
+    public static function getExamWebUrl(Exam $exam): string
+    {
+        $base = self::getPublicServerBaseUrl();
+        return "{$base}/seb/exam/{$exam->id}";
+    }
+
+    /**
+     * URL File Konfigurasi .seb
+     */
+    public static function getExamConfigUrl(Exam $exam): string
+    {
+        $base = self::getPublicServerBaseUrl();
+        return "{$base}/seb/exam/{$exam->id}/config";
+    }
+
+    /**
+     * URL Skema Peluncur SEB (sebs:// atau seb://) mengarah ke endpoint file konfigurasi .seb
+     * Safe Exam Browser membutuhkan file konfigurasi .seb untuk lock down kiosk mode
+     */
+    public static function getSebSchemeUrl(Exam $exam): string
+    {
+        $configUrl = self::getExamConfigUrl($exam);
+        $schemeUrl = preg_replace('/^https:\/\//i', 'sebs://', $configUrl);
+        if ($schemeUrl === $configUrl) {
+            $schemeUrl = preg_replace('/^http:\/\//i', 'seb://', $configUrl);
+        }
+        return $schemeUrl;
+    }
+
+    /**
      * Halaman Utama Ujian SEB
      */
     public function show(Request $request, Exam $exam)
     {
+        $ua = $request->header('User-Agent') ?? '';
+        \Illuminate\Support\Facades\Log::info('SEB show hit', [
+            'ip' => $request->ip(),
+            'ua' => $ua,
+            'is_seb' => self::isSeb($request),
+            'auth' => Auth::check(),
+        ]);
+
         // 1. Jika BUKAN dibuka dari Safe Exam Browser, tampilkan halaman panduan & link peluncur sebs://
         if (!self::isSeb($request)) {
-            $currentUrl = $request->fullUrl();
-            // Ubah skema https:// menjadi sebs:// atau http:// menjadi seb://
-            $sebSchemeUrl = preg_replace('/^https:\/\//i', 'sebs://', $currentUrl);
-            if ($sebSchemeUrl === $currentUrl) {
-                $sebSchemeUrl = preg_replace('/^http:\/\//i', 'seb://', $currentUrl);
-            }
+            $currentUrl = self::getExamWebUrl($exam);
+            $sebSchemeUrl = self::getSebSchemeUrl($exam);
 
             return view('seb.landing', [
                 'exam' => $exam,
@@ -120,6 +183,21 @@ class SebExamController extends Controller
             ->latest('id')
             ->first();
 
+        // Jika sesi siswa sebelumnya telah melebihi batas waktu (expired_at)
+        if ($session && $session->expired_at && $now->gt($session->expired_at)) {
+            $session->update(['status' => 'COMPLETED']);
+            $participant->update([
+                'status' => 'finished',
+                'finished_at' => $session->expired_at,
+            ]);
+
+            return view('seb.finished', [
+                'exam' => $exam,
+                'user' => $user,
+                'message' => 'Batas waktu pengerjaan ujian Anda telah berakhir.',
+            ]);
+        }
+
         if (!$session) {
             $calculatedExpiry = $now->copy()->addMinutes((int)$exam->duration);
             $expiredAt = ($exam->end_at && $calculatedExpiry->gt($exam->end_at)) ? $exam->end_at : $calculatedExpiry;
@@ -152,9 +230,6 @@ class SebExamController extends Controller
             'user' => $user,
             'session' => $session,
             'formUrl' => $formUrl,
-            'schoolLat' => self::SCHOOL_LAT,
-            'schoolLng' => self::SCHOOL_LNG,
-            'maxRadius' => self::MAX_RADIUS,
         ]);
     }
 
@@ -226,9 +301,14 @@ class SebExamController extends Controller
      */
     public function downloadConfig(Exam $exam)
     {
-        $examUrl = route('seb.exam.show', $exam);
+        $examUrl = self::getExamWebUrl($exam);
+        \Illuminate\Support\Facades\Log::info('SEB config downloaded', [
+            'ip' => request()->ip(),
+            'ua' => request()->header('User-Agent'),
+            'examUrl' => $examUrl,
+        ]);
 
-        // Format Plist XML standar Safe Exam Browser
+        // Format Plist XML standar Safe Exam Browser untuk iOS & Desktop
         $plistXml = <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -242,19 +322,33 @@ class SebExamController extends Controller
     <false/>
     <key>browserViewMode</key>
     <integer>0</integer>
+    <key>mainBrowserWindowWidth</key>
+    <string>100%</string>
+    <key>mainBrowserWindowHeight</key>
+    <string>100%</string>
     <key>allowQuit</key>
     <true/>
-    <key>allowFlashFullscreen</key>
-    <true/>
-    <key>allowUserAppFolderInstall</key>
-    <false/>
     <key>enableTouchExit</key>
     <false/>
     <key>browserWindowAllowReload</key>
-    <false/>
-    <key>showTaskBar</key>
-    <false/>
+    <true/>
     <key>showReloadButton</key>
+    <true/>
+    <key>showReloadWarning</key>
+    <false/>
+    <key>enableJavaScript</key>
+    <true/>
+    <key>enablePlugIns</key>
+    <true/>
+    <key>allowBrowsingBackForward</key>
+    <true/>
+    <key>examSessionClearCookiesOnStart</key>
+    <false/>
+    <key>examSessionClearCookiesOnEnd</key>
+    <false/>
+    <key>urlFilterEnable</key>
+    <false/>
+    <key>urlFilterEnableContentFilter</key>
     <false/>
 </dict>
 </plist>

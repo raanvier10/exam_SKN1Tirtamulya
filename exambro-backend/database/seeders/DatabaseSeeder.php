@@ -16,13 +16,13 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $class1 = \App\Models\StudentClass::firstOrCreate(
-            ['name' => '11 TJKT 1'],
-            ['description' => 'Kelas 11 TJKT 1']
+            ['name' => 'XI TJKT 1'],
+            ['description' => 'Kelas XI TJKT 1']
         );
 
         $class2 = \App\Models\StudentClass::firstOrCreate(
-            ['name' => '11 TJKT 2'],
-            ['description' => 'Kelas 11 TJKT 2']
+            ['name' => 'XI TJKT 2'],
+            ['description' => 'Kelas XI TJKT 2']
         );
 
         $class3 = \App\Models\StudentClass::firstOrCreate(

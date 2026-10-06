@@ -36,6 +36,76 @@
                 <input type="text" name="title" value="{{ old('title', $exam->title) }}" required class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 transition-all">
             </div>
 
+            <!-- Kategori / Jenis Ujian (UAS vs UTS) -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Kategori / Jenis Ujian <span class="text-rose-500">*</span></label>
+                @if(Auth::user()->isTeacher())
+                    <!-- Mode Guru: Terkunci Otomatis ke UTS / Penilaian Mapel -->
+                    <div class="p-3.5 rounded-xl border-2 border-emerald-500 bg-emerald-50/50 flex items-center justify-between gap-3 shadow-2xs">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-2xs">
+                                📝
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs font-bold text-emerald-950">UTS / Penilaian Mapel Guru</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">Mode Guru Otomatis</span>
+                                </div>
+                                <div class="text-[11px] text-emerald-700 mt-0.5">Ujian ini dipantau pada tab UTS admin berdasarkan nama Anda sebagai guru pengampu.</div>
+                            </div>
+                        </div>
+                        <div class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                    </div>
+                    <input type="hidden" name="type" id="radioTypeUts" value="uts">
+                @else
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Option UAS -->
+                        <div onclick="setExamType('uas')" 
+                             onkeydown="if(event.key==='Enter'||event.key===' '){setExamType('uas');event.preventDefault();}"
+                             id="cardExamTypeUas"
+                             role="button"
+                             tabindex="0"
+                             class="relative flex items-center justify-between p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-150 select-none shadow-xs">
+                            <input type="radio" name="type" id="radioTypeUas" value="uas" {{ old('type', $exam->type ?? 'uas') === 'uas' ? 'checked' : '' }} class="sr-only">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                                    🏫
+                                </div>
+                                <div>
+                                    <div class="text-xs font-bold text-slate-900">UAS (Ujian Akhir Semester)</div>
+                                    <div class="text-[11px] text-slate-500">Ujian sekolah serentak, diawasi per ruang kelas</div>
+                                </div>
+                            </div>
+                            <div id="indicatorTypeUas" class="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all">
+                            </div>
+                        </div>
+
+                        <!-- Option UTS -->
+                        <div onclick="setExamType('uts')" 
+                             onkeydown="if(event.key==='Enter'||event.key===' '){setExamType('uts');event.preventDefault();}"
+                             id="cardExamTypeUts"
+                             role="button"
+                             tabindex="0"
+                             class="relative flex items-center justify-between p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-150 select-none shadow-xs">
+                            <input type="radio" name="type" id="radioTypeUts" value="uts" {{ old('type', $exam->type ?? 'uas') === 'uts' ? 'checked' : '' }} class="sr-only">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                                    📝
+                                </div>
+                                <div>
+                                    <div class="text-xs font-bold text-slate-900">UTS / PTS (Tengah Semester)</div>
+                                    <div class="text-[11px] text-slate-500">Penilaian mapel, diawasi oleh guru pengampu</div>
+                                </div>
+                            </div>
+                            <div id="indicatorTypeUts" class="w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all">
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
             <div>
                 <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Deskripsi / Petunjuk (Opsional)</label>
                 <textarea name="description" rows="2" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 transition-all">{{ old('description', $exam->description) }}</textarea>
@@ -53,11 +123,9 @@
                 </div>
 
                 @php
-                    $sebWebUrl = route('seb.exam.show', $exam);
-                    $sebSchemeUrl = preg_replace('/^https:\/\//i', 'sebs://', $sebWebUrl);
-                    if ($sebSchemeUrl === $sebWebUrl) {
-                        $sebSchemeUrl = preg_replace('/^http:\/\//i', 'seb://', $sebWebUrl);
-                    }
+                    $sebWebUrl = \App\Http\Controllers\SebExamController::getExamWebUrl($exam);
+                    $sebSchemeUrl = \App\Http\Controllers\SebExamController::getSebSchemeUrl($exam);
+                    $serverHost = \App\Http\Controllers\SebExamController::getPublicServerBaseUrl();
                 @endphp
                 <!-- Card Akses Safe Exam Browser (iOS / SEB) -->
                 <div class="mt-4 p-3.5 sm:p-4 rounded-xl bg-purple-50/60 border border-purple-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -122,15 +190,13 @@
                 <div>
                     <div class="flex items-center justify-between mb-2">
                         <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Durasi (Menit) <span class="text-rose-500">*</span></label>
-                        <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded" id="edit_duration_jp_pill">{{ round($exam->duration / 45, 1) }} JP</span>
+                        <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded" id="edit_duration_jp_pill">{{ round($exam->duration / 35, 1) }} JP</span>
                     </div>
                     <input type="number" name="duration" id="exam_duration" required min="1" value="{{ old('duration', $exam->duration) }}" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 transition-all font-medium">
                     <div class="flex items-center gap-1.5 mt-2 flex-wrap">
-                        <button type="button" onclick="setExamDuration(45)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors" title="1 Jam Pelajaran">1 JP (45m)</button>
-                        <button type="button" onclick="setExamDuration(60)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors">60m</button>
-                        <button type="button" onclick="setExamDuration(90)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors" title="2 Jam Pelajaran">2 JP (90m)</button>
-                        <button type="button" onclick="setExamDuration(120)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors">120m</button>
-                        <button type="button" onclick="setExamDuration(135)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors" title="3 Jam Pelajaran">3 JP (135m)</button>
+                        <button type="button" onclick="setExamDuration(35)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors" title="1 Jam Pelajaran">1 JP (35m)</button>
+                        <button type="button" onclick="setExamDuration(70)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors" title="2 Jam Pelajaran">2 JP (70m)</button>
+                        <button type="button" onclick="setExamDuration(105)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors" title="3 Jam Pelajaran">3 JP (105m)</button>
                     </div>
                 </div>
             </div>
@@ -543,6 +609,64 @@
             liveText.textContent = `${num} kali`;
         }
     }
+
+    // ==========================================
+    // KATEGORI UJIAN (UAS vs UTS)
+    // ==========================================
+    function setExamType(type) {
+        const radioUas = document.getElementById('radioTypeUas');
+        const radioUts = document.getElementById('radioTypeUts');
+        const cardUas = document.getElementById('cardExamTypeUas');
+        const cardUts = document.getElementById('cardExamTypeUts');
+        const indUas = document.getElementById('indicatorTypeUas');
+        const indUts = document.getElementById('indicatorTypeUts');
+
+        if (!radioUas || !radioUts) return;
+
+        if (type === 'uts') {
+            radioUts.checked = true;
+            radioUas.checked = false;
+
+            if (cardUts) {
+                cardUts.className = 'relative flex items-center justify-between p-3.5 rounded-xl border-2 border-emerald-600 bg-emerald-50/40 ring-2 ring-emerald-500/20 cursor-pointer transition-all duration-150 select-none shadow-xs';
+            }
+            if (indUts) {
+                indUts.className = 'w-5 h-5 rounded-full border-2 border-emerald-600 bg-emerald-600 text-white flex items-center justify-center shrink-0 transition-all';
+                indUts.innerHTML = '<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>';
+            }
+
+            if (cardUas) {
+                cardUas.className = 'relative flex items-center justify-between p-3.5 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60 cursor-pointer transition-all duration-150 select-none';
+            }
+            if (indUas) {
+                indUas.className = 'w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0 transition-all';
+                indUas.innerHTML = '';
+            }
+        } else {
+            radioUas.checked = true;
+            radioUts.checked = false;
+
+            if (cardUas) {
+                cardUas.className = 'relative flex items-center justify-between p-3.5 rounded-xl border-2 border-indigo-600 bg-indigo-50/40 ring-2 ring-indigo-500/20 cursor-pointer transition-all duration-150 select-none shadow-xs';
+            }
+            if (indUas) {
+                indUas.className = 'w-5 h-5 rounded-full border-2 border-indigo-600 bg-indigo-600 text-white flex items-center justify-center shrink-0 transition-all';
+                indUas.innerHTML = '<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>';
+            }
+
+            if (cardUts) {
+                cardUts.className = 'relative flex items-center justify-between p-3.5 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60 cursor-pointer transition-all duration-150 select-none';
+            }
+            if (indUts) {
+                indUts.className = 'w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0 transition-all';
+                indUts.innerHTML = '';
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        setExamType('{{ old("type", $exam->type ?? "uas") }}');
+    });
 </script>
 
 <!-- Modal QR Code Safe Exam Browser -->
@@ -561,7 +685,10 @@
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data={{ urlencode($sebSchemeUrl) }}" alt="QR Code Safe Exam Browser" class="w-48 h-48 block mx-auto">
         </div>
         <div class="text-xs font-bold text-slate-800">{{ $exam->title }}</div>
-        <p class="text-[11px] text-slate-500 mt-1 mb-4">Arahkan kamera iPhone siswa langsung ke kode QR di atas untuk membuka aplikasi Safe Exam Browser.</p>
+        <p class="text-[11px] text-slate-500 mt-1 mb-2">Arahkan kamera iPhone siswa langsung ke kode QR di atas untuk membuka aplikasi Safe Exam Browser.</p>
+        <div class="text-[11px] text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2.5 py-1 rounded-lg mb-3">
+            Host: <strong class="font-mono">{{ $serverHost }}</strong> (iPhone & Laptop wajib di Wi-Fi / Hotspot yang sama).
+        </div>
 
         <div class="flex items-center gap-2 bg-purple-50/70 p-2 rounded-xl border border-purple-200 text-left">
             <span class="text-[11px] font-mono text-purple-900 truncate select-all flex-1 pl-1">{{ $sebSchemeUrl }}</span>

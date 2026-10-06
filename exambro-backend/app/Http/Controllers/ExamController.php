@@ -105,9 +105,287 @@ class ExamController extends Controller
             ];
         })->values();
 
+        // Deteksi tingkat kelas (X, XI, XII, UMUM)
+        $detectGrades = function ($item) {
+            $classes = $item->classes;
+            if ($classes->isEmpty()) {
+                return ['UMUM'];
+            }
+
+            $grades = [];
+            foreach ($classes as $class) {
+                $name = strtoupper(trim($class->name));
+                if (preg_match('/(^|[\s\-_.,])(XII|12)($|[\s\-_.,])/i', $name)) {
+                    $grades['XII'] = true;
+                } elseif (preg_match('/(^|[\s\-_.,])(XI|11)($|[\s\-_.,])/i', $name)) {
+                    $grades['XI'] = true;
+                } elseif (preg_match('/(^|[\s\-_.,])(X|10)($|[\s\-_.,])/i', $name)) {
+                    $grades['X'] = true;
+                }
+            }
+
+            return !empty($grades) ? array_keys($grades) : ['UMUM'];
+        };
+
+        // Attach detected grades & type (UAS vs UTS)
+        $groupedExams = $groupedExams->map(function ($item) use ($detectGrades) {
+            $item->detected_grades = $detectGrades($item);
+
+            // Tentukan kategori apakah UAS atau UTS:
+            // Jika dibuat oleh Guru -> SELALU masuk ke UTS (Penilaian Mapel / Pengawasan Guru)
+            $isTeacherCreator = ($item->creator && $item->creator->role === 'guru');
+            $rawType = $item->primary->type ?? null;
+
+            if ($isTeacherCreator) {
+                $item->type = 'uts';
+            } elseif (!empty($rawType) && in_array(strtolower($rawType), ['uas', 'uts'])) {
+                $item->type = strtolower($rawType);
+            } else {
+                $item->type = preg_match('/\b(uts|pts|tengah|harian|uh)\b/i', $item->title) ? 'uts' : 'uas';
+            }
+
+            return $item;
+        })->sortBy(function ($item) {
+            if ($item->is_ongoing) return 0;
+            if ($item->has_active) return 1;
+            return 2;
+        })->values();
+
         $classes = \App\Models\StudentClass::orderBy('name')->get();
 
-        return view('admin.exams.index', compact('exams', 'groupedExams', 'classes'));
+        // 1. STRUKTUR KHUSUS UAS: DIUTAMAKAN KATEGORI KELAS
+        $uasExams = $groupedExams->filter(fn($item) => $item->type === 'uas')->values();
+        $uasClassGroups = collect();
+
+        foreach ($classes as $cls) {
+            $clsName = $cls->name;
+            $cGrade = 'UMUM';
+            if (preg_match('/(^|[\s\-_.,])(XII|12)($|[\s\-_.,])/i', $clsName)) {
+                $cGrade = 'XII';
+            } elseif (preg_match('/(^|[\s\-_.,])(XI|11)($|[\s\-_.,])/i', $clsName)) {
+                $cGrade = 'XI';
+            } elseif (preg_match('/(^|[\s\-_.,])(X|10)($|[\s\-_.,])/i', $clsName)) {
+                $cGrade = 'X';
+            }
+
+            // Temukan ujian UAS untuk kelas ini
+            $clsExams = $uasExams->filter(function ($item) use ($cls) {
+                return $item->classes->contains('id', $cls->id);
+            })->map(function ($item) use ($cls) {
+                $specificSession = $item->sessions->first(function ($s) use ($cls) {
+                    return $s->classes->contains('id', $cls->id);
+                }) ?? $item->primary;
+
+                $clone = clone $item;
+                $clone->target_session = $specificSession;
+                return $clone;
+            })->values();
+
+            if ($clsExams->isNotEmpty()) {
+                $uasClassGroups->push((object) [
+                    'class' => $cls,
+                    'id' => $cls->id,
+                    'name' => $cls->name,
+                    'grade' => $cGrade,
+                    'exams' => $clsExams,
+                    'total_exams' => $clsExams->count(),
+                    'ongoing_exams' => $clsExams->where('is_ongoing', true)->count(),
+                    'active_exams' => $clsExams->where('has_active', true)->count(),
+                ]);
+            }
+        }
+
+        // Ujian UAS umum tanpa kelas spesifik
+        $generalUasExams = $uasExams->filter(fn($item) => $item->classes->isEmpty())->values();
+        if ($generalUasExams->isNotEmpty()) {
+            $uasClassGroups->push((object) [
+                'class' => null,
+                'id' => 'umum',
+                'name' => 'Semua Kelas / Umum',
+                'grade' => 'UMUM',
+                'exams' => $generalUasExams,
+                'total_exams' => $generalUasExams->count(),
+                'ongoing_exams' => $generalUasExams->where('is_ongoing', true)->count(),
+                'active_exams' => $generalUasExams->where('has_active', true)->count(),
+            ]);
+        }
+
+        // 2. STRUKTUR KHUSUS UTS: DIUTAMAKAN NAMA GURU PENGAMPU
+        $utsExams = $groupedExams->filter(fn($item) => $item->type === 'uts')->values();
+        $utsTeacherGroups = [];
+
+        foreach ($utsExams as $item) {
+            $creator = $item->creator;
+            if ($creator && $creator->role !== 'admin') {
+                $tId = 'teacher_' . $creator->id;
+                $tName = $creator->name;
+                $tRole = $creator->role;
+                $tEmail = $creator->email;
+                $isCurrent = (Auth::id() === $creator->id);
+            } else {
+                $tId = 'school_admin';
+                $tName = Auth::user()->isAdmin() ? Auth::user()->name : 'Administrator (Ujian Sekolah)';
+                $tRole = 'admin';
+                $tEmail = ($creator && $creator->email) ? $creator->email : (Auth::user()->isAdmin() ? Auth::user()->email : 'admin@smkn1tirtamulya.online');
+                $isCurrent = Auth::user()->isAdmin();
+            }
+
+            if (!isset($utsTeacherGroups[$tId])) {
+                $words = preg_split('/\s+/', trim($tName));
+                $initials = '';
+                foreach (array_slice($words, 0, 2) as $w) {
+                    $initials .= mb_strtoupper(mb_substr($w, 0, 1));
+                }
+
+                $utsTeacherGroups[$tId] = (object) [
+                    'id' => $tId,
+                    'name' => $tName,
+                    'role' => $tRole,
+                    'email' => $tEmail,
+                    'initials' => $initials ?: 'GR',
+                    'is_current' => $isCurrent,
+                    'total_exams' => 0,
+                    'active_exams' => 0,
+                    'ongoing_exams' => 0,
+                    'grades' => [
+                        'X' => (object) ['label' => 'Kelas X', 'exams' => collect()],
+                        'XI' => (object) ['label' => 'Kelas XI', 'exams' => collect()],
+                        'XII' => (object) ['label' => 'Kelas XII', 'exams' => collect()],
+                        'UMUM' => (object) ['label' => 'Semua Tingkat', 'exams' => collect()],
+                    ]
+                ];
+            }
+
+            $utsTeacherGroups[$tId]->total_exams++;
+            if ($item->is_ongoing) {
+                $utsTeacherGroups[$tId]->ongoing_exams++;
+            } elseif ($item->has_active) {
+                $utsTeacherGroups[$tId]->active_exams++;
+            }
+
+            $grades = $detectGrades($item);
+            foreach ($grades as $g) {
+                if (isset($utsTeacherGroups[$tId]->grades[$g])) {
+                    $utsTeacherGroups[$tId]->grades[$g]->exams->push($item);
+                }
+            }
+        }
+
+        // Seluruh Guru untuk Mode Guru Umum / Kompatibilitas
+        $teacherGroups = [];
+        foreach ($groupedExams as $item) {
+            $creator = $item->creator;
+            if ($creator && $creator->role !== 'admin') {
+                $tId = 'teacher_' . $creator->id;
+                $tName = $creator->name;
+                $tRole = $creator->role;
+                $tEmail = $creator->email;
+                $isCurrent = (Auth::id() === $creator->id);
+            } else {
+                $tId = 'school_admin';
+                $tName = Auth::user()->isAdmin() ? Auth::user()->name : 'Administrator (Ujian Sekolah)';
+                $tRole = 'admin';
+                $tEmail = ($creator && $creator->email) ? $creator->email : (Auth::user()->isAdmin() ? Auth::user()->email : 'admin@smkn1tirtamulya.online');
+                $isCurrent = Auth::user()->isAdmin();
+            }
+
+            if (!isset($teacherGroups[$tId])) {
+                $words = preg_split('/\s+/', trim($tName));
+                $initials = '';
+                foreach (array_slice($words, 0, 2) as $w) {
+                    $initials .= mb_strtoupper(mb_substr($w, 0, 1));
+                }
+
+                $teacherGroups[$tId] = (object) [
+                    'id' => $tId,
+                    'name' => $tName,
+                    'role' => $tRole,
+                    'email' => $tEmail,
+                    'initials' => $initials ?: 'GR',
+                    'is_current' => $isCurrent,
+                    'total_exams' => 0,
+                    'active_exams' => 0,
+                    'ongoing_exams' => 0,
+                    'grades' => [
+                        'X' => (object) ['label' => 'Kelas X', 'exams' => collect()],
+                        'XI' => (object) ['label' => 'Kelas XI', 'exams' => collect()],
+                        'XII' => (object) ['label' => 'Kelas XII', 'exams' => collect()],
+                        'UMUM' => (object) ['label' => 'Semua Tingkat', 'exams' => collect()],
+                    ]
+                ];
+            }
+
+            $teacherGroups[$tId]->total_exams++;
+            if ($item->is_ongoing) {
+                $teacherGroups[$tId]->ongoing_exams++;
+            } elseif ($item->has_active) {
+                $teacherGroups[$tId]->active_exams++;
+            }
+
+            $grades = $detectGrades($item);
+            foreach ($grades as $g) {
+                if (isset($teacherGroups[$tId]->grades[$g])) {
+                    $teacherGroups[$tId]->grades[$g]->exams->push($item);
+                }
+            }
+        }
+
+        // Jika guru login, sertakan profilnya di kelompok guru agar kartu profil dan tombol buat ujian selalu muncul
+        if (Auth::user()->isTeacher()) {
+            $current = Auth::user();
+            $words = preg_split('/\s+/', trim($current->name));
+            $initials = '';
+            foreach (array_slice($words, 0, 2) as $w) {
+                $initials .= mb_strtoupper(mb_substr($w, 0, 1));
+            }
+            $emptyProfile = (object) [
+                'id' => 'teacher_' . $current->id,
+                'name' => $current->name,
+                'role' => $current->role,
+                'email' => $current->email,
+                'initials' => $initials ?: 'GR',
+                'is_current' => true,
+                'total_exams' => 0,
+                'active_exams' => 0,
+                'ongoing_exams' => 0,
+                'grades' => [
+                    'X' => (object) ['label' => 'Kelas X', 'exams' => collect()],
+                    'XI' => (object) ['label' => 'Kelas XI', 'exams' => collect()],
+                    'XII' => (object) ['label' => 'Kelas XII', 'exams' => collect()],
+                    'UMUM' => (object) ['label' => 'Semua Tingkat', 'exams' => collect()],
+                ]
+            ];
+
+            if (!isset($teacherGroups['teacher_' . $current->id])) {
+                $teacherGroups['teacher_' . $current->id] = clone $emptyProfile;
+            }
+            if (!isset($utsTeacherGroups['teacher_' . $current->id])) {
+                $utsTeacherGroups['teacher_' . $current->id] = clone $emptyProfile;
+            }
+        }
+
+        $teacherGroups = collect($teacherGroups)->sortBy(function ($t) {
+            if ($t->is_current) return 0;
+            if ($t->role === 'admin') return 1;
+            return 2 . $t->name;
+        })->values();
+
+        $utsTeacherGroups = collect($utsTeacherGroups)->sortBy(function ($t) {
+            if ($t->is_current) return 0;
+            if ($t->role === 'admin') return 1;
+            return 2 . $t->name;
+        })->values();
+
+        return view('admin.exams.index', compact(
+            'exams', 
+            'groupedExams', 
+            'teacherGroups', 
+            'classes',
+            'uasClassGroups',
+            'utsTeacherGroups',
+            'uasExams',
+            'utsExams'
+        ));
     }
 
     public function create()
@@ -120,6 +398,7 @@ class ExamController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'type' => 'nullable|in:uas,uts',
             'description' => 'nullable|string',
             'google_form_url' => 'required|url',
             'duration' => 'required|integer|min:1',
@@ -137,6 +416,12 @@ class ExamController extends Controller
             'schedules.*.classes.min' => 'Setiap jadwal wajib memilih minimal 1 kelas target.',
         ]);
 
+        if (Auth::user()->isTeacher()) {
+            $examType = 'uts';
+        } else {
+            $examType = $request->input('type') ?: (preg_match('/\b(uts|pts|tengah)/i', $validated['title']) ? 'uts' : 'uas');
+        }
+
         $createdCount = 0;
         foreach ($validated['schedules'] as $slot) {
             $slotDuration = !empty($slot['duration']) ? (int)$slot['duration'] : (int)$validated['duration'];
@@ -145,6 +430,7 @@ class ExamController extends Controller
 
             $exam = Exam::create([
                 'title' => $validated['title'],
+                'type' => $examType,
                 'description' => $validated['description'] ?? null,
                 'google_form_url' => $validated['google_form_url'],
                 'start_at' => $start_at,
@@ -350,6 +636,7 @@ class ExamController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
+            'type' => 'nullable|in:uas,uts',
             'description' => 'nullable|string',
             'google_form_url' => 'required|url',
             'start_at' => 'required|date',
@@ -362,6 +649,10 @@ class ExamController extends Controller
             'classes.required' => 'Pilih minimal 1 kelas target.',
             'classes.min' => 'Pilih minimal 1 kelas target.',
         ]);
+
+        if (Auth::user()->isTeacher()) {
+            $validated['type'] = 'uts';
+        }
 
         $validated['end_at'] = \Carbon\Carbon::parse($validated['start_at'])->addMinutes((int)$validated['duration']);
 
@@ -433,12 +724,25 @@ class ExamController extends Controller
             };
 
             foreach ($violations as $v) {
+                $typeLabel = match (strtoupper($v->type ?? '')) {
+                    'SCREEN_OFF' => 'Layar Dimatikan (Screen Off)',
+                    'APP_RESTART_OR_DEVICE_OFF', 'DEVICE_OFF', 'REBOOT' => 'HP Dimatikan / Dimulai Ulang (Restart / Off)',
+                    'APP_SWITCH', 'SWITCH', 'APP' => 'Keluar Aplikasi (App Switch)',
+                    'FLOATING_WINDOW' => 'Jendela Mengambang (Floating Window)',
+                    'SPLIT_SCREEN', 'SPLIT', 'MULTI_WINDOW' => 'Layar Belah (Split Screen)',
+                    'SCREEN_RECORDING' => 'Perekaman Layar (Screen Recording)',
+                    'SCREENSHOT' => 'Tangkapan Layar (Screenshot)',
+                    'UNAUTHORIZED_URL', 'URL' => 'Akses URL Terlarang / Browsing',
+                    'UNAUTHORIZED_COPY', 'COPY' => 'Salin Soal (Copy Attempt)',
+                    default => $v->type ?? 'Keluar Aplikasi'
+                };
+
                 fputcsv($file, [
                     $v->created_at ? $v->created_at->format('Y-m-d H:i:s') : '-',
                     $sanitizeCsv($v->user?->username ?? '-'),
                     $sanitizeCsv($v->user?->name ?? '-'),
                     $sanitizeCsv($v->user?->class?->name ?? 'Tanpa Kelas'),
-                    $sanitizeCsv($v->type ?? 'EXIT_APP'),
+                    $sanitizeCsv($typeLabel),
                     $sanitizeCsv($v->description ?? '-'),
                 ]);
             }
@@ -548,8 +852,15 @@ class ExamController extends Controller
                         continue;
                     }
 
+                    $examType = Auth::user()->isTeacher() ? 'uts' : (
+                        !empty($row['tipe']) && in_array(strtolower($row['tipe']), ['uas', 'uts']) ? strtolower($row['tipe']) : (
+                            preg_match('/\b(uts|pts|tengah)/i', $row['judul_ujian']) ? 'uts' : 'uas'
+                        )
+                    );
+
                     $exam = \App\Models\Exam::create([
                         'title' => $row['judul_ujian'],
+                        'type' => $examType,
                         'description' => $row['deskripsi'] ?? null,
                         'google_form_url' => $row['url_google_form'],
                         'start_at' => $start_at,

@@ -186,11 +186,9 @@
             </div>
 
             @php
-                $sebWebUrl = route('seb.exam.show', $exam);
-                $sebSchemeUrl = preg_replace('/^https:\/\//i', 'sebs://', $sebWebUrl);
-                if ($sebSchemeUrl === $sebWebUrl) {
-                    $sebSchemeUrl = preg_replace('/^http:\/\//i', 'seb://', $sebWebUrl);
-                }
+                $sebWebUrl = \App\Http\Controllers\SebExamController::getExamWebUrl($exam);
+                $sebSchemeUrl = \App\Http\Controllers\SebExamController::getSebSchemeUrl($exam);
+                $serverHost = \App\Http\Controllers\SebExamController::getPublicServerBaseUrl();
             @endphp
             <!-- Card Akses Safe Exam Browser (iOS / SEB) -->
             <div class="p-3.5 sm:p-4 rounded-xl bg-purple-50/60 border border-purple-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -246,7 +244,7 @@
                         <span class="text-slate-900 font-bold flex items-center gap-1.5">
                             {{ $exam->duration }} Menit
                             <span class="text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-md">
-                                {{ round($exam->duration / 45, 1) }} JP
+                                {{ round($exam->duration / 35, 1) }} JP
                             </span>
                         </span>
                     </div>
@@ -638,17 +636,42 @@
                                     {{ $v->user->class->name ?? '-' }}
                                 </td>
                                 <td class="py-3.5 px-4">
-                                    @if(str_contains(strtoupper($v->type), 'SWITCH') || str_contains(strtoupper($v->type), 'APP'))
+                                    @php $vType = strtoupper($v->type ?? ''); @endphp
+                                    @if(str_contains($vType, 'SCREEN_OFF'))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-500/20">
+                                            Layar Dimatikan (Screen Off)
+                                        </span>
+                                    @elseif(str_contains($vType, 'RESTART') || str_contains($vType, 'DEVICE_OFF') || str_contains($vType, 'REBOOT'))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-rose-50 text-rose-700 ring-1 ring-rose-500/20">
+                                            HP Dimatikan / Restart
+                                        </span>
+                                    @elseif(str_contains($vType, 'SWITCH') || str_contains($vType, 'APP'))
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-500/20">
                                             Keluar Aplikasi (App Switch)
                                         </span>
-                                    @elseif(str_contains(strtoupper($v->type), 'SCREENSHOT'))
+                                    @elseif(str_contains($vType, 'FLOATING'))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-sky-50 text-sky-700 ring-1 ring-sky-500/20">
+                                            Jendela Mengambang (Floating Window)
+                                        </span>
+                                    @elseif(str_contains($vType, 'SPLIT') || str_contains($vType, 'MULTI_WINDOW'))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-purple-50 text-purple-700 ring-1 ring-purple-500/20">
+                                            Layar Belah (Split Screen)
+                                        </span>
+                                    @elseif(str_contains($vType, 'RECORDING'))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-pink-50 text-pink-700 ring-1 ring-pink-500/20">
+                                            Perekaman Layar (Screen Recording)
+                                        </span>
+                                    @elseif(str_contains($vType, 'SCREENSHOT'))
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-rose-50 text-rose-700 ring-1 ring-rose-500/20">
                                             Screenshot Attempt
                                         </span>
-                                    @elseif(str_contains(strtoupper($v->type), 'SPLIT'))
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-purple-50 text-purple-700 ring-1 ring-purple-500/20">
-                                            Split Screen
+                                    @elseif(str_contains($vType, 'URL'))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-red-50 text-red-700 ring-1 ring-red-500/20">
+                                            Akses URL Terlarang / Browsing
+                                        </span>
+                                    @elseif(str_contains($vType, 'COPY'))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700 ring-1 ring-indigo-500/20">
+                                            Salin Soal (Copy Attempt)
                                         </span>
                                     @else
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-700">
@@ -677,17 +700,42 @@
                             <span class="font-mono text-[10px] text-slate-400 shrink-0">{{ \Carbon\Carbon::parse($v->created_at)->format('H:i:s') }} WIB</span>
                         </div>
                         <div class="flex items-start gap-2 pt-0.5">
-                            @if(str_contains(strtoupper($v->type), 'SWITCH') || str_contains(strtoupper($v->type), 'APP'))
+                            @php $vTypeMob = strtoupper($v->type ?? ''); @endphp
+                            @if(str_contains($vTypeMob, 'SCREEN_OFF'))
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-500/20 shrink-0">
+                                    Screen Off
+                                </span>
+                            @elseif(str_contains($vTypeMob, 'RESTART') || str_contains($vTypeMob, 'DEVICE_OFF') || str_contains($vTypeMob, 'REBOOT'))
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 ring-1 ring-rose-500/20 shrink-0">
+                                    Device Off / Restart
+                                </span>
+                            @elseif(str_contains($vTypeMob, 'SWITCH') || str_contains($vTypeMob, 'APP'))
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-500/20 shrink-0">
                                     App Switch
                                 </span>
-                            @elseif(str_contains(strtoupper($v->type), 'SCREENSHOT'))
+                            @elseif(str_contains($vTypeMob, 'FLOATING'))
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-sky-50 text-sky-700 ring-1 ring-sky-500/20 shrink-0">
+                                    Floating Window
+                                </span>
+                            @elseif(str_contains($vTypeMob, 'SPLIT') || str_contains($vTypeMob, 'MULTI_WINDOW'))
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 ring-1 ring-purple-500/20 shrink-0">
+                                    Split Screen
+                                </span>
+                            @elseif(str_contains($vTypeMob, 'RECORDING'))
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-pink-50 text-pink-700 ring-1 ring-pink-500/20 shrink-0">
+                                    Recording
+                                </span>
+                            @elseif(str_contains($vTypeMob, 'SCREENSHOT'))
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 ring-1 ring-rose-500/20 shrink-0">
                                     Screenshot
                                 </span>
-                            @elseif(str_contains(strtoupper($v->type), 'SPLIT'))
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 ring-1 ring-purple-500/20 shrink-0">
-                                    Split Screen
+                            @elseif(str_contains($vTypeMob, 'URL'))
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-red-50 text-red-700 ring-1 ring-red-500/20 shrink-0">
+                                    Akses URL Ilegal
+                                </span>
+                            @elseif(str_contains($vTypeMob, 'COPY'))
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 ring-1 ring-indigo-500/20 shrink-0">
+                                    Salin Soal (Copy)
                                 </span>
                             @else
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700 shrink-0">
@@ -988,7 +1036,10 @@ document.addEventListener('DOMContentLoaded', () => {
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data={{ urlencode($sebSchemeUrl) }}" alt="QR Code Safe Exam Browser" class="w-48 h-48 block mx-auto">
         </div>
         <div class="text-xs font-bold text-slate-800">{{ $exam->title }}</div>
-        <p class="text-[11px] text-slate-500 mt-1 mb-4">Arahkan kamera iPhone siswa langsung ke kode QR di atas untuk membuka aplikasi Safe Exam Browser.</p>
+        <p class="text-[11px] text-slate-500 mt-1 mb-2">Arahkan kamera iPhone siswa langsung ke kode QR di atas untuk membuka aplikasi Safe Exam Browser.</p>
+        <div class="text-[11px] text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2.5 py-1 rounded-lg mb-3">
+            Host: <strong class="font-mono">{{ $serverHost }}</strong> (iPhone & Laptop wajib di Wi-Fi / Hotspot yang sama).
+        </div>
 
         <div class="flex items-center gap-2 bg-purple-50/70 p-2 rounded-xl border border-purple-200 text-left">
             <span class="text-[11px] font-mono text-purple-900 truncate select-all flex-1 pl-1">{{ $sebSchemeUrl }}</span>
