@@ -1,9 +1,13 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  // Daftar URL server kandidat: USB ADB Reverse, USB Tethering, dan Wi-Fi LAN
+  // Gunakan --dart-define=API_BASE_URL=https://domain-sekolah/api saat build production
+  static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
+
+  // Daftar URL server kandidat lokal (dipakai hanya jika API_BASE_URL tidak disetel)
   static const List<String> candidateUrls = [
     'http://127.0.0.1:8000/api',
     'http://10.122.152.181:8000/api',
@@ -13,6 +17,7 @@ class ApiService {
   static String? _cachedBaseUrl;
 
   static Future<String> getBaseUrl() async {
+    if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
     if (_cachedBaseUrl != null) return _cachedBaseUrl!;
     return candidateUrls.first;
   }
@@ -20,10 +25,12 @@ class ApiService {
   static Future<http.Response> _requestWithFallback(
     Future<http.Response> Function(String baseUrl) requestFn,
   ) async {
-    final urls = <String>[
-      ?_cachedBaseUrl,
-      ...candidateUrls.where((u) => u != _cachedBaseUrl),
-    ];
+    final urls = _envBaseUrl.isNotEmpty
+        ? <String>[_envBaseUrl]
+        : <String>[
+            ?_cachedBaseUrl,
+            ...candidateUrls.where((u) => u != _cachedBaseUrl),
+          ];
 
     Object? lastError;
     for (final base in urls) {
@@ -37,6 +44,22 @@ class ApiService {
       }
     }
     throw lastError ?? Exception('Gagal terhubung ke server');
+  }
+
+  static Future<String> getOrCreateDeviceId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final existing = prefs.getString('device_id');
+    if (existing != null && existing.isNotEmpty) {
+      return existing;
+    }
+
+    final random = Random.secure();
+    final bytes = List<int>.generate(16, (_) => random.nextInt(256));
+    final generated = bytes
+        .map((b) => b.toRadixString(16).padLeft(2, '0'))
+        .join();
+    await prefs.setString('device_id', generated);
+    return generated;
   }
 
   static Future<String?> getToken() async {
@@ -182,8 +205,8 @@ class ApiService {
         ),
       );
       return jsonDecode(response.body);
-    } catch (e) {
-      return {'success': false, 'error': e.toString()};
+    } catch (_) {
+      return {'success': false, 'message': 'Gagal mengirim laporan pelanggaran'};
     }
   }
 }

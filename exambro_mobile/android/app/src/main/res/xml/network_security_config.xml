@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Izinkan HTTP hanya untuk jaringan LAN lokal sekolah; paksa HTTPS untuk domain Google & publik -->
+    <base-config cleartextTrafficPermitted="true" />
+    <domain-config cleartextTrafficPermitted="false">
+        <domain includeSubdomains="true">google.com</domain>
+        <domain includeSubdomains="true">google.co.id</domain>
+        <domain includeSubdomains="true">forms.gle</domain>
+        <domain includeSubdomains="true">googleapis.com</domain>
+        <domain includeSubdomains="true">gstatic.com</domain>
+        <domain includeSubdomains="true">googleusercontent.com</domain>
+        <domain includeSubdomains="true">youtube.com</domain>
+        <domain includeSubdomains="true">1e100.net</domain>
+        <domain includeSubdomains="true">trycloudflare.com</domain>
+    </domain-config>
+</network-security-config>
+

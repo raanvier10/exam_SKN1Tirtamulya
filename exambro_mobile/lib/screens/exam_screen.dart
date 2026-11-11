@@ -137,15 +137,41 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
             },
             onNavigationRequest: (NavigationRequest request) {
               final uri = Uri.tryParse(request.url);
+              final scheme = uri?.scheme.toLowerCase() ?? '';
               final host = uri?.host.toLowerCase() ?? '';
               final path = uri?.path.toLowerCase() ?? '';
 
-              // Blokir streaming video YouTube & pencarian Google
+              // Tolak skema non-HTTP(S) (mis. file://, content://, intent://, javascript:)
+              if (scheme != 'http' && scheme != 'https') {
+                return NavigationDecision.prevent;
+              }
+
+              // Blokir streaming video YouTube, AI assistant, pencarian, dan layanan non-ujian Google
               // CATATAN: accounts.youtube.com TIDAK diblokir karena digunakan Google SSO untuk SetSID sinkronisasi session
-              final isYoutubeVideo = host == 'www.youtube.com' ||
-                  host == 'm.youtube.com' ||
-                  host == 'youtube.com' ||
-                  host == 'youtu.be';
+              const blockedGoogleHosts = <String>{
+                'www.youtube.com',
+                'm.youtube.com',
+                'youtube.com',
+                'youtu.be',
+                'gemini.google.com',
+                'bard.google.com',
+                'ai.google.com',
+                'aistudio.google.com',
+                'notebooklm.google.com',
+                'scholar.google.com',
+                'translate.google.com',
+                'mail.google.com',
+                'chat.google.com',
+                'classroom.google.com',
+                'keep.google.com',
+                'books.google.com',
+                'sites.google.com',
+                'news.google.com',
+                'maps.google.com',
+                'play.google.com',
+                'search.google.com',
+                'support.google.com',
+              };
 
               final isSearch = path.startsWith('/search') ||
                   ((path == '/' || path.isEmpty) &&
@@ -154,7 +180,6 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                           host == 'google.co.id' ||
                           host == 'www.google.co.id'));
 
-              // Blokir halaman Google non-form (webhp, sorry, settings, dll)
               final isGoogleHost = host == 'google.com' ||
                   host == 'www.google.com' ||
                   host == 'google.co.id' ||
@@ -167,14 +192,20 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                    path.startsWith('/intl') ||
                    path.startsWith('/about'));
 
-              if (isYoutubeVideo || isSearch || isGoogleJunkPage) {
+              final isDocsNonForm = host == 'docs.google.com' &&
+                  (path.startsWith('/document') ||
+                   path.startsWith('/spreadsheets') ||
+                   path.startsWith('/presentation') ||
+                   path.startsWith('/drawings'));
+
+              if (blockedGoogleHosts.contains(host) || isSearch || isGoogleJunkPage || isDocsNonForm) {
                 _handleViolation(
                   'UNAUTHORIZED_URL',
-                  'Mencoba mencari di Google / membuka video di luar form ($host${path.isNotEmpty ? path : ""})',
+                  'Mencoba membuka layanan terlarang di luar soal ujian ($host${path.isNotEmpty ? path : ""})',
                 );
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Akses ke pencarian atau halaman Google di luar form diblokir.'),
+                    content: Text('Akses ke halaman atau layanan di luar form ujian diblokir.'),
                     backgroundColor: Color(0xFFEF4444),
                     duration: Duration(seconds: 2),
                     behavior: SnackBarBehavior.floating,
@@ -196,14 +227,17 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                 return NavigationDecision.navigate;
               }
 
-              // Whitelist Google Forms, short links, Google Auth, Drive, and static assets
+              // Whitelist ketat hanya host Google Forms, Google Auth, dan aset statis
               final isAllowed = host == 'forms.gle' ||
                   host.endsWith('.forms.gle') ||
                   host == 'forms.google.com' ||
-                  host.endsWith('.google.com') ||
-                  host == 'google.com' ||
-                  host.endsWith('.google.co.id') ||
-                  host == 'google.co.id' ||
+                  host == 'docs.google.com' ||
+                  host == 'accounts.google.com' ||
+                  host == 'myaccount.google.com' ||
+                  host == 'ogs.google.com' ||
+                  host == 'apis.google.com' ||
+                  host == 'content.googleapis.com' ||
+                  host == 'accounts.youtube.com' ||
                   host.endsWith('.gstatic.com') ||
                   host == 'gstatic.com' ||
                   host.endsWith('.googleusercontent.com') ||
@@ -211,8 +245,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                   host.endsWith('.googleapis.com') ||
                   host == 'googleapis.com' ||
                   host.endsWith('.1e100.net') ||
-                  host == '1e100.net' ||
-                  host == 'accounts.youtube.com';
+                  host == '1e100.net';
 
               if (!isAllowed) {
                 _handleViolation(
@@ -319,9 +352,10 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
   Future<void> _startExamSession() async {
     try {
       final examId = int.tryParse(widget.exam['id']?.toString() ?? '0') ?? 0;
+      final deviceId = await ApiService.getOrCreateDeviceId();
       final response = await ApiService.startExamSession(
         examId,
-        'device_dummy_id',
+        deviceId,
         latitude: widget.latitude,
         longitude: widget.longitude,
       );
@@ -387,19 +421,16 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
         Navigator.pop(context);
       }
     } catch (e) {
-      String? fallbackUrl = widget.exam['google_form_url']?.toString();
-      if (fallbackUrl != null && fallbackUrl.trim().isNotEmpty) {
-        fallbackUrl = fallbackUrl.trim();
-        if (!fallbackUrl.startsWith('http://') && !fallbackUrl.startsWith('https://')) {
-          fallbackUrl = 'https://$fallbackUrl';
-        }
-        if (fallbackUrl.contains('docs.google.com/forms') && !fallbackUrl.contains('embedded=true')) {
-          final sep = fallbackUrl.contains('?') ? '&' : '?';
-          fallbackUrl = '$fallbackUrl${sep}embedded=true';
-        }
-        _originalFormUrl = fallbackUrl;
-        _controller.loadRequest(Uri.parse(fallbackUrl));
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal terhubung ke server ujian. Periksa jaringan dan coba kembali.'),
+          backgroundColor: Color(0xFFEF4444),
+          duration: Duration(seconds: 4),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      Navigator.pop(context);
     }
   }
 

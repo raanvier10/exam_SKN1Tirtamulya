@@ -62,6 +62,26 @@ class _GoogleAuthScreenState extends State<GoogleAuthScreen> {
             onWebResourceError: (WebResourceError error) {
               if (mounted) setState(() => _isLoading = false);
             },
+            onNavigationRequest: (NavigationRequest request) {
+              final uri = Uri.tryParse(request.url);
+              final scheme = uri?.scheme.toLowerCase() ?? '';
+              final host = uri?.host.toLowerCase() ?? '';
+              if (scheme != 'https') {
+                return NavigationDecision.prevent;
+              }
+              final isAllowedAuthHost = host == 'accounts.google.com' ||
+                  host == 'myaccount.google.com' ||
+                  host == 'accounts.youtube.com' ||
+                  host == 'ogs.google.com' ||
+                  host == 'apis.google.com' ||
+                  host.endsWith('.gstatic.com') ||
+                  host.endsWith('.googleusercontent.com') ||
+                  host.endsWith('.googleapis.com') ||
+                  host.endsWith('.1e100.net');
+              return isAllowedAuthHost
+                  ? NavigationDecision.navigate
+                  : NavigationDecision.prevent;
+            },
           ),
         )
         ..loadRequest(Uri.parse('https://accounts.google.com/ServiceLogin'));
