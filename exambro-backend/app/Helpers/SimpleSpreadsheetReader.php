@@ -93,8 +93,8 @@ class SimpleSpreadsheetReader
         if ($zip->open($path) === true) {
             $sharedStrings = [];
             $sharedStringsXml = $zip->getFromName('xl/sharedStrings.xml');
-            if ($sharedStringsXml) {
-                $xml = @simplexml_load_string($sharedStringsXml);
+            if ($sharedStringsXml && stripos($sharedStringsXml, '<!DOCTYPE') === false && stripos($sharedStringsXml, '<!ENTITY') === false) {
+                $xml = @simplexml_load_string($sharedStringsXml, 'SimpleXMLElement', LIBXML_NONET | LIBXML_NOCDATA);
                 if ($xml && isset($xml->si)) {
                     foreach ($xml->si as $si) {
                         if (isset($si->t)) {
@@ -113,8 +113,8 @@ class SimpleSpreadsheetReader
             }
 
             $sheetXml = $zip->getFromName('xl/worksheets/sheet1.xml');
-            if ($sheetXml) {
-                $xml = @simplexml_load_string($sheetXml);
+            if ($sheetXml && stripos($sheetXml, '<!DOCTYPE') === false && stripos($sheetXml, '<!ENTITY') === false) {
+                $xml = @simplexml_load_string($sheetXml, 'SimpleXMLElement', LIBXML_NONET | LIBXML_NOCDATA);
                 if ($xml && isset($xml->sheetData->row)) {
                     foreach ($xml->sheetData->row as $rowNode) {
                         $row = [];

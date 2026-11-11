@@ -3,22 +3,79 @@
 
 @section('content')
 <!-- Header Page -->
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-    <div>
-        <div class="flex items-center gap-2.5">
-            <span class="w-2.5 h-6 bg-indigo-600 rounded-full inline-block"></span>
-            <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Manajemen Ujian</h2>
-        </div>
+@php
+    $isTeacher = auth()->user()->isTeacher();
+    $defaultMode = $isTeacher ? 'uts' : 'uas';
+    $initialMode = request('mode', request('category', $defaultMode));
+    $isUts = ($initialMode === 'uts');
+    $hideActionButtons = $isTeacher && !$isUts;
+@endphp
 
+<style>
+    /* Smooth Dropdown Flyout Transitions */
+    .dropdown-flyout {
+        transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s;
+        transform-origin: top right;
+    }
+    .dropdown-flyout-left {
+        transform-origin: top left;
+    }
+    .dropdown-flyout-closed {
+        opacity: 0 !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+        transform: scale(0.95) translateY(-6px) !important;
+    }
+    .dropdown-flyout-open {
+        opacity: 1 !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        transform: scale(1) translateY(0) !important;
+    }
+
+    /* Buttery-Smooth CSS Grid Accordion for Sub-items & Schedules */
+    .uts-accordion-wrapper {
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .uts-accordion-wrapper.is-open {
+        grid-template-rows: 1fr;
+    }
+    .uts-accordion-content {
+        overflow: hidden;
+        min-height: 0;
+    }
+
+    /* Class Option Interactive Animation */
+    .uts-class-item {
+        transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .uts-class-item:hover {
+        padding-left: 0.85rem;
+    }
+</style>
+
+<!-- Header Page -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div class="flex items-center gap-3">
+        <span class="w-2.5 h-6 {{ $isUts ? 'bg-emerald-600' : 'bg-indigo-600' }} rounded-full inline-block"></span>
+        <div>
+            <div class="flex items-center gap-2.5">
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Manajemen Ujian {{ $isUts ? 'UTS' : 'UAS' }}</h2>
+            </div>
+        </div>
     </div>
-    <div class="grid grid-cols-2 sm:flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
+    <div id="headerExamActionButtons" 
+         style="{{ $hideActionButtons ? 'display: none !important;' : '' }}"
+         class="{{ $hideActionButtons ? '!hidden ' : '' }}grid grid-cols-2 sm:flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
         <button onclick="importModal.showModal()" class="inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 bg-white border border-slate-200/80 text-slate-700 rounded-xl text-xs sm:text-sm font-medium hover:bg-slate-50 hover:border-slate-300 hover:text-indigo-600 shadow-xs transition-all duration-150 active:scale-[0.98] w-full sm:w-auto">
             <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
             <span>Import Excel</span>
         </button>
-        <a href="{{ route('admin.exams.create') }}" class="inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-sm shadow-indigo-500/20 hover:shadow-md hover:shadow-indigo-500/30 transition-all duration-150 active:scale-[0.98] w-full sm:w-auto">
+        <a href="{{ route('admin.exams.create') }}?type={{ $isUts ? 'uts' : 'uas' }}" class="inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-sm shadow-indigo-500/20 hover:shadow-md hover:shadow-indigo-500/30 transition-all duration-150 active:scale-[0.98] w-full sm:w-auto">
             <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
@@ -104,63 +161,7 @@
     </form>
 </dialog>
 
-<!-- ========================================================================= -->
-<!-- 1. DUA PILIHAN UTAMA: UAS (KATEGORI KELAS) VS UTS (GURU PENGAMPU)          -->
-<!-- ========================================================================= -->
-<div class="relative flex flex-col items-center justify-center my-6 sm:my-8">
-    <div class="relative flex items-center justify-center w-full max-w-2xl px-4">
-        <!-- Decorative Background Accent Line -->
-        <div class="absolute inset-0 flex items-center" aria-hidden="true">
-            <div class="w-full border-t border-slate-200/80"></div>
-        </div>
 
-        <!-- Floating Segmented Control with Ambient Glow -->
-        <div class="relative z-10 group">
-            <!-- Ambient Glow behind pill -->
-            <div class="absolute -inset-1 bg-gradient-to-r from-sky-400/20 via-indigo-400/20 to-sky-400/20 rounded-full blur-md opacity-60 group-hover:opacity-100 transition duration-500"></div>
-
-            <!-- Outer Pill Capsule -->
-            <div class="relative inline-flex items-center p-1.5 bg-[#f0f2f5] rounded-full border border-slate-200/80 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.06)] ring-4 ring-white/90 select-none" role="tablist">
-                <!-- Tab Pilihan 1: Mode UAS -->
-                <button type="button"
-                        onclick="selectExamCategory('uas')" 
-                        onkeydown="if(event.key==='Enter'||event.key===' '){selectExamCategory('uas');event.preventDefault();}"
-                        role="tab"
-                        aria-selected="true"
-                        id="cardCategoryUas"
-                        class="relative inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-2 sm:py-2.5 rounded-full text-sm sm:text-[15px] font-bold text-[#0099ff] bg-white shadow-[0_2px_10px_rgba(0,153,255,0.16)] transition-all duration-200 cursor-pointer select-none">
-                    <svg class="w-4 h-4 shrink-0 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-5.825-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5" />
-                    </svg>
-                    <span>UAS</span>
-                    <span id="badgeCountUas" class="px-2 py-0.5 text-[11px] font-extrabold rounded-full bg-sky-50 text-[#0099ff] border border-sky-200/60 shadow-2xs transition-colors">
-                        {{ $uasExams->count() }}
-                    </span>
-                </button>
-
-                <!-- Tab Pilihan 2: Mode UTS -->
-                <button type="button"
-                        onclick="selectExamCategory('uts')" 
-                        onkeydown="if(event.key==='Enter'||event.key===' '){selectExamCategory('uts');event.preventDefault();}"
-                        role="tab"
-                        aria-selected="false"
-                        id="cardCategoryUts"
-                        class="relative inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-2 sm:py-2.5 rounded-full text-sm sm:text-[15px] font-medium text-slate-500 hover:text-slate-800 bg-transparent hover:bg-slate-200/40 transition-all duration-200 cursor-pointer select-none">
-                    <svg class="w-4 h-4 shrink-0 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    <span>UTS</span>
-                    <span id="badgeCountUts" class="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-slate-200/70 text-slate-600 transition-colors">
-                        {{ $utsExams->count() }}
-                    </span>
-                </button>
-            </div>
-        </div>
-    </div>
-    <!-- Hidden indicator elements for legacy references -->
-    <div id="checkUas" class="hidden"></div>
-    <div id="checkUts" class="hidden"></div>
-</div>
 
 
 <!-- ========================================================================= -->
@@ -176,6 +177,55 @@
     $utsTeachersCount = $utsTeacherGroups->count();
 @endphp
 
+@if($isUts)
+<!-- Stats UTS -->
+<div id="statsUtsBar" class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-5">
+    <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 font-bold">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+        </div>
+        <div class="min-w-0">
+            <div class="text-[11px] font-medium text-slate-500">Guru Pengampu</div>
+            <div class="text-base font-bold text-slate-900 tracking-tight">{{ $utsTeachersCount }} Orang</div>
+        </div>
+    </div>
+    <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center shrink-0 font-bold">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+        </div>
+        <div class="min-w-0">
+            <div class="text-[11px] font-medium text-slate-500">Total Soal</div>
+            <div class="text-base font-bold text-slate-900 tracking-tight">{{ $utsExams->count() }} Ujian</div>
+        </div>
+    </div>
+    <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 font-bold">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+        </div>
+        <div class="min-w-0">
+            <div class="text-[11px] font-medium text-slate-500">Sedang Berlangsung</div>
+            <div class="text-base font-bold text-amber-600 tracking-tight">{{ $utsOngoing }} Sesi</div>
+        </div>
+    </div>
+    <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 font-bold">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </div>
+        <div class="min-w-0">
+            <div class="text-[11px] font-medium text-slate-500">Jadwal Aktif</div>
+            <div class="text-base font-bold text-emerald-600 tracking-tight">{{ $utsActive }} Ujian</div>
+        </div>
+    </div>
+</div>
+@else
 <!-- Stats UAS -->
 <div id="statsUasBar" class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-5">
     <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex items-center gap-3">
@@ -223,54 +273,7 @@
         </div>
     </div>
 </div>
-
-<!-- Stats UTS -->
-<div id="statsUtsBar" class="hidden grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3 mb-5">
-    <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex items-center gap-3">
-        <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 font-bold">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-        </div>
-        <div class="min-w-0">
-            <div class="text-[11px] font-medium text-slate-500">Guru Pengampu</div>
-            <div class="text-base font-bold text-slate-900 tracking-tight">{{ $utsTeachersCount }} Orang</div>
-        </div>
-    </div>
-    <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex items-center gap-3">
-        <div class="w-9 h-9 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center shrink-0 font-bold">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-        </div>
-        <div class="min-w-0">
-            <div class="text-[11px] font-medium text-slate-500">Total Soal</div>
-            <div class="text-base font-bold text-slate-900 tracking-tight">{{ $utsExams->count() }} Ujian</div>
-        </div>
-    </div>
-    <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex items-center gap-3">
-        <div class="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 font-bold">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-        </div>
-        <div class="min-w-0">
-            <div class="text-[11px] font-medium text-slate-500">Sedang Berlangsung</div>
-            <div class="text-base font-bold text-amber-600 tracking-tight">{{ $utsOngoing }} Sesi</div>
-        </div>
-    </div>
-    <div class="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs flex items-center gap-3">
-        <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 font-bold">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-        </div>
-        <div class="min-w-0">
-            <div class="text-[11px] font-medium text-slate-500">Jadwal Aktif</div>
-            <div class="text-base font-bold text-emerald-600 tracking-tight">{{ $utsActive }} Ujian</div>
-        </div>
-    </div>
-</div>
+@endif
 
 <!-- Bulk Delete Floating Bar -->
 <div id="bulkBar" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 transition-all">
@@ -289,6 +292,7 @@
     @csrf
 </form>
 
+@if(!$isUts)
 <!-- ========================================================================= -->
 <!-- 3. KONTEN MODE UAS: DIUTAMAKAN KATEGORI RUANG KELAS                       -->
 <!-- ========================================================================= -->
@@ -314,29 +318,98 @@
             <!-- Filter Status & Filter Jenjang -->
             <div class="flex items-center gap-2 flex-wrap">
                 <!-- Filter Status -->
-                <div class="relative">
-                    <select id="filterUasStatus" class="appearance-none pl-3 pr-8 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-semibold text-slate-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
-                        <option value="">Semua Status</option>
-                        <option value="ongoing">Sedang Berlangsung</option>
-                        <option value="active">Aktif</option>
-                        <option value="finished">Selesai</option>
-                        <option value="inactive">Nonaktif</option>
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                <div class="relative" id="uasStatusFilterDropdown">
+                    <button type="button"
+                            id="uasStatusFilterBtn"
+                            onclick="toggleUasStatusFilterMenu()"
+                            class="appearance-none min-w-[140px] pl-3 pr-8 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200/80 text-xs font-semibold transition-all shadow-xs cursor-pointer select-none relative text-left"
+                            aria-expanded="false"
+                            title="Filter Status">
+                        <span id="uasStatusFilterLabel">Semua Status</span>
+                        <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+                            <svg id="uasStatusFilterChevron" class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </span>
+                    </button>
+                    <input type="hidden" id="filterUasStatus" value="">
+
+                    <div id="uasStatusFilterMenu" class="dropdown-flyout dropdown-flyout-left dropdown-flyout-closed absolute left-0 mt-2 w-48 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 p-1.5 space-y-0.5">
+                        <button type="button" onclick="setUasStatusFilter('', 'Semua Status')" class="uas-status-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                                <span>Semua Status</span>
+                            </div>
+                        </button>
+                        <button type="button" onclick="setUasStatusFilter('ongoing', 'Sedang Berlangsung')" class="uas-status-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-indigo-700 hover:bg-indigo-50 transition-colors">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+                                <span>Sedang Berlangsung</span>
+                            </div>
+                        </button>
+                        <button type="button" onclick="setUasStatusFilter('active', 'Aktif')" class="uas-status-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-blue-700 hover:bg-blue-50 transition-colors">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                <span>Aktif</span>
+                            </div>
+                        </button>
+                        <button type="button" onclick="setUasStatusFilter('finished', 'Selesai')" class="uas-status-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                                <span>Selesai</span>
+                            </div>
+                        </button>
+                        <button type="button" onclick="setUasStatusFilter('inactive', 'Nonaktif')" class="uas-status-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-rose-700 hover:bg-rose-50 transition-colors">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                                <span>Nonaktif</span>
+                            </div>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Filter Kelas / Tingkat (Dropdown seperti Semua Status) -->
-                <div class="relative">
-                    <select id="filterUasGrade" onchange="filterUasGrade(this.value)" class="appearance-none pl-3 pr-8 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-semibold text-slate-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/20">
-                        <option value="">Semua Kelas</option>
-                        <option value="X">Kelas X</option>
-                        <option value="XI">Kelas XI</option>
-                        <option value="XII">Kelas XII</option>
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                <!-- Filter Kelas / Tingkat -->
+                <div class="relative" id="uasGradeFilterDropdown">
+                    <button type="button"
+                            id="uasGradeFilterBtn"
+                            onclick="toggleUasGradeFilterMenu()"
+                            class="appearance-none min-w-[140px] pl-3 pr-8 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200/80 text-xs font-semibold transition-all shadow-xs cursor-pointer select-none relative text-left"
+                            aria-expanded="false"
+                            title="Filter Kelas">
+                        <span id="uasGradeFilterLabel">Semua Kelas</span>
+                        <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+                            <svg id="uasGradeFilterChevron" class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </span>
+                    </button>
+                    <input type="hidden" id="filterUasGrade" value="">
+
+                    <div id="uasGradeFilterMenu" class="dropdown-flyout dropdown-flyout-left dropdown-flyout-closed absolute left-0 mt-2 w-44 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 p-1.5 space-y-0.5">
+                        <button type="button" onclick="setUasGradeFilter('', 'Semua Kelas')" class="uas-grade-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                                <span>Semua Kelas</span>
+                            </div>
+                        </button>
+                        <button type="button" onclick="setUasGradeFilter('X', 'Kelas X')" class="uas-grade-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-red-700 hover:bg-red-50 transition-colors">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                                <span>Kelas X</span>
+                            </div>
+                        </button>
+                        <button type="button" onclick="setUasGradeFilter('XI', 'Kelas XI')" class="uas-grade-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-blue-700 hover:bg-blue-50 transition-colors">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                <span>Kelas XI</span>
+                            </div>
+                        </button>
+                        <button type="button" onclick="setUasGradeFilter('XII', 'Kelas XII')" class="uas-grade-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-emerald-700 hover:bg-emerald-50 transition-colors">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                <span>Kelas XII</span>
+                            </div>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -346,40 +419,78 @@
     <!-- DAFTAR BLOK KELAS UAS (KATEGORI KELAS) -->
     <div class="space-y-4" id="uasClassCardList">
         @forelse($uasClassGroups as $cg)
-        <div class="uas-class-card bg-white rounded-2xl border border-slate-200/90 shadow-xs hover:border-slate-300 transition-all duration-200 overflow-hidden"
+        @php
+            $cGrade = strtoupper(trim($cg->grade ?? ''));
+            if ($cGrade === 'X' || preg_match('/\b(X|10)\b/i', $cg->name)) {
+                $badgeText = 'X';
+                $cTheme = [
+                    'header_bg' => 'bg-red-600',
+                    'header_border' => 'border-b border-red-700',
+                    'badge_box' => 'bg-white text-red-600',
+                    'ongoing_badge' => 'bg-white text-red-700',
+                    'ongoing_dot' => 'bg-red-600',
+                    'sub_color' => 'text-red-100',
+                ];
+            } elseif ($cGrade === 'XI' || preg_match('/\b(XI|11)\b/i', $cg->name)) {
+                $badgeText = 'XI';
+                $cTheme = [
+                    'header_bg' => 'bg-blue-600',
+                    'header_border' => 'border-b border-blue-700',
+                    'badge_box' => 'bg-white text-blue-600',
+                    'ongoing_badge' => 'bg-white text-blue-700',
+                    'ongoing_dot' => 'bg-blue-600',
+                    'sub_color' => 'text-blue-100',
+                ];
+            } elseif ($cGrade === 'XII' || preg_match('/\b(XII|12)\b/i', $cg->name)) {
+                $badgeText = 'XII';
+                $cTheme = [
+                    'header_bg' => 'bg-emerald-600',
+                    'header_border' => 'border-b border-emerald-700',
+                    'badge_box' => 'bg-white text-emerald-700',
+                    'ongoing_badge' => 'bg-white text-emerald-700',
+                    'ongoing_dot' => 'bg-emerald-600',
+                    'sub_color' => 'text-emerald-100',
+                ];
+            } else {
+                $badgeText = substr($cg->grade, 0, 3) ?: 'KL';
+                $cTheme = [
+                    'header_bg' => 'bg-slate-800',
+                    'header_border' => 'border-b border-slate-900',
+                    'badge_box' => 'bg-white text-slate-800',
+                    'ongoing_badge' => 'bg-white text-slate-800',
+                    'ongoing_dot' => 'bg-slate-800',
+                    'sub_color' => 'text-slate-300',
+                ];
+            }
+        @endphp
+        <div class="uas-class-card bg-white rounded-2xl border border-slate-200/90 shadow-2xs hover:border-slate-300 transition-all duration-200 overflow-hidden"
              data-class-id="{{ $cg->id }}"
              data-class-name="{{ strtolower($cg->name) }}"
              data-grade="{{ $cg->grade }}">
             
-            <!-- Header Blok Kelas -->
-            <div class="p-3.5 sm:p-4 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
+            <!-- Header Blok Kelas (Layout Seragam untuk Semua Kelas dengan Warna Khas) -->
+            <div class="p-3.5 sm:p-4 {{ $cTheme['header_bg'] }} {{ $cTheme['header_border'] }} flex items-center justify-between gap-3 flex-wrap">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-sm shadow-xs shrink-0">
-                        {{ substr($cg->grade, 0, 3) ?: 'KL' }}
+                    <div class="w-11 h-11 rounded-xl {{ $cTheme['badge_box'] }} flex items-center justify-center font-black text-sm tracking-tight shadow-xs shrink-0">
+                        {{ $badgeText }}
                     </div>
                     <div>
                         <div class="flex items-center gap-2 flex-wrap">
-                            <h4 class="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                            <h4 class="text-base sm:text-lg font-black text-white tracking-tight">
                                 Ruang Kelas {{ $cg->name }}
                             </h4>
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                Tingkat {{ $cg->grade }}
-                            </span>
+                           
                             @if($cg->ongoing_exams > 0)
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-300 animate-pulse">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold {{ $cTheme['ongoing_badge'] }} shadow-xs animate-pulse">
+                                    <span class="w-1.5 h-1.5 rounded-full {{ $cTheme['ongoing_dot'] }}"></span>
                                     {{ $cg->ongoing_exams }} Sedang Berlangsung
                                 </span>
                             @endif
                         </div>
-                        <div class="text-xs text-slate-500 mt-0.5">
-                            Pengawasan UAS Ruang • <span class="font-semibold text-slate-700">{{ $cg->total_exams }} Jadwal Soal</span>
+                        <div class="text-xs {{ $cTheme['sub_color'] }} mt-0.5">
+                            Pengawasan UAS Ruang • <span class="font-bold text-white">{{ $cg->total_exams }} Jadwal Soal</span>
                         </div>
                     </div>
-                </div>
-
-                <div class="text-xs text-slate-400 hidden sm:block">
-                    Pilih soal di bawah dan klik <strong>Pantau Siswa</strong>
                 </div>
             </div>
 
@@ -537,10 +648,14 @@
                 </svg>
             </div>
             <h5 class="text-base font-bold text-slate-800">Belum Ada Jadwal Ujian UAS</h5>
-            <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Klik tombol "Tambah Ujian" di atas untuk menambahkan jadwal ujian sekolah (UAS).</p>
-            <a href="{{ route('admin.exams.create') }}" class="inline-flex items-center gap-1.5 mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs">
-                + Buat Jadwal UAS Baru
-            </a>
+            @if(auth()->user()->isAdmin())
+                <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Klik tombol "Tambah Ujian" di atas untuk menambahkan jadwal ujian sekolah (UAS).</p>
+                <a href="{{ route('admin.exams.create') }}" class="inline-flex items-center gap-1.5 mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs">
+                    + Buat Jadwal UAS Baru
+                </a>
+            @else
+                <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Jadwal ujian UAS dikelola dan diterbitkan secara terpusat oleh Administrator / Kurikulum.</p>
+            @endif
         </div>
         @endforelse
     </div>
@@ -557,10 +672,18 @@
     </div>
 </div>
 
+@else
 <!-- ========================================================================= -->
 <!-- 4. KONTEN MODE UTS: DIUTAMAKAN NAMA GURU PENGAMPU                         -->
 <!-- ========================================================================= -->
-<div id="utsContainer" class="hidden space-y-4">
+<div id="utsContainer" class="space-y-4">
+    @php
+        $classesX = $classes->filter(fn($c) => preg_match('/(^|[\s\-_.,])(X|10)($|[\s\-_.,])/i', $c->name))->values();
+        $classesXI = $classes->filter(fn($c) => preg_match('/(^|[\s\-_.,])(XI|11)($|[\s\-_.,])/i', $c->name))->values();
+        $classesXII = $classes->filter(fn($c) => preg_match('/(^|[\s\-_.,])(XII|12)($|[\s\-_.,])/i', $c->name))->values();
+        $classesOther = $classes->reject(fn($c) => preg_match('/(^|[\s\-_.,])(X|XI|XII|10|11|12)($|[\s\-_.,])/i', $c->name))->values();
+    @endphp
+
     <!-- Bar Kontrol UTS -->
     <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-3.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <!-- Search Input UTS -->
@@ -578,25 +701,238 @@
             >
         </div>
 
-        <div class="flex items-center gap-2.5">
             <!-- Filter Status UTS -->
-            <div class="relative">
-                <select id="filterUtsStatus" class="appearance-none pl-3 pr-8 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-semibold text-slate-700 cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
-                    <option value="">Semua Status</option>
-                    <option value="ongoing">⚡ Sedang Berlangsung</option>
-                    <option value="active">✓ Aktif</option>
-                    <option value="finished">Selesai</option>
-                    <option value="inactive">Nonaktif</option>
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+            <div class="relative" id="utsStatusFilterDropdown">
+                <button type="button" 
+                        id="utsStatusFilterBtn"
+                        onclick="toggleUtsStatusFilterMenu()"
+                        class="appearance-none min-w-[140px] pl-3 pr-8 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200/80 text-xs font-semibold transition-all shadow-xs cursor-pointer select-none relative text-left"
+                        aria-expanded="false"
+                        title="Filter Status">
+                    <span id="utsStatusFilterLabel">Semua Status</span>
+                    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+                        <svg id="utsStatusFilterChevron" class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </span>
+                </button>
+                <input type="hidden" id="filterUtsStatus" value="">
+
+                <!-- Dropdown Menu Filter Status UTS -->
+                <div id="utsStatusFilterMenu" class="dropdown-flyout dropdown-flyout-left dropdown-flyout-closed absolute left-0 mt-2 w-48 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 p-1.5 space-y-0.5">
+                    <button type="button" onclick="setUtsStatusFilter('', 'Semua Status')" class="uts-status-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                            <span>Semua Status</span>
+                        </div>
+                    </button>
+                    <button type="button" onclick="setUtsStatusFilter('ongoing', 'Sedang Berlangsung')" class="uts-status-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>Sedang Berlangsung</span>
+                        </div>
+                    </button>
+                    <button type="button" onclick="setUtsStatusFilter('active', 'Aktif')" class="uts-status-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-blue-700 hover:bg-blue-50 transition-colors">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                            <span>Aktif</span>
+                        </div>
+                    </button>
+                    <button type="button" onclick="setUtsStatusFilter('finished', 'Selesai')" class="uts-status-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                            <span>Selesai</span>
+                        </div>
+                    </button>
+                    <button type="button" onclick="setUtsStatusFilter('inactive', 'Nonaktif')" class="uts-status-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-rose-700 hover:bg-rose-50 transition-colors">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                            <span>Nonaktif</span>
+                        </div>
+                    </button>
                 </div>
             </div>
 
-            <!-- Tombol Expand / Collapse All Teachers -->
-            <button id="expandAllUtsTeachers" class="px-3.5 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200/80 text-xs font-semibold transition-all shadow-xs" title="Buka / Tutup Semua Guru">
-                <span id="expandAllUtsText">Buka Semua Guru</span>
-            </button>
+            <!-- Dropdown Accordion Menu: Memilih Kelas UTS -->
+            <div class="relative" id="utsClassFilterDropdown">
+                <button type="button" 
+                        id="utsClassFilterBtn"
+                        onclick="toggleUtsClassFilterMenu()" 
+                        class="appearance-none min-w-[140px] pl-3 pr-8 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200/80 text-xs font-semibold transition-all shadow-xs cursor-pointer select-none relative text-left"
+                        aria-expanded="false"
+                        title="Pilih Kelas">
+                    <span id="utsClassFilterLabel">Pilih Kelas</span>
+                    <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+                        <svg id="utsClassFilterChevron" class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </span>
+                </button>
+
+                <!-- Accordion Menu Memilih Kelas -->
+                <div id="utsClassFilterMenu" class="dropdown-flyout dropdown-flyout-closed absolute right-0 mt-2 w-64 sm:w-72 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 p-2.5 space-y-1.5 max-h-[75vh] overflow-y-auto">
+                    <!-- Opsi: Semua Kelas -->
+                    <button type="button" 
+                            onclick="setUtsClassFilter('', '', 'Semua Kelas')" 
+                            class="uts-class-opt-btn w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-700 hover:bg-slate-50 border border-transparent hover:border-slate-200/80">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                            <span>Semua Kelas</span>
+                        </div>
+                        <span class="text-[10px] text-slate-400 font-medium">Reset</span>
+                    </button>
+
+                    <div class="border-t border-slate-100 my-1"></div>
+
+                    <!-- Accordion Tingkat Kelas X -->
+                    <div class="uts-grade-accordion rounded-xl border border-slate-200/80 overflow-hidden">
+                        <button type="button" 
+                                onclick="toggleUtsGradeSection('X')" 
+                                class="w-full flex items-center justify-between px-3 py-2 bg-slate-50/80 hover:bg-slate-100 text-xs font-bold text-slate-800 transition-colors">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                <span>Kelas X</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-slate-400">
+                                <span class="text-[10px] font-semibold bg-white px-1.5 py-0.5 rounded-md border border-slate-200/60 text-slate-600">{{ $classesX->count() }} Kelas</span>
+                                <svg id="chevron-grade-X" class="w-3.5 h-3.5 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </button>
+                        <div id="section-grade-X" class="uts-accordion-wrapper">
+                            <div class="uts-accordion-content">
+                                <div class="p-1.5 bg-white space-y-1 border-t border-slate-100">
+                                    <button type="button" 
+                                            onclick="setUtsClassFilter('X', '', 'Semua Kelas X')" 
+                                            class="uts-class-item w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition-all">
+                                        <svg class="w-3 h-3 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                                        <span>Semua Tingkat X</span>
+                                    </button>
+                                    @foreach($classesX as $cls)
+                                        <button type="button" 
+                                                onclick="setUtsClassFilter('X', '{{ strtolower($cls->name) }}', '{{ $cls->name }}')" 
+                                                class="uts-class-item w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span>
+                                            <span>{{ $cls->name }}</span>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Accordion Tingkat Kelas XI -->
+                    <div class="uts-grade-accordion rounded-xl border border-slate-200/80 overflow-hidden">
+                        <button type="button" 
+                                onclick="toggleUtsGradeSection('XI')" 
+                                class="w-full flex items-center justify-between px-3 py-2 bg-slate-50/80 hover:bg-slate-100 text-xs font-bold text-slate-800 transition-colors">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-sky-500"></span>
+                                <span>Kelas XI</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-slate-400">
+                                <span class="text-[10px] font-semibold bg-white px-1.5 py-0.5 rounded-md border border-slate-200/60 text-slate-600">{{ $classesXI->count() }} Kelas</span>
+                                <svg id="chevron-grade-XI" class="w-3.5 h-3.5 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </button>
+                        <div id="section-grade-XI" class="uts-accordion-wrapper">
+                            <div class="uts-accordion-content">
+                                <div class="p-1.5 bg-white space-y-1 border-t border-slate-100">
+                                    <button type="button" 
+                                            onclick="setUtsClassFilter('XI', '', 'Semua Kelas XI')" 
+                                            class="uts-class-item w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-sky-700 hover:bg-sky-50 transition-all">
+                                        <svg class="w-3 h-3 text-sky-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                                        <span>Semua Tingkat XI</span>
+                                    </button>
+                                    @foreach($classesXI as $cls)
+                                        <button type="button" 
+                                                onclick="setUtsClassFilter('XI', '{{ strtolower($cls->name) }}', '{{ $cls->name }}')" 
+                                                class="uts-class-item w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span>
+                                            <span>{{ $cls->name }}</span>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Accordion Tingkat Kelas XII -->
+                    <div class="uts-grade-accordion rounded-xl border border-slate-200/80 overflow-hidden">
+                        <button type="button" 
+                                onclick="toggleUtsGradeSection('XII')" 
+                                class="w-full flex items-center justify-between px-3 py-2 bg-slate-50/80 hover:bg-slate-100 text-xs font-bold text-slate-800 transition-colors">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                <span>Kelas XII</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-slate-400">
+                                <span class="text-[10px] font-semibold bg-white px-1.5 py-0.5 rounded-md border border-slate-200/60 text-slate-600">{{ $classesXII->count() }} Kelas</span>
+                                <svg id="chevron-grade-XII" class="w-3.5 h-3.5 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </button>
+                        <div id="section-grade-XII" class="uts-accordion-wrapper">
+                            <div class="uts-accordion-content">
+                                <div class="p-1.5 bg-white space-y-1 border-t border-slate-100">
+                                    <button type="button" 
+                                            onclick="setUtsClassFilter('XII', '', 'Semua Kelas XII')" 
+                                            class="uts-class-item w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-amber-700 hover:bg-amber-50 transition-all">
+                                        <svg class="w-3 h-3 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                                        <span>Semua Tingkat XII</span>
+                                    </button>
+                                    @foreach($classesXII as $cls)
+                                        <button type="button" 
+                                                onclick="setUtsClassFilter('XII', '{{ strtolower($cls->name) }}', '{{ $cls->name }}')" 
+                                                class="uts-class-item w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span>
+                                            <span>{{ $cls->name }}</span>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    @if($classesOther->isNotEmpty())
+                    <!-- Accordion Kelas Lainnya / Umum -->
+                    <div class="uts-grade-accordion rounded-xl border border-slate-200/80 overflow-hidden">
+                        <button type="button" 
+                                onclick="toggleUtsGradeSection('UMUM')" 
+                                class="w-full flex items-center justify-between px-3 py-2 bg-slate-50/80 hover:bg-slate-100 text-xs font-bold text-slate-800 transition-colors">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                                <span>Lainnya / Umum</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-slate-400">
+                                <span class="text-[10px] font-semibold bg-white px-1.5 py-0.5 rounded-md border border-slate-200/60 text-slate-600">{{ $classesOther->count() }} Kelas</span>
+                                <svg id="chevron-grade-UMUM" class="w-3.5 h-3.5 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </div>
+                        </button>
+                        <div id="section-grade-UMUM" class="uts-accordion-wrapper">
+                            <div class="uts-accordion-content">
+                                <div class="p-1.5 bg-white space-y-1 border-t border-slate-100">
+                                    @foreach($classesOther as $cls)
+                                        <button type="button" 
+                                                onclick="setUtsClassFilter('UMUM', '{{ strtolower($cls->name) }}', '{{ $cls->name }}')" 
+                                                class="uts-class-item w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></span>
+                                            <span>{{ $cls->name }}</span>
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+                </div>
+            </div>
         </div>
     </div>
 
@@ -604,16 +940,7 @@
     <div class="space-y-4" id="utsTeacherAccordionList">
         @forelse($utsTeacherGroups as $tIdx => $t)
         @php
-            $totalX = $t->grades['X']->exams->count();
-            $totalXI = $t->grades['XI']->exams->count();
-            $totalXII = $t->grades['XII']->exams->count();
-            $totalUmum = $t->grades['UMUM']->exams->count();
-            
-            $defaultActiveGrade = 'X';
-            if ($totalX > 0) $defaultActiveGrade = 'X';
-            elseif ($totalXI > 0) $defaultActiveGrade = 'XI';
-            elseif ($totalXII > 0) $defaultActiveGrade = 'XII';
-            elseif ($totalUmum > 0) $defaultActiveGrade = 'UMUM';
+            $teacherExams = collect($t->grades)->flatMap(fn($g) => $g->exams)->unique('group_id');
         @endphp
 
         <!-- Card Guru UTS -->
@@ -635,9 +962,6 @@
                                 {{ $t->name }}
                             </h4>
                             @if($t->is_current)
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span> Akun Anda
-                                </span>
                             @elseif($t->role === 'admin')
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                                     Administrator
@@ -663,58 +987,8 @@
                     </div>
                 </div>
 
-                <!-- Right: Bar Pilihan Kelas -->
-                <div class="flex items-center gap-2 sm:gap-2.5 shrink-0">
-                    <div class="inline-flex items-center p-0.5 sm:p-1 bg-slate-100/90 rounded-xl border border-slate-200/80 gap-0.5 shadow-2xs" onclick="event.stopPropagation()">
-                        <!-- Tombol Kelas X -->
-                        <button type="button" 
-                                onclick="selectUtsTeacherGrade('{{ $t->id }}', 'X')"
-                                id="bar-btn-{{ $t->id }}-X"
-                                class="grade-choice-btn-{{ $t->id }} px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold transition-all {{ $defaultActiveGrade === 'X' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-white/80' }}"
-                                title="Kelas X ({{ $totalX }} Ujian)">
-                            <span>X</span>
-                            <span class="ml-0.5 px-1 py-0.2 rounded text-[10px] {{ $defaultActiveGrade === 'X' ? 'bg-white/20 text-white' : ($totalX > 0 ? 'bg-emerald-100 text-emerald-700 font-extrabold' : 'bg-slate-200/60 text-slate-400') }}">
-                                {{ $totalX }}
-                            </span>
-                        </button>
-
-                        <!-- Tombol Kelas XI -->
-                        <button type="button" 
-                                onclick="selectUtsTeacherGrade('{{ $t->id }}', 'XI')"
-                                id="bar-btn-{{ $t->id }}-XI"
-                                class="grade-choice-btn-{{ $t->id }} px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold transition-all {{ $defaultActiveGrade === 'XI' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-white/80' }}"
-                                title="Kelas XI ({{ $totalXI }} Ujian)">
-                            <span>XI</span>
-                            <span class="ml-0.5 px-1 py-0.2 rounded text-[10px] {{ $defaultActiveGrade === 'XI' ? 'bg-white/20 text-white' : ($totalXI > 0 ? 'bg-emerald-100 text-emerald-700 font-extrabold' : 'bg-slate-200/60 text-slate-400') }}">
-                                {{ $totalXI }}
-                            </span>
-                        </button>
-
-                        <!-- Tombol Kelas XII -->
-                        <button type="button" 
-                                onclick="selectUtsTeacherGrade('{{ $t->id }}', 'XII')"
-                                id="bar-btn-{{ $t->id }}-XII"
-                                class="grade-choice-btn-{{ $t->id }} px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold transition-all {{ $defaultActiveGrade === 'XII' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-white/80' }}"
-                                title="Kelas XII ({{ $totalXII }} Ujian)">
-                            <span>XII</span>
-                            <span class="ml-0.5 px-1 py-0.2 rounded text-[10px] {{ $defaultActiveGrade === 'XII' ? 'bg-white/20 text-white' : ($totalXII > 0 ? 'bg-emerald-100 text-emerald-700 font-extrabold' : 'bg-slate-200/60 text-slate-400') }}">
-                                {{ $totalXII }}
-                            </span>
-                        </button>
-
-                        @if($totalUmum > 0)
-                        <button type="button" 
-                                onclick="selectUtsTeacherGrade('{{ $t->id }}', 'UMUM')"
-                                id="bar-btn-{{ $t->id }}-UMUM"
-                                class="grade-choice-btn-{{ $t->id }} px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold transition-all {{ $defaultActiveGrade === 'UMUM' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-white/80' }}">
-                            <span>Umum</span>
-                            <span class="ml-0.5 px-1 py-0.2 rounded text-[10px] {{ $defaultActiveGrade === 'UMUM' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-800 font-extrabold' }}">
-                                {{ $totalUmum }}
-                            </span>
-                        </button>
-                        @endif
-                    </div>
-
+                <!-- Right: Chevron Toggle Button -->
+                <div class="flex items-center gap-2 shrink-0">
                     <button type="button" class="w-8 h-8 rounded-xl border border-slate-200/80 bg-white flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
                         <svg id="chevron-uts-{{ $t->id }}" class="w-4 h-4 transition-transform duration-200 transform {{ ($t->is_current || $tIdx === 0) ? 'rotate-180' : '' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
@@ -724,30 +998,23 @@
             </div>
 
             <!-- Body Guru UTS -->
-            <div id="body-uts-{{ $t->id }}" class="{{ ($t->is_current || $tIdx === 0) ? 'block' : 'hidden' }} border-t border-slate-100 bg-slate-50/50 p-3.5 sm:p-4">
-                @foreach(['X', 'XI', 'XII', 'UMUM'] as $gradeKey)
-                @php
-                    $gradeObj = $t->grades[$gradeKey] ?? null;
-                    $gradeExams = $gradeObj ? $gradeObj->exams : collect();
-                    $isPaneActive = ($gradeKey === $defaultActiveGrade);
-                @endphp
-                
-                <div id="pane-uts-{{ $t->id }}-{{ $gradeKey }}" 
-                     class="grade-pane-uts-{{ $t->id }} {{ $isPaneActive ? 'block' : 'hidden' }} space-y-2.5">
-                    
-                    @if($gradeExams->isEmpty())
-                        <div class="py-8 text-center bg-white rounded-2xl border-2 border-dashed border-slate-200 p-6">
-                            <h5 class="text-xs sm:text-sm font-bold text-slate-700">Belum Ada Ujian untuk Kelas {{ $gradeKey }}</h5>
-                            <p class="text-xs text-slate-400 mt-0.5">Guru ini belum mengunggah jadwal UTS untuk tingkat Kelas {{ $gradeKey }}.</p>
-                            @if(($t->is_current ?? false) || auth()->user()->isAdmin())
-                                <a href="{{ route('admin.exams.create') }}?type=uts" class="inline-flex items-center gap-1.5 px-3 py-1.5 mt-3 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-semibold transition-colors">
-                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                    <span>Buat Ujian Kelas</span>
-                                </a>
-                            @endif
-                        </div>
-                    @else
-                        @foreach($gradeExams as $grp)
+            <div id="body-uts-{{ $t->id }}" class="uts-accordion-wrapper {{ ($t->is_current || $tIdx === 0) ? 'is-open' : '' }} border-t border-slate-100 bg-slate-50/50">
+                <div class="uts-accordion-content">
+                    <div class="p-3.5 sm:p-4">
+                @if($teacherExams->isEmpty())
+                    <div class="py-8 text-center bg-white rounded-2xl border-2 border-dashed border-slate-200 p-6">
+                        <h5 class="text-xs sm:text-sm font-bold text-slate-700">Belum Ada Jadwal UTS</h5>
+                        <p class="text-xs text-slate-400 mt-0.5">Guru ini belum mengunggah jadwal ujian tengah semester.</p>
+                        @if(($t->is_current ?? false) || auth()->user()->isAdmin())
+                            <a href="{{ route('admin.exams.create') }}?type=uts" class="inline-flex items-center gap-1.5 px-3 py-1.5 mt-3 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg text-xs font-semibold transition-colors">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                <span>Buat Jadwal UTS</span>
+                            </a>
+                        @endif
+                    </div>
+                @else
+                    <div class="space-y-2.5">
+                        @foreach($teacherExams as $grp)
                         @php
                             $primary = $grp->primary ?? $grp;
                             $classList = $grp->classes->pluck('name')->implode(', ');
@@ -755,12 +1022,14 @@
                             $isExpired = $grp->is_expired ?? false;
                             $isOngoing = $grp->is_ongoing ?? false;
                             $status = $isOngoing ? 'ongoing' : ($isExpired ? 'finished' : ($grp->has_active ? 'active' : 'inactive'));
+                            $gradesList = implode(',', $grp->detected_grades ?? []);
                         @endphp
 
                         <div class="uts-exam-row bg-white rounded-xl border border-slate-200/90 p-3.5 sm:p-4 hover:border-emerald-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-3"
                              data-exam-title="{{ strtolower($grp->title) }}"
                              data-exam-classes="{{ strtolower($classList ?: 'semua kelas') }}"
-                             data-exam-status="{{ $status }}">
+                             data-exam-status="{{ $status }}"
+                             data-exam-grades="{{ $gradesList }}">
                             
                             <div class="flex items-start gap-3 min-w-0 flex-1">
                                 @if($canManage)
@@ -859,9 +1128,10 @@
                             @endif
                         </div>
                         @endforeach
-                    @endif
+                    </div>
+                @endif
+                    </div>
                 </div>
-                @endforeach
             </div>
         </div>
         @empty
@@ -878,6 +1148,7 @@
         <p class="text-xs text-slate-500 mt-1">Sesuaikan kata kunci pencarian atau status.</p>
     </div>
 </div>
+@endif
 
 <!-- ========================================================================= -->
 <!-- 5. JAVASCRIPT LOGIC (UAS KELAS VS UTS GURU, FILTER, ACCORDION, STORAGE)    -->
@@ -886,81 +1157,107 @@
     let currentUasGrade = '';
     let currentUasClassId = '';
 
-    // 1. Pemilihan Mode Utama (UAS vs UTS)
-    function selectExamCategory(category) {
-        try {
-            localStorage.setItem('admin_exam_category', category);
-        } catch (_) {}
-
-        const cardUas = document.getElementById('cardCategoryUas');
-        const cardUts = document.getElementById('cardCategoryUts');
-        const bUas = document.getElementById('badgeCountUas');
-        const bUts = document.getElementById('badgeCountUts');
-        const checkUas = document.getElementById('checkUas');
-        const checkUts = document.getElementById('checkUts');
-
-        const uasContainer = document.getElementById('uasContainer');
-        const utsContainer = document.getElementById('utsContainer');
-        const statsUasBar = document.getElementById('statsUasBar');
-        const statsUtsBar = document.getElementById('statsUtsBar');
-
-        const activeClasses = 'relative inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-2 sm:py-2.5 rounded-full text-sm sm:text-[15px] font-bold text-[#0099ff] bg-white shadow-[0_2px_10px_rgba(0,153,255,0.16)] transition-all duration-200 cursor-pointer select-none';
-        const inactiveClasses = 'relative inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-2 sm:py-2.5 rounded-full text-sm sm:text-[15px] font-medium text-slate-500 hover:text-slate-800 bg-transparent hover:bg-slate-200/40 transition-all duration-200 cursor-pointer select-none';
-
-        const activeBadgeClasses = 'px-2 py-0.5 text-[11px] font-extrabold rounded-full bg-sky-50 text-[#0099ff] border border-sky-200/60 shadow-2xs transition-colors';
-        const inactiveBadgeClasses = 'px-2 py-0.5 text-[11px] font-semibold rounded-full bg-slate-200/70 text-slate-600 transition-colors';
-
-        if (category === 'uas') {
-            if (cardUas) {
-                cardUas.className = activeClasses;
-                cardUas.setAttribute('aria-selected', 'true');
-            }
-            if (cardUts) {
-                cardUts.className = inactiveClasses;
-                cardUts.setAttribute('aria-selected', 'false');
-            }
-            if (bUas) bUas.className = activeBadgeClasses;
-            if (bUts) bUts.className = inactiveBadgeClasses;
-
-            // Tampilkan Konten UAS, Sembunyikan UTS
-            if (uasContainer) uasContainer.classList.remove('hidden');
-            if (utsContainer) utsContainer.classList.add('hidden');
-            if (statsUasBar) statsUasBar.classList.remove('hidden');
-            if (statsUtsBar) statsUtsBar.classList.add('hidden');
-
-            runUasFilter();
+    // Helper Flyout Dropdown
+    function setDropdownFlyout(menuId, open) {
+        const menu = document.getElementById(menuId);
+        if (!menu) return;
+        if (open) {
+            menu.classList.remove('dropdown-flyout-closed');
+            menu.classList.add('dropdown-flyout-open');
         } else {
-            if (cardUts) {
-                cardUts.className = activeClasses;
-                cardUts.setAttribute('aria-selected', 'true');
-            }
-            if (cardUas) {
-                cardUas.className = inactiveClasses;
-                cardUas.setAttribute('aria-selected', 'false');
-            }
-            if (bUts) bUts.className = activeBadgeClasses;
-            if (bUas) bUas.className = inactiveBadgeClasses;
-
-            // Tampilkan Konten UTS, Sembunyikan UAS
-            if (uasContainer) uasContainer.classList.add('hidden');
-            if (utsContainer) utsContainer.classList.remove('hidden');
-            if (statsUasBar) statsUasBar.classList.add('hidden');
-            if (statsUtsBar) statsUtsBar.classList.remove('hidden');
-
-            runUtsFilter();
+            menu.classList.remove('dropdown-flyout-open');
+            menu.classList.add('dropdown-flyout-closed');
         }
     }
 
-    // 2. Filter Tingkat di Mode UAS (Dropdown: Semua Kelas, Kelas X, Kelas XI, Kelas XII)
-    function filterUasGrade(grade) {
-        currentUasGrade = grade || '';
+    function isDropdownFlyoutOpen(menuId) {
+        const menu = document.getElementById(menuId);
+        return menu ? menu.classList.contains('dropdown-flyout-open') : false;
+    }
 
-        const selectEl = document.getElementById('filterUasGrade');
-        if (selectEl && selectEl.value !== currentUasGrade) {
-            selectEl.value = currentUasGrade;
+    // 1. Dropdown Filter Status di Mode UAS
+    function toggleUasStatusFilterMenu(forceClose) {
+        const chev = document.getElementById('uasStatusFilterChevron');
+        const btn = document.getElementById('uasStatusFilterBtn');
+
+        const shouldOpen = forceClose === undefined ? !isDropdownFlyoutOpen('uasStatusFilterMenu') : !forceClose;
+        if (shouldOpen) {
+            toggleUasGradeFilterMenu(true);
+            setDropdownFlyout('uasStatusFilterMenu', true);
+            if (chev) chev.classList.add('rotate-180');
+            if (btn) btn.setAttribute('aria-expanded', 'true');
+        } else {
+            setDropdownFlyout('uasStatusFilterMenu', false);
+            if (chev) chev.classList.remove('rotate-180');
+            if (btn) btn.setAttribute('aria-expanded', 'false');
         }
+    }
 
+    function setUasStatusFilter(val, label) {
+        const input = document.getElementById('filterUasStatus');
+        const labelEl = document.getElementById('uasStatusFilterLabel');
+        const btnEl = document.getElementById('uasStatusFilterBtn');
+        if (input) input.value = val;
+        if (labelEl) labelEl.textContent = label || 'Semua Status';
+        if (btnEl) {
+            if (val) {
+                btnEl.className = 'appearance-none min-w-[140px] pl-3 pr-8 py-2 bg-indigo-50 text-indigo-700 rounded-xl border border-indigo-200 text-xs font-bold transition-all shadow-2xs cursor-pointer select-none relative text-left';
+            } else {
+                btnEl.className = 'appearance-none min-w-[140px] pl-3 pr-8 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200/80 text-xs font-semibold transition-all shadow-xs cursor-pointer select-none relative text-left';
+            }
+        }
+        toggleUasStatusFilterMenu(true);
         runUasFilter();
+    }
+
+    // 2. Dropdown Filter Tingkat di Mode UAS
+    function toggleUasGradeFilterMenu(forceClose) {
+        const chev = document.getElementById('uasGradeFilterChevron');
+        const btn = document.getElementById('uasGradeFilterBtn');
+
+        const shouldOpen = forceClose === undefined ? !isDropdownFlyoutOpen('uasGradeFilterMenu') : !forceClose;
+        if (shouldOpen) {
+            toggleUasStatusFilterMenu(true);
+            setDropdownFlyout('uasGradeFilterMenu', true);
+            if (chev) chev.classList.add('rotate-180');
+            if (btn) btn.setAttribute('aria-expanded', 'true');
+        } else {
+            setDropdownFlyout('uasGradeFilterMenu', false);
+            if (chev) chev.classList.remove('rotate-180');
+            if (btn) btn.setAttribute('aria-expanded', 'false');
+        }
+    }
+
+    function setUasGradeFilter(grade, label) {
+        currentUasGrade = grade || '';
+        const input = document.getElementById('filterUasGrade');
+        const labelEl = document.getElementById('uasGradeFilterLabel');
+        const btnEl = document.getElementById('uasGradeFilterBtn');
+        const chev = document.getElementById('uasGradeFilterChevron');
+        if (input) input.value = currentUasGrade;
+        if (labelEl) labelEl.textContent = label || 'Semua Kelas';
+        if (btnEl) {
+            if (currentUasGrade === 'X') {
+                btnEl.className = 'appearance-none min-w-[140px] pl-3 pr-8 py-2 bg-red-50 text-red-700 rounded-xl border border-red-200 text-xs font-bold transition-all shadow-2xs cursor-pointer select-none relative text-left';
+                if (chev) chev.className = 'w-3.5 h-3.5 text-red-500 transition-transform duration-200';
+            } else if (currentUasGrade === 'XI') {
+                btnEl.className = 'appearance-none min-w-[140px] pl-3 pr-8 py-2 bg-blue-50 text-blue-700 rounded-xl border border-blue-200 text-xs font-bold transition-all shadow-2xs cursor-pointer select-none relative text-left';
+                if (chev) chev.className = 'w-3.5 h-3.5 text-blue-500 transition-transform duration-200';
+            } else if (currentUasGrade === 'XII') {
+                btnEl.className = 'appearance-none min-w-[140px] pl-3 pr-8 py-2 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200 text-xs font-bold transition-all shadow-2xs cursor-pointer select-none relative text-left';
+                if (chev) chev.className = 'w-3.5 h-3.5 text-emerald-500 transition-transform duration-200';
+            } else {
+                btnEl.className = 'appearance-none min-w-[140px] pl-3 pr-8 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200/80 text-xs font-semibold transition-all shadow-xs cursor-pointer select-none relative text-left';
+                if (chev) chev.className = 'w-3.5 h-3.5 text-slate-400 transition-transform duration-200';
+            }
+        }
+        toggleUasGradeFilterMenu(false);
+        runUasFilter();
+    }
+
+    function filterUasGrade(grade) {
+        const labels = { '': 'Semua Kelas', 'X': 'Kelas X', 'XI': 'Kelas XI', 'XII': 'Kelas XII' };
+        setUasGradeFilter(grade, labels[grade] || 'Semua Kelas');
     }
 
     // 3. Filter Pill Ruang Kelas Tertentu di Mode UAS
@@ -1022,7 +1319,110 @@
         }
     }
 
-    // 5. Runner Filter UTS (Live Search + Status)
+    // 5. Runner Filter UTS (Live Search + Status + Tingkat / Ruang Kelas)
+    let currentUtsTargetGrade = '';
+    let currentUtsTargetClass = '';
+
+    // Dropdown Filter Status di Mode UTS
+    function toggleUtsStatusFilterMenu(forceClose) {
+        const chev = document.getElementById('utsStatusFilterChevron');
+        const btn = document.getElementById('utsStatusFilterBtn');
+
+        const shouldOpen = forceClose === undefined ? !isDropdownFlyoutOpen('utsStatusFilterMenu') : !forceClose;
+        if (shouldOpen) {
+            toggleUtsClassFilterMenu(true);
+            setDropdownFlyout('utsStatusFilterMenu', true);
+            if (chev) chev.classList.add('rotate-180');
+            if (btn) btn.setAttribute('aria-expanded', 'true');
+        } else {
+            setDropdownFlyout('utsStatusFilterMenu', false);
+            if (chev) chev.classList.remove('rotate-180');
+            if (btn) btn.setAttribute('aria-expanded', 'false');
+        }
+    }
+
+    function setUtsStatusFilter(val, label) {
+        const input = document.getElementById('filterUtsStatus');
+        const labelEl = document.getElementById('utsStatusFilterLabel');
+        const btnEl = document.getElementById('utsStatusFilterBtn');
+        if (input) input.value = val;
+        if (labelEl) labelEl.textContent = label || 'Semua Status';
+        if (btnEl) {
+            if (val) {
+                btnEl.className = 'appearance-none min-w-[140px] pl-3 pr-8 py-2 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200 text-xs font-bold transition-all shadow-2xs cursor-pointer select-none relative text-left';
+            } else {
+                btnEl.className = 'appearance-none min-w-[140px] pl-3 pr-8 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200/80 text-xs font-semibold transition-all shadow-xs cursor-pointer select-none relative text-left';
+            }
+        }
+        toggleUtsStatusFilterMenu(true);
+        runUtsFilter();
+    }
+
+    function toggleUtsClassFilterMenu(forceClose) {
+        const chev = document.getElementById('utsClassFilterChevron');
+        const btn = document.getElementById('utsClassFilterBtn');
+
+        const shouldOpen = forceClose === undefined ? !isDropdownFlyoutOpen('utsClassFilterMenu') : !forceClose;
+        if (shouldOpen) {
+            toggleUtsStatusFilterMenu(true);
+            setDropdownFlyout('utsClassFilterMenu', true);
+            if (chev) chev.classList.add('rotate-180');
+            if (btn) btn.setAttribute('aria-expanded', 'true');
+        } else {
+            setDropdownFlyout('utsClassFilterMenu', false);
+            if (chev) chev.classList.remove('rotate-180');
+            if (btn) btn.setAttribute('aria-expanded', 'false');
+        }
+    }
+
+    function toggleUtsGradeSection(grade) {
+        const sec = document.getElementById('section-grade-' + grade);
+        const chev = document.getElementById('chevron-grade-' + grade);
+        if (!sec) return;
+
+        const isOpen = sec.classList.contains('is-open');
+        if (isOpen) {
+            sec.classList.remove('is-open');
+            if (chev) chev.classList.remove('rotate-180');
+        } else {
+            // Smoothly collapse sibling sections so only the active grade expands
+            ['X', 'XI', 'XII', 'UMUM'].forEach(g => {
+                if (g !== grade) {
+                    const siblingSec = document.getElementById('section-grade-' + g);
+                    const siblingChev = document.getElementById('chevron-grade-' + g);
+                    if (siblingSec && siblingSec.classList.contains('is-open')) {
+                        siblingSec.classList.remove('is-open');
+                        if (siblingChev) siblingChev.classList.remove('rotate-180');
+                    }
+                }
+            });
+            sec.classList.add('is-open');
+            if (chev) chev.classList.add('rotate-180');
+        }
+    }
+
+    function setUtsClassFilter(grade, className, label) {
+        currentUtsTargetGrade = grade || '';
+        currentUtsTargetClass = (className || '').toLowerCase().trim();
+
+        const labelEl = document.getElementById('utsClassFilterLabel');
+        const btnEl = document.getElementById('utsClassFilterBtn');
+        if (labelEl) {
+            labelEl.textContent = label || 'Pilih Kelas';
+        }
+
+        if (btnEl) {
+            if (currentUtsTargetGrade || currentUtsTargetClass) {
+                btnEl.className = 'appearance-none min-w-[140px] pl-3 pr-8 py-2 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200 text-xs font-bold transition-all shadow-2xs cursor-pointer select-none relative text-left';
+            } else {
+                btnEl.className = 'appearance-none min-w-[140px] pl-3 pr-8 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200/80 text-xs font-semibold transition-all shadow-xs cursor-pointer select-none relative text-left';
+            }
+        }
+
+        toggleUtsClassFilterMenu(true);
+        runUtsFilter();
+    }
+
     function runUtsFilter() {
         const query = (document.getElementById('searchUtsInput')?.value || '').toLowerCase().trim();
         const statusVal = (document.getElementById('filterUtsStatus')?.value || '').toLowerCase().trim();
@@ -1038,11 +1438,14 @@
                 const title = row.getAttribute('data-exam-title') || '';
                 const classes = row.getAttribute('data-exam-classes') || '';
                 const status = row.getAttribute('data-exam-status') || '';
+                const rowGrades = (row.getAttribute('data-exam-grades') || row.getAttribute('data-exam-grade') || '').split(',');
 
                 const matchesQuery = !query || title.includes(query) || classes.includes(query) || teacherName.includes(query);
                 const matchesStatus = !statusVal || status === statusVal;
+                const matchesGrade = !currentUtsTargetGrade || rowGrades.includes(currentUtsTargetGrade);
+                const matchesClass = !currentUtsTargetClass || classes.includes(currentUtsTargetClass);
 
-                if (matchesQuery && matchesStatus) {
+                if (matchesQuery && matchesStatus && matchesGrade && matchesClass) {
                     row.classList.remove('hidden');
                     visibleExamsInTeacher++;
                 } else {
@@ -1050,15 +1453,17 @@
                 }
             });
 
-            if (matchesTeacher || visibleExamsInTeacher > 0) {
+            if ((matchesTeacher && !currentUtsTargetClass && !currentUtsTargetGrade) || visibleExamsInTeacher > 0) {
                 block.classList.remove('hidden');
                 totalVisibleTeachers++;
 
-                if (query.length > 1) {
+                if (currentUtsTargetGrade || currentUtsTargetClass || query.length > 1) {
                     const bodyEl = document.getElementById('body-uts-' + teacherId);
                     const chevronEl = document.getElementById('chevron-uts-' + teacherId);
-                    if (bodyEl) bodyEl.classList.remove('hidden');
-                    if (chevronEl) chevronEl.classList.add('rotate-180');
+                    if (bodyEl && !bodyEl.classList.contains('is-open')) {
+                        bodyEl.classList.add('is-open');
+                        if (chevronEl) chevronEl.classList.add('rotate-180');
+                    }
                 }
             } else {
                 block.classList.add('hidden');
@@ -1077,47 +1482,10 @@
         const chevronEl = document.getElementById('chevron-uts-' + teacherId);
         if (!bodyEl) return;
 
-        if (bodyEl.classList.contains('hidden')) {
-            bodyEl.classList.remove('hidden');
-            if (chevronEl) chevronEl.classList.add('rotate-180');
-        } else {
-            bodyEl.classList.add('hidden');
-            if (chevronEl) chevronEl.classList.remove('rotate-180');
+        const isOpen = bodyEl.classList.toggle('is-open');
+        if (chevronEl) {
+            chevronEl.classList.toggle('rotate-180', isOpen);
         }
-    }
-
-    function selectUtsTeacherGrade(teacherId, targetGrade) {
-        const bodyEl = document.getElementById('body-uts-' + teacherId);
-        const chevronEl = document.getElementById('chevron-uts-' + teacherId);
-        if (bodyEl && bodyEl.classList.contains('hidden')) {
-            bodyEl.classList.remove('hidden');
-            if (chevronEl) chevronEl.classList.add('rotate-180');
-        }
-
-        const grades = ['X', 'XI', 'XII', 'UMUM'];
-        grades.forEach(g => {
-            const btn = document.getElementById('bar-btn-' + teacherId + '-' + g);
-            const pane = document.getElementById('pane-uts-' + teacherId + '-' + g);
-
-            if (pane) {
-                pane.classList.toggle('hidden', g !== targetGrade);
-                pane.classList.toggle('block', g === targetGrade);
-            }
-
-            if (btn) {
-                const countBadge = btn.querySelector('span:last-child');
-                if (g === targetGrade) {
-                    btn.className = `grade-choice-btn-${teacherId} px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold transition-all bg-emerald-600 text-white shadow-xs`;
-                    if (countBadge) countBadge.className = 'ml-0.5 px-1 py-0.2 rounded text-[10px] bg-white/20 text-white';
-                } else {
-                    btn.className = `grade-choice-btn-${teacherId} px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900 hover:bg-white/80`;
-                    if (countBadge) {
-                        const cnt = parseInt(countBadge.textContent.trim()) || 0;
-                        countBadge.className = `ml-0.5 px-1 py-0.2 rounded text-[10px] ${cnt > 0 ? 'bg-emerald-100 text-emerald-700 font-extrabold' : 'bg-slate-200/60 text-slate-400'}`;
-                    }
-                }
-            }
-        });
     }
 
     // 7. Inisialisasi saat DOM Ready
@@ -1135,23 +1503,22 @@
         if (sUts) sUts.addEventListener('input', runUtsFilter);
         if (fUtsStatus) fUtsStatus.addEventListener('change', runUtsFilter);
 
-        // Expand / Collapse UTS Teachers
-        const expandBtn = document.getElementById('expandAllUtsTeachers');
-        const expandText = document.getElementById('expandAllUtsText');
-        let isUtsAllExpanded = false;
-        if (expandBtn) {
-            expandBtn.addEventListener('click', function() {
-                isUtsAllExpanded = !isUtsAllExpanded;
-                document.querySelectorAll('.uts-teacher-block').forEach(b => {
-                    const tId = b.getAttribute('data-teacher-id');
-                    const body = document.getElementById('body-uts-' + tId);
-                    const chev = document.getElementById('chevron-uts-' + tId);
-                    if (body) body.classList.toggle('hidden', !isUtsAllExpanded);
-                    if (chev) chev.classList.toggle('rotate-180', isUtsAllExpanded);
-                });
-                if (expandText) expandText.textContent = isUtsAllExpanded ? 'Tutup Semua Guru' : 'Buka Semua Guru';
+        // Close all dropdown menus if clicked outside
+        document.addEventListener('click', function(e) {
+            const dropdowns = [
+                { container: 'utsClassFilterDropdown', close: () => toggleUtsClassFilterMenu(true) },
+                { container: 'utsStatusFilterDropdown', close: () => toggleUtsStatusFilterMenu(true) },
+                { container: 'uasStatusFilterDropdown', close: () => toggleUasStatusFilterMenu(true) },
+                { container: 'uasGradeFilterDropdown', close: () => toggleUasGradeFilterMenu(true) }
+            ];
+
+            dropdowns.forEach(d => {
+                const containerEl = document.getElementById(d.container);
+                if (containerEl && !containerEl.contains(e.target)) {
+                    d.close();
+                }
             });
-        }
+        });
 
         // Bulk Delete Selection Handler
         const bulkBar = document.getElementById('bulkBar');
@@ -1199,17 +1566,13 @@
             });
         }
 
-        // Setup Category Switcher Listeners
-        const cUas = document.getElementById('cardCategoryUas');
-        const cUts = document.getElementById('cardCategoryUts');
-        if (cUas) cUas.addEventListener('click', () => selectExamCategory('uas'));
-        if (cUts) cUts.addEventListener('click', () => selectExamCategory('uts'));
 
-        // Restore Mode Pilihan (Default: 'uas')
-        const urlParams = new URLSearchParams(window.location.search);
-        const modeFromUrl = urlParams.get('mode') || urlParams.get('category');
-        const savedMode = modeFromUrl || localStorage.getItem('admin_exam_category') || 'uas';
-        selectExamCategory(savedMode);
+
+        @if($isUts)
+        runUtsFilter();
+        @else
+        runUasFilter();
+        @endif
     });
 
     // 8. File Upload Preview Handlers

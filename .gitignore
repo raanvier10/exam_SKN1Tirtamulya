@@ -7,13 +7,18 @@
 Thumbs.db
 *.log
 
-# Mobile build artifacts
+# Mobile build artifacts & signing secrets
 **/build/
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
+**/*.jks
+**/*.keystore
+**/key.properties
 
-# Tools
+# Database & Tools
+*.sqlite
+*.sqlite3
 cloudflared.exe
 
 # Backend

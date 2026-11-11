@@ -29,6 +29,21 @@
             from { opacity: 0; }
             to { opacity: 1; }
         }
+
+        /* Smooth Accordion in Sidebar */
+        .accordion-menu {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease-out;
+            opacity: 0;
+        }
+        .accordion-menu.expanded {
+            grid-template-rows: 1fr;
+            opacity: 1;
+        }
+        .accordion-menu-inner {
+            overflow: hidden;
+        }
     </style>
 </head>
 <body class="antialiased min-h-screen flex selection:bg-indigo-500 selection:text-white bg-slate-50">
@@ -54,7 +69,7 @@
             </button>
         </div>
         
-        <nav class="flex-1 px-3 py-6 space-y-1.5 overflow-y-auto">
+        <nav class="flex-1 px-3 py-6 space-y-1.5 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <a href="{{ route('admin.dashboard') }}" 
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.dashboard') ? 'bg-indigo-50 text-indigo-600 font-semibold shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}">
                 <svg class="w-5 h-5 {{ request()->routeIs('admin.dashboard') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -91,13 +106,58 @@
             </a>
             @endif
 
-            <a href="{{ route('admin.exams.index') }}" 
-               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.exams.*') ? 'bg-indigo-50 text-indigo-600 font-semibold shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}">
-                <svg class="w-5 h-5 {{ request()->routeIs('admin.exams.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                </svg>
-                Manajemen Ujian
-            </a>
+            <!-- Accordion Menu: Manajemen Ujian -->
+            <div class="space-y-1">
+                <button type="button" 
+                        id="examMenuTrigger"
+                        onclick="toggleExamAccordion()" 
+                        class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group {{ request()->routeIs('admin.exams.*') ? 'bg-indigo-50 text-indigo-600 font-semibold shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}"
+                        aria-expanded="{{ request()->routeIs('admin.exams.*') ? 'true' : 'false' }}">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5 {{ request()->routeIs('admin.exams.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                        <span>Manajemen Ujian</span>
+                    </div>
+                    <svg id="examMenuChevron" class="w-4 h-4 transition-transform duration-200 {{ request()->routeIs('admin.exams.*') ? 'rotate-180 text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+
+                <!-- Submenu Items (UTS & UAS) -->
+                <div id="examSubmenu" class="accordion-menu {{ request()->routeIs('admin.exams.*') ? 'expanded' : '' }} pl-4 pr-1">
+                    <div class="accordion-menu-inner space-y-1">
+                        <div class="pl-3 border-l-2 border-slate-200/80 space-y-1 py-1">
+                            @php
+                                $userIsTeacher = auth()->user()?->isTeacher();
+                                $defaultSubmenuMode = $userIsTeacher ? 'uts' : 'uas';
+                                $currentSubmenuMode = request('mode', request('category', $defaultSubmenuMode));
+                                $isUtsActive = request()->routeIs('admin.exams.index') && ($currentSubmenuMode === 'uts');
+                                $isUasActive = request()->routeIs('admin.exams.index') && ($currentSubmenuMode === 'uas');
+                            @endphp
+                            <!-- UTS Submenu -->
+                            <a href="{{ route('admin.exams.index', ['mode' => 'uts']) }}" 
+                               id="sidebarExamUts"
+                               class="sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 {{ $isUtsActive ? 'bg-indigo-50 text-indigo-700 font-bold shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}">
+                                <svg class="w-3.5 h-3.5 shrink-0 {{ $isUtsActive ? 'text-indigo-600' : 'text-slate-400' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                </svg>
+                                <span>UTS</span>
+                            </a>
+
+                            <!-- UAS Submenu -->
+                            <a href="{{ route('admin.exams.index', ['mode' => 'uas']) }}" 
+                               id="sidebarExamUas"
+                               class="sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 {{ $isUasActive ? 'bg-indigo-50 text-indigo-700 font-bold shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}">
+                                <svg class="w-3.5 h-3.5 shrink-0 {{ $isUasActive ? 'text-indigo-600' : 'text-slate-400' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                </svg>
+                                <span>UAS</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <a href="{{ route('admin.change-password') }}" 
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.change-password*') ? 'bg-indigo-50 text-indigo-600 font-semibold shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}">
@@ -183,13 +243,27 @@
             if (open) {
                 sidebar.classList.remove('-translate-x-full');
                 backdrop.classList.remove('hidden');
-                document.body.classList.add('overflow-hidden', 'lg:overflow-auto');
             } else {
                 sidebar.classList.add('-translate-x-full');
                 backdrop.classList.add('hidden');
-                document.body.classList.remove('overflow-hidden', 'lg:overflow-auto');
             }
         }
+
+        function toggleExamAccordion() {
+            const submenu = document.getElementById('examSubmenu');
+            const chevron = document.getElementById('examMenuChevron');
+            const trigger = document.getElementById('examMenuTrigger');
+            if (!submenu) return;
+
+            const isExpanded = submenu.classList.toggle('expanded');
+            if (chevron) {
+                chevron.classList.toggle('rotate-180', isExpanded);
+            }
+            if (trigger) {
+                trigger.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+            }
+        }
+
 
         // Close on Escape key
         document.addEventListener('keydown', function(e) {

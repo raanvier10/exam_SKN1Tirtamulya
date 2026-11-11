@@ -822,7 +822,6 @@
                 </div>
                 <!-- Jam & Aksi di Sisi Kanan -->
                 <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-semibold border border-indigo-100 schedule-preview shadow-2xs">—</span>
                     <button type="button" onclick="removeScheduleSlot(this)" class="remove-slot-btn inline-flex items-center gap-1.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2.5 py-1 rounded-lg transition-colors font-semibold ${num === 1 ? 'hidden' : ''}">
                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                         <span>Hapus Sesi</span>
@@ -861,9 +860,7 @@
                             <span class="text-xs font-bold text-slate-800">Durasi Sesi</span>
                             <span class="text-[10px] font-medium text-slate-400 bg-white px-1.5 py-0.2 rounded border border-slate-200/70">Opsional</span>
                         </div>
-                        <div class="slot-dur-status text-xs text-slate-500 mt-0.5 font-medium">
-                            Sesuai default (<span class="slot-default-hint">${globalDurationVal}m / ${formatJP(globalDurationVal)}</span>)
-                        </div>
+                       
                     </div>
                 </div>
 
@@ -883,13 +880,7 @@
                 </div>
             </div>
 
-            <!-- Baris 3: Target Kelas untuk Sesi Ini -->
-            <div class="pt-1 space-y-2.5">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <label class="text-xs font-bold text-slate-800 uppercase tracking-wider">Target Kelas Sesi Ini <span class="text-rose-500">*</span></label>
-                        <span class="slot-class-count text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200">Wajib Pilih Kelas</span>
-                    </div>
+         
 
                     <!-- Filter Tingkat & Search Box -->
                     <div class="flex items-center gap-1.5 flex-wrap">
@@ -988,15 +979,7 @@
             }
         });
 
-        if (countBadge) {
-            if (checked.length > 0) {
-                countBadge.className = 'slot-class-count text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200';
-                countBadge.textContent = `${checked.length} Kelas Dipilih`;
-            } else {
-                countBadge.className = 'slot-class-count text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200';
-                countBadge.textContent = `Wajib Pilih Kelas`;
-            }
-        }
+     
 
         if (toggleBtn) {
             const allVisibleChecked = visibleBoxes.length > 0 && visibleBoxes.every(cb => cb.checked);
@@ -1106,20 +1089,12 @@
             const dateInput = slot.querySelector('.schedule-date');
             const timeInput = slot.querySelector('.schedule-time');
             const durationInput = slot.querySelector('.schedule-duration');
-            const previewEl = slot.querySelector('.schedule-preview');
 
             const customDur = durationInput && durationInput.value ? parseInt(durationInput.value) : null;
             const effectiveDur = (customDur && customDur > 0) ? customDur : durationVal;
             const durStatusEl = slot.querySelector('.slot-dur-status');
 
-            if (durStatusEl) {
-                if (customDur && customDur > 0) {
-                    durStatusEl.innerHTML = `<span class="text-amber-700 font-bold inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Khusus sesi ini: ${customDur}m (${formatJP(customDur)})</span>`;
-                } else {
-                    durStatusEl.innerHTML = `Sesuai default (<span class="slot-default-hint">${durationVal}m / ${formatJP(durationVal)}</span>)`;
-                }
-            }
-
+           
             // Update status tombol preset durasi sesi
             const durButtons = slot.querySelectorAll('.slot-dur-btn');
             durButtons.forEach(b => {
@@ -1140,25 +1115,6 @@
             const defaultHint = slot.querySelector('.slot-default-hint');
             if (defaultHint) {
                 defaultHint.textContent = `${durationVal}m / ${formatJP(durationVal)}`;
-            }
-
-            if (!dateInput.value || !timeInput.value) {
-                if (previewEl) previewEl.textContent = '—';
-                return;
-            }
-
-            const startDT = new Date(`${dateInput.value}T${timeInput.value}`);
-            const endDT = new Date(startDT.getTime() + effectiveDur * 60000);
-
-            const sH = String(startDT.getHours()).padStart(2, '0');
-            const sM = String(startDT.getMinutes()).padStart(2, '0');
-            const eH = String(endDT.getHours()).padStart(2, '0');
-            const eM = String(endDT.getMinutes()).padStart(2, '0');
-
-            if (previewEl) {
-                previewEl.textContent = customDur 
-                    ? `${sH}:${sM}–${eH}:${eM} WIB (${customDur}m kustom)`
-                    : `${sH}:${sM}–${eH}:${eM} WIB (${effectiveDur}m)`;
             }
         });
     }

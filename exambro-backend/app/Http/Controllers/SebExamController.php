@@ -15,13 +15,6 @@ use Illuminate\Support\Str;
 class SebExamController extends Controller
 {
     /**
-     * Titik koordinat sekolah & batas radius (meter)
-     */
-    public const SCHOOL_LAT = -6.3400545;
-    public const SCHOOL_LNG = 107.4686982;
-    public const MAX_RADIUS = 450;
-
-    /**
      * Cek apakah request berasal dari Safe Exam Browser
      */
     public static function isSeb(Request $request): bool
@@ -104,6 +97,14 @@ class SebExamController extends Controller
 
         // 1. Jika BUKAN dibuka dari Safe Exam Browser, tampilkan halaman panduan & link peluncur sebs://
         if (!self::isSeb($request)) {
+            if ($exam->status !== 'active') {
+                return view('seb.error', [
+                    'exam' => $exam,
+                    'title' => 'Ujian Tidak Aktif',
+                    'message' => 'Ujian ini sedang nonaktif atau belum diterbitkan oleh pihak sekolah.',
+                ]);
+            }
+
             $currentUrl = self::getExamWebUrl($exam);
             $sebSchemeUrl = self::getSebSchemeUrl($exam);
 
@@ -111,6 +112,14 @@ class SebExamController extends Controller
                 'exam' => $exam,
                 'sebSchemeUrl' => $sebSchemeUrl,
                 'currentUrl' => $currentUrl,
+            ]);
+        }
+
+        if ($exam->status !== 'active') {
+            return view('seb.error', [
+                'exam' => $exam,
+                'title' => 'Ujian Tidak Aktif',
+                'message' => 'Ujian ini sedang nonaktif atau belum diterbitkan oleh pihak sekolah.',
             ]);
         }
 
@@ -238,9 +247,17 @@ class SebExamController extends Controller
      */
     public function authenticate(Request $request, Exam $exam)
     {
+        if ($exam->status !== 'active') {
+            return view('seb.error', [
+                'exam' => $exam,
+                'title' => 'Ujian Tidak Aktif',
+                'message' => 'Ujian ini sedang nonaktif atau belum diterbitkan oleh pihak sekolah.',
+            ]);
+        }
+
         $request->validate([
-            'username' => 'required|string',
-            'password' => 'required|string',
+            'username' => 'required|string|max:255',
+            'password' => 'required|string|max:255',
         ], [
             'username.required' => 'NIS / Username wajib diisi.',
             'password.required' => 'Password wajib diisi.',
@@ -259,6 +276,7 @@ class SebExamController extends Controller
         }
 
         Auth::login($user);
+        $request->session()->regenerate();
 
         return redirect()->route('seb.exam.show', $exam);
     }
@@ -301,7 +319,11 @@ class SebExamController extends Controller
      */
     public function downloadConfig(Exam $exam)
     {
-        $examUrl = self::getExamWebUrl($exam);
+        if ($exam->status !== 'active') {
+            abort(404);
+        }
+
+        $examUrl = htmlspecialchars(self::getExamWebUrl($exam), ENT_XML1 | ENT_QUOTES, 'UTF-8');
         \Illuminate\Support\Facades\Log::info('SEB config downloaded', [
             'ip' => request()->ip(),
             'ua' => request()->header('User-Agent'),

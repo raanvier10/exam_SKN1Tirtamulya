@@ -67,7 +67,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'connected' => 'required|boolean',
-            'email' => 'nullable|string',
+            'email' => 'nullable|email|max:255',
         ]);
 
         $user = $request->user();

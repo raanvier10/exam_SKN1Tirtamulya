@@ -1043,7 +1043,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         <div class="flex items-center gap-2 bg-purple-50/70 p-2 rounded-xl border border-purple-200 text-left">
             <span class="text-[11px] font-mono text-purple-900 truncate select-all flex-1 pl-1">{{ $sebSchemeUrl }}</span>
-            <button type="button" onclick="navigator.clipboard.writeText('{{ $sebSchemeUrl }}'); alert('Link SEB berhasil disalin!');" class="px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold shrink-0 transition-colors shadow-2xs">
+            <button type="button" data-copy-url="{{ $sebSchemeUrl }}" onclick="navigator.clipboard.writeText(this.dataset.copyUrl); alert('Link SEB berhasil disalin!');" class="px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold shrink-0 transition-colors shadow-2xs">
                 Salin Link
             </button>
         </div>

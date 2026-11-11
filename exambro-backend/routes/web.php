@@ -49,7 +49,7 @@ Route::get('/download/apk', function () {
     return response()->download($apkPath, 'ExaSatrya_Ujian_SMKN1Tirtamulya.apk', [
         'Content-Type' => 'application/vnd.android.package-archive',
     ]);
-})->name('download.apk');
+})->middleware('throttle:30,1')->name('download.apk');
 
 Route::get('/download', function () {
     return redirect()->route('student.portal');
@@ -58,7 +58,7 @@ Route::get('/download', function () {
 // Portal Ujian Siswa via Safe Exam Browser (SEB) / iOS
 Route::prefix('seb')->name('seb.')->group(function () {
     Route::get('/exam/{exam}', [SebExamController::class, 'show'])->name('exam.show');
-    Route::post('/exam/{exam}/auth', [SebExamController::class, 'authenticate'])->name('exam.auth');
+    Route::post('/exam/{exam}/auth', [SebExamController::class, 'authenticate'])->middleware('throttle:10,1')->name('exam.auth');
     Route::post('/exam/{exam}/finish', [SebExamController::class, 'finish'])->name('exam.finish');
     Route::get('/exam/{exam}/config', [SebExamController::class, 'downloadConfig'])->name('exam.config');
 });
@@ -145,6 +145,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('exams', ExamController::class);
 
         Route::get('/change-password', [AdminAuthController::class, 'showChangePasswordForm'])->name('change-password');
-        Route::put('/change-password', [AdminAuthController::class, 'updatePassword'])->name('change-password.update');
+        Route::put('/change-password', [AdminAuthController::class, 'updatePassword'])->middleware('throttle:5,1')->name('change-password.update');
     });
 });

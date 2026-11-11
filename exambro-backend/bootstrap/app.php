@@ -12,14 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->trustProxies(at: '*');
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
         $middleware->redirectGuestsTo(fn (\Illuminate\Http\Request $request) => $request->expectsJson() ? null : route('admin.login'));
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureUserRole::class,
-        ]);
-        $middleware->validateCsrfTokens(except: [
-            'seb/exam/*/auth',
-            'seb/exam/*/finish',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

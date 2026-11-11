@@ -399,8 +399,8 @@ class ExamController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'type' => 'nullable|in:uas,uts',
-            'description' => 'nullable|string',
-            'google_form_url' => 'required|url',
+            'description' => 'nullable|string|max:2000',
+            'google_form_url' => 'required|url:http,https|max:2048',
             'duration' => 'required|integer|min:1',
             'max_violation' => 'required|integer|min:1',
             'status' => 'required|in:active,inactive',
@@ -619,7 +619,7 @@ class ExamController extends Controller
 
     public function edit(Exam $exam)
     {
-        if (Auth::user()->isTeacher() && $exam->created_by && $exam->created_by !== Auth::id()) {
+        if (Auth::user()->isTeacher() && $exam->created_by !== Auth::id()) {
             return redirect()->route('admin.exams.index')->with('error', 'Anda hanya dapat mengubah jadwal ujian yang Anda buat sendiri.');
         }
 
@@ -630,15 +630,15 @@ class ExamController extends Controller
 
     public function update(Request $request, Exam $exam)
     {
-        if (Auth::user()->isTeacher() && $exam->created_by && $exam->created_by !== Auth::id()) {
+        if (Auth::user()->isTeacher() && $exam->created_by !== Auth::id()) {
             return redirect()->route('admin.exams.index')->with('error', 'Anda hanya dapat mengubah jadwal ujian yang Anda buat sendiri.');
         }
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'type' => 'nullable|in:uas,uts',
-            'description' => 'nullable|string',
-            'google_form_url' => 'required|url',
+            'description' => 'nullable|string|max:2000',
+            'google_form_url' => 'required|url:http,https|max:2048',
             'start_at' => 'required|date',
             'duration' => 'required|integer|min:1',
             'max_violation' => 'required|integer|min:1',
@@ -687,6 +687,14 @@ class ExamController extends Controller
 
     public function exportViolations(Exam $exam)
     {
+        if (Auth::user()->isTeacher()) {
+            $isOwn = $exam->created_by === Auth::id();
+            $isSchoolExam = $exam->created_by === null || ($exam->creator && $exam->creator->isAdmin());
+            if (!$isOwn && !$isSchoolExam) {
+                return redirect()->route('admin.exams.index')->with('error', 'Akses ditolak. Anda tidak memiliki izin untuk mengunduh rekap ujian milik guru lain.');
+            }
+        }
+
         $violations = \App\Models\Violation::where('exam_id', $exam->id)
             ->with(['user.class', 'session'])
             ->latest('id')
@@ -760,7 +768,7 @@ class ExamController extends Controller
         }
 
         $request->validate([
-            'google_form_url' => 'required|url',
+            'google_form_url' => 'required|url:http,https|max:2048',
         ], [
             'google_form_url.required' => 'URL Google Form wajib diisi.',
             'google_form_url.url' => 'Format URL Google Form tidak valid (harus diawali http:// atau https://).',
@@ -775,7 +783,7 @@ class ExamController extends Controller
 
     public function destroy(Exam $exam)
     {
-        if (Auth::user()->isTeacher() && $exam->created_by && $exam->created_by !== Auth::id()) {
+        if (Auth::user()->isTeacher() && $exam->created_by !== Auth::id()) {
             return redirect()->route('admin.exams.index')->with('error', 'Anda hanya dapat menghapus jadwal ujian yang Anda buat sendiri.');
         }
 
@@ -830,20 +838,26 @@ class ExamController extends Controller
 
     public function import(\Illuminate\Http\Request $request)
     {
-        $request->validate(['file' => 'required|file']);
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt,xlsx|max:10240',
+        ]);
         $rows = \App\Helpers\SimpleSpreadsheetReader::read($request->file('file'));
         $count = 0;
         $skipped = 0;
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($rows, &$count, &$skipped) {
             foreach ($rows as $row) {
-                if (!empty($row['judul_ujian']) && !empty($row['url_google_form'])) {
+                $rawUrl = trim((string)($row['url_google_form'] ?? ''));
+                $parsedScheme = strtolower((string) parse_url($rawUrl, PHP_URL_SCHEME));
+                $isValidUrl = filter_var($rawUrl, FILTER_VALIDATE_URL) !== false && in_array($parsedScheme, ['http', 'https'], true);
+
+                if (!empty($row['judul_ujian']) && $isValidUrl) {
                     $start_at = !empty($row['waktu_mulai']) ? \Carbon\Carbon::parse($row['waktu_mulai']) : now();
-                    $duration = (int)($row['durasi_menit'] ?? 60);
+                    $duration = max(1, (int)($row['durasi_menit'] ?? 60));
 
                     // ponytail: dedup by composite key — skip if exact same exam already exists
                     $exists = \App\Models\Exam::where('title', $row['judul_ujian'])
-                        ->where('google_form_url', $row['url_google_form'])
+                        ->where('google_form_url', $rawUrl)
                         ->where('start_at', $start_at)
                         ->exists();
 
@@ -858,16 +872,19 @@ class ExamController extends Controller
                         )
                     );
 
+                    $rawStatus = strtolower(trim((string)($row['status'] ?? 'active')));
+                    $status = in_array($rawStatus, ['active', 'inactive'], true) ? $rawStatus : 'active';
+
                     $exam = \App\Models\Exam::create([
-                        'title' => $row['judul_ujian'],
+                        'title' => trim((string)$row['judul_ujian']),
                         'type' => $examType,
                         'description' => $row['deskripsi'] ?? null,
-                        'google_form_url' => $row['url_google_form'],
+                        'google_form_url' => $rawUrl,
                         'start_at' => $start_at,
                         'end_at' => $start_at->copy()->addMinutes($duration),
                         'duration' => $duration,
-                        'max_violation' => (int)($row['maksimal_pelanggaran'] ?? 3),
-                        'status' => strtolower($row['status'] ?? 'active'),
+                        'max_violation' => max(1, (int)($row['maksimal_pelanggaran'] ?? 3)),
+                        'status' => $status,
                         'created_by' => Auth::id(),
                     ]);
 
