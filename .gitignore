@@ -19,3 +19,7 @@ cloudflared.exe
 # Backend
 exambro-backend/.env
 exambro-backend/vendor/
+
+# Agent rules & skills
+.agents/
+
