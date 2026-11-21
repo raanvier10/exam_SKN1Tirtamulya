@@ -137,7 +137,7 @@
                             @endphp
                             <!-- UTS Submenu -->
                             <a href="{{ route('admin.exams.index', ['mode' => 'uts']) }}" 
-                               id="sidebarExamUts"
+                               id="cardCategoryUts"
                                class="sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 {{ $isUtsActive ? 'bg-indigo-50 text-indigo-700 font-bold shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}">
                                 <svg class="w-3.5 h-3.5 shrink-0 {{ $isUtsActive ? 'text-indigo-600' : 'text-slate-400' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -147,7 +147,7 @@
 
                             <!-- UAS Submenu -->
                             <a href="{{ route('admin.exams.index', ['mode' => 'uas']) }}" 
-                               id="sidebarExamUas"
+                               id="cardCategoryUas"
                                class="sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 {{ $isUasActive ? 'bg-indigo-50 text-indigo-700 font-bold shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}">
                                 <svg class="w-3.5 h-3.5 shrink-0 {{ $isUasActive ? 'text-indigo-600' : 'text-slate-400' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />

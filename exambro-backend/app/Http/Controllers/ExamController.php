@@ -468,7 +468,7 @@ class ExamController extends Controller
         return redirect()->route('admin.exams.index')->with('success', $msg);
     }
 
-    public function show(Exam $exam)
+    public function show(Exam $exam, Request $request)
     {
         if (Auth::user()->isTeacher()) {
             $isOwn = $exam->created_by === Auth::id();
@@ -491,9 +491,20 @@ class ExamController extends Controller
                 ->update(['status' => 'FINISHED']);
         }
 
-        $participants = $exam->participants()
-            ->with(['user.class'])
-            ->get()
+        // Dukungan filter ruang kelas spesifik (misal saat dipantau dari daftar per ruang kelas UAS)
+        $selectedClass = null;
+        if ($request->filled('class_id') && is_numeric($request->class_id)) {
+            $selectedClass = \App\Models\StudentClass::find($request->class_id);
+        }
+
+        $participantsQuery = $exam->participants()->with(['user.class']);
+        if ($selectedClass) {
+            $participantsQuery->whereHas('user', function ($q) use ($selectedClass) {
+                $q->where('class_id', $selectedClass->id);
+            });
+        }
+
+        $participants = $participantsQuery->get()
             ->map(function ($participant) use ($exam) {
                 $latestSession = \App\Models\ExamSession::where('exam_id', $exam->id)
                     ->where('user_id', $participant->user_id)
@@ -543,10 +554,14 @@ class ExamController extends Controller
             })
             ->values();
 
-        $violations = \App\Models\Violation::where('exam_id', $exam->id)
-            ->with(['user.class', 'session'])
-            ->latest('id')
-            ->get();
+        $violationsQuery = \App\Models\Violation::where('exam_id', $exam->id)
+            ->with(['user.class', 'session']);
+        if ($selectedClass) {
+            $violationsQuery->whereHas('user', function ($q) use ($selectedClass) {
+                $q->where('class_id', $selectedClass->id);
+            });
+        }
+        $violations = $violationsQuery->latest('id')->get();
 
         $stats = [
             'total_participants' => $participants->count(),
@@ -559,7 +574,7 @@ class ExamController extends Controller
             'total_violations' => $violations->count(),
         ];
 
-        return view('admin.exams.show', compact('exam', 'participants', 'violations', 'stats'));
+        return view('admin.exams.show', compact('exam', 'participants', 'violations', 'stats', 'selectedClass'));
     }
 
     public function unlockStudent(Exam $exam, \App\Models\User $user)

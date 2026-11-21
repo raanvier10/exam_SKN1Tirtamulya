@@ -7,7 +7,7 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <div class="flex items-center gap-2 mb-2">
-                <a href="{{ route('admin.exams.index') }}" class="text-xs sm:text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors inline-flex items-center gap-1.5">
+                <a href="{{ route('admin.exams.index', ['mode' => 'uas']) }}" class="text-xs sm:text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors inline-flex items-center gap-1.5">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
@@ -16,6 +16,11 @@
             </div>
             <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
                 <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">{{ $exam->title }}</h2>
+                @if(isset($selectedClass) && $selectedClass)
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 text-white shadow-2xs">
+                        Ruang Kelas {{ $selectedClass->name }}
+                    </span>
+                @endif
                 @if($exam->status === 'active')
                     <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Sesi Aktif
@@ -139,20 +144,42 @@
         <!-- Kolom Kiri: Informasi Utama & Link -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 sm:p-6 lg:col-span-2 flex flex-col justify-between space-y-4">
             <div>
-                <div class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">Target Kelas / Peserta</div>
-                <div class="flex flex-wrap items-center gap-1.5 mb-3">
-                    @if($exam->classes->count() > 0)
-                        @foreach($exam->classes as $cls)
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
-                                {{ $cls->name }}
+                @if(isset($selectedClass) && $selectedClass)
+                    <div class="flex items-center justify-between gap-3 mb-4 p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ruang Pengawasan:</span>
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 text-white shadow-2xs">
+                                Ruang Kelas {{ $selectedClass->name }}
                             </span>
-                        @endforeach
-                    @else
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                            Semua Kelas Aktif
+                            <span class="text-xs text-slate-500 font-medium">({{ $stats['total_participants'] }} Siswa Terdaftar)</span>
+                        </div>
+                        @if($exam->classes->count() > 1)
+                            <a href="{{ route('admin.exams.show', $exam->id) }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold hover:underline">
+                                Lihat Semua Kelas
+                            </a>
+                        @endif
+                    </div>
+                @elseif($exam->classes->count() > 1)
+                    <div class="flex items-center justify-between gap-3 mb-4 p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex-wrap">
+                        <div class="flex items-center gap-2">
+                            <label for="roomSelectFilter" class="text-xs font-semibold text-slate-500 uppercase tracking-wider shrink-0">Filter Ruang Pengawasan:</label>
+                            <select id="roomSelectFilter" onchange="window.location.href = this.value" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500/20">
+                                <option value="{{ route('admin.exams.show', $exam->id) }}" selected>Semua Ruang Kelas ({{ $exam->classes->count() }} Kelas)</option>
+                                @foreach($exam->classes as $cls)
+                                    <option value="{{ route('admin.exams.show', ['exam' => $exam->id, 'class_id' => $cls->id]) }}">Ruang Kelas {{ $cls->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <span class="text-xs text-slate-400">Total {{ $stats['total_participants'] }} Siswa</span>
+                    </div>
+                @elseif($exam->classes->count() === 1)
+                    <div class="flex items-center gap-2 mb-4 p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
+                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ruang Kelas:</span>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 text-white shadow-2xs">
+                            Ruang Kelas {{ $exam->classes->first()->name }}
                         </span>
-                    @endif
-                </div>
+                    </div>
+                @endif
 
                 <div class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">Deskripsi Ujian</div>
                 <div class="text-slate-700 text-xs sm:text-sm leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-200">{{ $exam->description ?: 'Tidak ada deskripsi tambahan untuk ujian ini.' }}</div>
