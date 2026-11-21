@@ -130,17 +130,20 @@ class TeacherController extends Controller
 
     public function import(Request $request)
     {
-        $request->validate(['file' => 'required|file']);
+        $request->validate(['file' => 'required|file|mimes:csv,txt,xlsx|max:10240']);
         $rows = \App\Helpers\SimpleSpreadsheetReader::read($request->file('file'));
         $count = 0;
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($rows, &$count) {
             foreach ($rows as $row) {
                 $name = $row['nama_lengkap'] ?? $row['nama'] ?? $row['name'] ?? null;
-                $username = (string)($row['nip_username'] ?? $row['nip'] ?? $row['username'] ?? '');
+                $username = trim((string)($row['nip_username'] ?? $row['nip'] ?? $row['username'] ?? ''));
 
                 if (!empty($username) && !empty($name)) {
                     $existingUser = User::where('username', $username)->first();
+                    if ($existingUser && $existingUser->role !== 'guru') {
+                        continue;
+                    }
 
                     $status = $existingUser?->status ?? 'active';
                     if (isset($row['status'])) {

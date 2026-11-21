@@ -2,11 +2,8 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Login Siswa - {{ $exam->title }} (Safe Exam Browser)</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #4F46E5;
@@ -21,24 +18,35 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             -webkit-user-select: none;
             user-select: none;
         }
+        html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #0F172A;
+        }
         body {
-            background: #F8FAFC;
+            background-color: #0F172A;
+            background: radial-gradient(circle at 50% 10%, #1E1B4B 0%, #0F172A 80%);
+            min-height: 100%;
             min-height: 100vh;
+            min-height: -webkit-fill-available;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: max(20px, env(safe-area-inset-top, 20px)) 20px max(20px, env(safe-area-inset-bottom, 20px));
             color: var(--slate-900);
+            -webkit-font-smoothing: antialiased;
         }
         .login-card {
             background: #ffffff;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
-            border: 1px solid var(--slate-200);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             max-width: 400px;
             width: 100%;
             padding: 32px 28px;
@@ -53,7 +61,7 @@
             gap: 6px;
             background: #EEF2FF;
             color: var(--primary);
-            padding: 4px 12px;
+            padding: 5px 14px;
             border-radius: 9999px;
             font-size: 11px;
             font-weight: 700;
@@ -68,9 +76,9 @@
             line-height: 1.3;
         }
         .subtitle {
-            font-size: 12px;
+            font-size: 13px;
             color: var(--slate-500);
-            margin-top: 4px;
+            margin-top: 6px;
         }
         .form-group {
             margin-bottom: 18px;
@@ -90,7 +98,7 @@
             border-radius: 12px;
             border: 1.5px solid var(--slate-200);
             background: #F8FAFC;
-            font-size: 14px;
+            font-size: 16px; /* 16px prevents iOS automatic zoom on focus */
             color: var(--slate-900);
             outline: none;
             transition: all 0.2s;
@@ -108,15 +116,15 @@
             border-radius: 12px;
             background: var(--primary);
             color: white;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 700;
             border: none;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
             transition: all 0.2s;
             margin-top: 6px;
         }
-        .btn-submit:hover {
+        .btn-submit:hover, .btn-submit:active {
             background: var(--primary-hover);
         }
         .alert-error {
@@ -125,7 +133,7 @@
             color: #B91C1C;
             border-radius: 12px;
             padding: 12px 14px;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
             margin-bottom: 18px;
             display: flex;

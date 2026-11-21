@@ -191,4 +191,207 @@ class ExamCreationTest extends TestCase
         $response->assertSee('2 Sesi Terjadwal');
         $response->assertSee('Buka 2 Sesi');
     }
+
+    public function test_teacher_sees_own_name_and_hierarchical_grade_bar_when_viewing_exams_index(): void
+    {
+        $teacher = User::factory()->create([
+            'name' => 'Budi Santoso Guru',
+            'role' => 'guru',
+            'status' => 'active',
+        ]);
+        $classX = StudentClass::create(['name' => '10 TJKT 1']);
+        $classXI = StudentClass::create(['name' => '11 RPL 1']);
+
+        $examX = Exam::create([
+            'title' => 'Matematika Dasar X',
+            'google_form_url' => 'https://forms.gle/mat-x',
+            'duration' => 60,
+            'max_violation' => 3,
+            'status' => 'active',
+            'start_at' => now()->addDay(),
+            'end_at' => now()->addDay()->addHour(),
+            'created_by' => $teacher->id,
+        ]);
+        $examX->classes()->attach($classX->id);
+
+        $examXI = Exam::create([
+            'title' => 'Pemrograman Web XI',
+            'google_form_url' => 'https://forms.gle/web-xi',
+            'duration' => 90,
+            'max_violation' => 3,
+            'status' => 'active',
+            'start_at' => now()->addDays(2),
+            'end_at' => now()->addDays(2)->addMinutes(90),
+            'created_by' => $teacher->id,
+        ]);
+        $examXI->classes()->attach($classXI->id);
+
+        $response = $this->actingAs($teacher)->get(route('admin.exams.index'));
+        $response->assertStatus(200);
+
+        // Memastikan nama guru tampil di kartu utama dengan badge Akun Anda
+        $response->assertSee('Budi Santoso Guru');
+        $response->assertSee('Akun Anda');
+
+        // Memastikan bar kecil pilihan kelas X, XI, XII ada di samping kanan
+        $response->assertSee('bar-btn-teacher_' . $teacher->id . '-X', false);
+        $response->assertSee('bar-btn-teacher_' . $teacher->id . '-XI', false);
+        $response->assertSee('bar-btn-teacher_' . $teacher->id . '-XII', false);
+
+        // Memastikan ujian X dan XI ada di dalam pane masing-masing
+        $response->assertSee('Matematika Dasar X');
+        $response->assertSee('Pemrograman Web XI');
+    }
+
+    public function test_teacher_without_any_exams_still_sees_their_card_and_create_button(): void
+    {
+        $teacher = User::factory()->create([
+            'name' => 'Siti Guru Baru',
+            'role' => 'guru',
+            'status' => 'active',
+        ]);
+
+        $response = $this->actingAs($teacher)->get(route('admin.exams.index'));
+        $response->assertStatus(200);
+
+        $response->assertSee('Siti Guru Baru');
+        $response->assertSee('Akun Anda');
+        $response->assertSee('0 Ujian Diupload');
+        $response->assertSee('Belum Ada Ujian untuk Kelas');
+        $response->assertSee('Buat Ujian Kelas');
+    }
+
+    public function test_admin_sees_all_exams_in_unified_single_column_view(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'status' => 'active']);
+        $class1 = StudentClass::create(['name' => 'XI TJKT 1']);
+        $class2 = StudentClass::create(['name' => '10 RPL 1']);
+
+        // Exam 1 created by admin
+        $exam1 = Exam::create([
+            'title' => 'Contoh aja inimah',
+            'google_form_url' => 'https://forms.gle/contoh',
+            'duration' => 105,
+            'max_violation' => 5,
+            'status' => 'active',
+            'start_at' => now()->subMinutes(10),
+            'end_at' => now()->addMinutes(95),
+            'created_by' => $admin->id,
+        ]);
+        $exam1->classes()->attach($class1->id);
+
+        // Exam 2 created by school (null)
+        $exam2 = Exam::create([
+            'title' => 'UAS Basis Data',
+            'google_form_url' => 'https://forms.gle/basisdata',
+            'duration' => 90,
+            'max_violation' => 3,
+            'status' => 'active',
+            'start_at' => now()->subDays(1),
+            'end_at' => now()->subDays(1)->addMinutes(90),
+            'created_by' => null,
+        ]);
+        $exam2->classes()->attach($class2->id);
+
+        $response = $this->actingAs($admin)->get(route('admin.exams.index'));
+        $response->assertStatus(200);
+
+        // Pastikan 2 pilihan utama (UAS kategori kelas & UTS guru pengampu) tersedia
+        $response->assertSee('cardCategoryUas', false);
+        $response->assertSee('cardCategoryUts', false);
+        $response->assertSee('uasContainer', false);
+        $response->assertSee('utsContainer', false);
+
+        // Pastikan kedua ujian tampil di halaman
+        $response->assertSee('Contoh aja inimah');
+        $response->assertSee('UAS Basis Data');
+        $response->assertSee('Sedang Berlangsung');
+    }
+
+    public function test_teacher_created_exam_is_strictly_assigned_to_uts_and_grouped_under_teacher(): void
+    {
+        $teacher = User::factory()->create([
+            'name' => 'Guru Matematika Budi',
+            'role' => 'guru',
+            'status' => 'active',
+        ]);
+
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
+
+        $class = StudentClass::create(['name' => 'XII RPL 1']);
+
+        // Guru submit ujian bahkan jika parameter 'type' mencoba mengirim 'uas'
+        $response = $this->actingAs($teacher)->post(route('admin.exams.store'), [
+            'title' => 'Matematika Peminatan XII',
+            'type' => 'uas', // Sengaja kirim uas untuk tes proteksi
+            'google_form_url' => 'https://docs.google.com/forms/d/e/123/viewform',
+            'duration' => 90,
+            'max_violation' => 3,
+            'status' => 'active',
+            'schedules' => [
+                [
+                    'date' => now()->toDateString(),
+                    'time' => '08:00',
+                    'duration' => 90,
+                    'classes' => [$class->id],
+                ]
+            ],
+        ]);
+
+        $response->assertRedirect(route('admin.exams.index'));
+
+        // Cek di database bahwa type DIPAKSA menjadi 'uts'
+        $this->assertDatabaseHas('exams', [
+            'title' => 'Matematika Peminatan XII',
+            'type' => 'uts',
+            'created_by' => $teacher->id,
+        ]);
+
+        // Saat admin membuka laman index
+        $adminResponse = $this->actingAs($admin)->get(route('admin.exams.index'));
+        $adminResponse->assertStatus(200);
+
+        // Harus muncul nama guru di section UTS
+        $adminResponse->assertSee('Guru Matematika Budi');
+        $adminResponse->assertSee('Matematika Peminatan XII');
+    }
+
+    public function test_jp_duration_calculation_displays_correctly_for_35_minutes_per_jp(): void
+    {
+        $admin = User::factory()->create([
+            'role' => 'admin',
+            'status' => 'active',
+        ]);
+
+        $exam = Exam::create([
+            'title' => 'Ujian 3 JP Test',
+            'type' => 'uas',
+            'google_form_url' => 'https://docs.google.com/forms/d/e/sample/viewform',
+            'duration' => 105,
+            'start_at' => now()->addHour(),
+            'end_at' => now()->addHours(2),
+            'max_violation' => 3,
+            'status' => 'active',
+            'created_by' => $admin->id,
+        ]);
+
+        // 1. Index page
+        $indexResponse = $this->actingAs($admin)->get(route('admin.exams.index'));
+        $indexResponse->assertStatus(200);
+        $indexResponse->assertSee('(3 JP)');
+
+        // 2. Show page
+        $showResponse = $this->actingAs($admin)->get(route('admin.exams.show', $exam->id));
+        $showResponse->assertStatus(200);
+        $showResponse->assertSee('3 JP');
+
+        // 3. Edit page
+        $editResponse = $this->actingAs($admin)->get(route('admin.exams.edit', $exam->id));
+        $editResponse->assertStatus(200);
+        $editResponse->assertSee('3 JP');
+    }
 }
+

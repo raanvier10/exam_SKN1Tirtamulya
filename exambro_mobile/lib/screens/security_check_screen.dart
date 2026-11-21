@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,6 +27,7 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
 
   bool _isChecking = true;
   bool _isSecure = false;
+  bool _canOpenSettings = false;
   String _statusMessage = 'Memverifikasi profil & lingkungan ujian...';
   double? _detectedLat;
   double? _detectedLng;
@@ -66,6 +68,7 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
     setState(() {
       _isChecking = true;
       _isSecure = false;
+      _canOpenSettings = false;
       _statusMessage = 'Memverifikasi profil & lingkungan ujian...';
     });
     _controller.reset();
@@ -86,20 +89,24 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
       }
     } catch (_) {}
 
-    // JIKA SISWA PKL: Bebaskan pengecekan GPS
-    if (isPkl) {
+    final bool isExamPkl = widget.exam['type']?.toString().toLowerCase() == 'pkl';
+
+    // JIKA SISWA PKL ATAU UJIAN KHUSUS PKL: Bebaskan pengecekan GPS
+    if (isPkl || isExamPkl) {
       if (mounted) {
         setState(() {
           _isChecking = false;
           _isSecure = true;
-          _statusMessage = 'Status: PKL / Magang (Verifikasi GPS Dinonaktifkan).';
+          _statusMessage = isExamPkl
+              ? 'Tipe Ujian: Khusus PKL / Magang (Verifikasi GPS Dinonaktifkan).'
+              : 'Status Siswa: PKL / Magang (Verifikasi GPS Dinonaktifkan).';
         });
         _controller.forward();
       }
       return;
     }
 
-    // JIKA SISWA REGULER (BUKAN PKL): Wajib lolos verifikasi GPS & Radius Sekolah 250m
+    // JIKA SISWA REGULER (BUKAN PKL): Wajib lolos verifikasi GPS & Radius Sekolah
     try {
       if (mounted) {
         setState(() {
@@ -113,6 +120,7 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
           setState(() {
             _isChecking = false;
             _isSecure = false;
+            _canOpenSettings = true;
             _statusMessage = 'GPS belum aktif. Silakan nyalakan lokasi perangkat Anda.';
           });
           _controller.forward();
@@ -121,13 +129,14 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
       }
 
       LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
+      if (permission == LocationPermission.denied || permission == LocationPermission.unableToDetermine) {
         permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
+        if (permission == LocationPermission.denied || permission == LocationPermission.unableToDetermine) {
           if (mounted) {
             setState(() {
               _isChecking = false;
               _isSecure = false;
+              _canOpenSettings = true;
               _statusMessage = 'Izin lokasi dibutuhkan untuk verifikasi ujian.';
             });
             _controller.forward();
@@ -141,6 +150,7 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
           setState(() {
             _isChecking = false;
             _isSecure = false;
+            _canOpenSettings = true;
             _statusMessage = 'Izin lokasi ditolak permanen. Buka Pengaturan HP untuk mengizinkan.';
           });
           _controller.forward();
@@ -148,33 +158,78 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
         return;
       }
 
+      // Deteksi & Tangani Akurasi Presisi iOS (iOS 14+)
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        try {
+          final accuracyStatus = await Geolocator.getLocationAccuracy();
+          if (accuracyStatus == LocationAccuracyStatus.reduced) {
+            final upgraded = await Geolocator.requestTemporaryFullAccuracy(
+              purposeKey: 'ExamLocationCheck',
+            );
+            if (upgraded == LocationAccuracyStatus.reduced) {
+              if (mounted) {
+                setState(() {
+                  _isChecking = false;
+                  _isSecure = false;
+                  _canOpenSettings = true;
+                  _statusMessage =
+                      'Akurasi lokasi iPhone dalam mode "Perkiraan" (Reduced Accuracy).\n'
+                      'Aktifkan "Lokasi Tepat" (Precise Location) di Pengaturan iOS agar titik sekolah terdeteksi akurat.';
+                });
+                _controller.forward();
+              }
+              return;
+            }
+          }
+        } catch (_) {}
+      }
+
       Position? position;
       try {
         final lastPos = await Geolocator.getLastKnownPosition();
-        // Hanya gunakan posisi terakhir jika masih segar (< 2 menit lalu) agar tidak membaca lokasi lama di rumah
-        if (lastPos != null && DateTime.now().difference(lastPos.timestamp).inMinutes < 2) {
+        // Gunakan posisi terakhir jika masih segar (< 5 menit lalu)
+        if (lastPos != null && DateTime.now().difference(lastPos.timestamp).inMinutes < 5) {
           position = lastPos;
         }
       } catch (_) {}
 
       if (position == null) {
         try {
-          position = await Geolocator.getCurrentPosition(
-            locationSettings: const LocationSettings(
-              accuracy: LocationAccuracy.high,
-              timeLimit: Duration(seconds: 8),
-            ),
-          );
+          final LocationSettings highSettings = defaultTargetPlatform == TargetPlatform.iOS
+              ? AppleSettings(
+                  accuracy: LocationAccuracy.high,
+                  activityType: ActivityType.other,
+                  pauseLocationUpdatesAutomatically: false,
+                  showBackgroundLocationIndicator: false,
+                  timeLimit: const Duration(seconds: 15),
+                )
+              : const LocationSettings(
+                  accuracy: LocationAccuracy.high,
+                  timeLimit: Duration(seconds: 12),
+                );
+          position = await Geolocator.getCurrentPosition(locationSettings: highSettings);
         } catch (e) {
           // Fallback akurasi medium untuk ruangan kelas dengan sinyal satelit terbatas
           try {
-            position = await Geolocator.getCurrentPosition(
-              locationSettings: const LocationSettings(
-                accuracy: LocationAccuracy.medium,
-                timeLimit: Duration(seconds: 6),
-              ),
-            );
-          } catch (_) {}
+            final LocationSettings mediumSettings = defaultTargetPlatform == TargetPlatform.iOS
+                ? AppleSettings(
+                    accuracy: LocationAccuracy.medium,
+                    activityType: ActivityType.other,
+                    pauseLocationUpdatesAutomatically: false,
+                    showBackgroundLocationIndicator: false,
+                    timeLimit: const Duration(seconds: 10),
+                  )
+                : const LocationSettings(
+                    accuracy: LocationAccuracy.medium,
+                    timeLimit: Duration(seconds: 10),
+                  );
+            position = await Geolocator.getCurrentPosition(locationSettings: mediumSettings);
+          } catch (_) {
+            // Fallback terakhir: coba baca last known position jika ada
+            try {
+              position = await Geolocator.getLastKnownPosition();
+            } catch (_) {}
+          }
         }
       }
 
@@ -183,7 +238,8 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
           setState(() {
             _isChecking = false;
             _isSecure = false;
-            _statusMessage = 'Tidak dapat mendeteksi titik lokasi. Pastikan GPS aktif.';
+            _canOpenSettings = true;
+            _statusMessage = 'Tidak dapat mendeteksi titik lokasi. Pastikan GPS aktif dan berada di area terbuka.';
           });
           _controller.forward();
         }
@@ -216,11 +272,15 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
 
       if (distance > maxRadiusMeters) {
         if (mounted) {
+          final String iosHint = (defaultTargetPlatform == TargetPlatform.iOS && distance > 1000)
+              ? '\nTips iOS: Pastikan opsi "Lokasi Tepat / Precise Location" aktif di Pengaturan iPhone Anda.'
+              : '';
           setState(() {
             _isChecking = false;
             _isSecure = false;
+            _canOpenSettings = (defaultTargetPlatform == TargetPlatform.iOS);
             _statusMessage =
-                'Di luar area sekolah (${distance.round()}m dari target, maks: ${maxRadiusMeters.round()}m).\nPosisi Anda: ${userPos.latitude.toStringAsFixed(6)}, ${userPos.longitude.toStringAsFixed(6)}';
+                'Di luar area sekolah (${distance.round()}m dari target, maks: ${maxRadiusMeters.round()}m).\nPosisi Anda: ${userPos.latitude.toStringAsFixed(6)}, ${userPos.longitude.toStringAsFixed(6)}$iosHint';
           });
           _controller.forward();
         }
@@ -336,20 +396,23 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
 
                 const SizedBox(height: 10),
 
-                // Subtitle (Fixed Height to prevent layout jumping)
-                SizedBox(
-                  height: 44,
+                // Subtitle (Dynamic Height to prevent text clipping on iOS multi-line hints)
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 44),
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 250),
-                    child: Text(
-                      _statusMessage,
-                      key: ValueKey<String>(_statusMessage),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 13.5,
-                        color: Color(0xFF64748B),
-                        height: 1.45,
-                        fontWeight: FontWeight.w400,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Text(
+                        _statusMessage,
+                        key: ValueKey<String>(_statusMessage),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF64748B),
+                          height: 1.45,
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
                     ),
                   ),
@@ -402,6 +465,31 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
                     Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        if (_canOpenSettings) ...[
+                          SizedBox(
+                            width: double.infinity,
+                            height: 48,
+                            child: OutlinedButton.icon(
+                              onPressed: () => Geolocator.openAppSettings(),
+                              icon: const Icon(Icons.settings_rounded, size: 18),
+                              label: const Text(
+                                'Buka Pengaturan HP',
+                                style: TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFF38BDF8),
+                                side: const BorderSide(color: Color(0xFF38BDF8), width: 1.5),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                        ],
                         SizedBox(
                           width: double.infinity,
                           height: 50,

@@ -64,7 +64,7 @@ class StudentClassController extends Controller
 
     public function import(Request $request)
     {
-        $request->validate(['file' => 'required|file']);
+        $request->validate(['file' => 'required|file|mimes:csv,txt,xlsx|max:10240']);
         $rows = \App\Helpers\SimpleSpreadsheetReader::read($request->file('file'));
         $count = 0;
 

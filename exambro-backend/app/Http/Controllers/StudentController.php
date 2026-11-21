@@ -76,12 +76,20 @@ class StudentController extends Controller
 
     public function edit(User $student)
     {
+        if ($student->role !== 'siswa') {
+            abort(404);
+        }
+
         $classes = StudentClass::all();
         return view('admin.students.edit', compact('student', 'classes'));
     }
 
     public function update(Request $request, User $student)
     {
+        if ($student->role !== 'siswa') {
+            abort(404);
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users,username,' . $student->id,
@@ -111,6 +119,10 @@ class StudentController extends Controller
 
     public function togglePkl(User $student)
     {
+        if ($student->role !== 'siswa') {
+            abort(404);
+        }
+
         $student->update([
             'is_pkl' => !$student->is_pkl,
         ]);
@@ -121,6 +133,10 @@ class StudentController extends Controller
 
     public function destroy(User $student)
     {
+        if ($student->role !== 'siswa') {
+            abort(404);
+        }
+
         $student->delete();
         return redirect()->route('admin.students.index')->with('success', 'Siswa berhasil dihapus');
     }
@@ -145,17 +161,20 @@ class StudentController extends Controller
 
     public function import(Request $request)
     {
-        $request->validate(['file' => 'required|file']);
+        $request->validate(['file' => 'required|file|mimes:csv,txt,xlsx|max:10240']);
         $rows = \App\Helpers\SimpleSpreadsheetReader::read($request->file('file'));
         $count = 0;
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($rows, &$count) {
             foreach ($rows as $row) {
                 $name = $row['nama_lengkap'] ?? $row['nama'] ?? $row['name'] ?? null;
-                $username = (string)($row['nis_username'] ?? $row['nis'] ?? $row['username'] ?? '');
+                $username = trim((string)($row['nis_username'] ?? $row['nis'] ?? $row['username'] ?? ''));
 
                 if (!empty($username) && !empty($name)) {
                     $existingUser = \App\Models\User::where('username', $username)->first();
+                    if ($existingUser && $existingUser->role !== 'siswa') {
+                        continue;
+                    }
 
                     // Resolusi Kelas (Bisa nama kelas misal 'XII RPL 1' atau ID kelas angka)
                     $classId = $existingUser?->class_id ?? null;

@@ -126,6 +126,80 @@
                     @error('title') <span class="text-rose-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                 </div>
 
+                <!-- Kategori / Jenis Ujian (UAS vs UTS) -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
+                        Kategori / Jenis Ujian <span class="text-rose-500">*</span>
+                    </label>
+                    @if(Auth::user()->isTeacher())
+                        <!-- Mode Guru: Terkunci Otomatis ke UTS / Penilaian Mapel -->
+                        <div class="p-3.5 rounded-xl border-2 border-emerald-500 bg-emerald-50/50 flex items-center justify-between gap-3 shadow-2xs">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-2xs">
+                                    📝
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold text-emerald-950">UTS / Penilaian Mapel Guru</span>
+                                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">Mode Guru Otomatis</span>
+                                    </div>
+                                    <div class="text-[11px] text-emerald-700 mt-0.5">Soal yang Anda buat akan otomatis tampil di tab UTS admin dan dipantau berdasarkan nama Anda.</div>
+                                </div>
+                            </div>
+                            <div class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            </div>
+                        </div>
+                        <input type="hidden" name="type" id="radioTypeUts" value="uts">
+                    @else
+                        <!-- Mode Admin: Dapat memilih UAS (Sekolah/Kelas) atau UTS (Mapel) -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <!-- Option UAS -->
+                            <div onclick="setExamType('uas')" 
+                                 onkeydown="if(event.key==='Enter'||event.key===' '){setExamType('uas');event.preventDefault();}"
+                                 id="cardExamTypeUas"
+                                 role="button"
+                                 tabindex="0"
+                                 class="relative flex items-center justify-between p-3.5 rounded-xl border-2 border-indigo-600 bg-indigo-50/40 ring-2 ring-indigo-500/20 cursor-pointer transition-all duration-150 select-none shadow-xs">
+                                <input type="radio" name="type" id="radioTypeUas" value="uas" {{ old('type', request('type', 'uas')) === 'uas' ? 'checked' : '' }} class="sr-only">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                                        🏫
+                                    </div>
+                                    <div>
+                                        <div class="text-xs font-bold text-slate-900">UAS (Ujian Akhir Semester)</div>
+                                        <div class="text-[11px] text-slate-500">Ujian sekolah serentak, diawasi per ruang kelas</div>
+                                    </div>
+                                </div>
+                                <div id="indicatorTypeUas" class="w-5 h-5 rounded-full border-2 border-indigo-600 bg-indigo-600 text-white flex items-center justify-center shrink-0 transition-all">
+                                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                </div>
+                            </div>
+
+                            <!-- Option UTS -->
+                            <div onclick="setExamType('uts')" 
+                                 onkeydown="if(event.key==='Enter'||event.key===' '){setExamType('uts');event.preventDefault();}"
+                                 id="cardExamTypeUts"
+                                 role="button"
+                                 tabindex="0"
+                                 class="relative flex items-center justify-between p-3.5 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60 cursor-pointer transition-all duration-150 select-none">
+                                <input type="radio" name="type" id="radioTypeUts" value="uts" {{ old('type', request('type')) === 'uts' ? 'checked' : '' }} class="sr-only">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                                        📝
+                                    </div>
+                                    <div>
+                                        <div class="text-xs font-bold text-slate-900">UTS / PTS (Tengah Semester)</div>
+                                        <div class="text-[11px] text-slate-500">Penilaian mapel, diawasi oleh guru pengampu</div>
+                                    </div>
+                                </div>
+                                <div id="indicatorTypeUts" class="w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0 transition-all">
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
                 <!-- Google Form URL -->
                 <div>
                     <label for="input_google_form_url" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
@@ -748,7 +822,6 @@
                 </div>
                 <!-- Jam & Aksi di Sisi Kanan -->
                 <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-semibold border border-indigo-100 schedule-preview shadow-2xs">—</span>
                     <button type="button" onclick="removeScheduleSlot(this)" class="remove-slot-btn inline-flex items-center gap-1.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2.5 py-1 rounded-lg transition-colors font-semibold ${num === 1 ? 'hidden' : ''}">
                         <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                         <span>Hapus Sesi</span>
@@ -787,9 +860,7 @@
                             <span class="text-xs font-bold text-slate-800">Durasi Sesi</span>
                             <span class="text-[10px] font-medium text-slate-400 bg-white px-1.5 py-0.2 rounded border border-slate-200/70">Opsional</span>
                         </div>
-                        <div class="slot-dur-status text-xs text-slate-500 mt-0.5 font-medium">
-                            Sesuai default (<span class="slot-default-hint">${globalDurationVal}m / ${formatJP(globalDurationVal)}</span>)
-                        </div>
+                       
                     </div>
                 </div>
 
@@ -809,13 +880,7 @@
                 </div>
             </div>
 
-            <!-- Baris 3: Target Kelas untuk Sesi Ini -->
-            <div class="pt-1 space-y-2.5">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <label class="text-xs font-bold text-slate-800 uppercase tracking-wider">Target Kelas Sesi Ini <span class="text-rose-500">*</span></label>
-                        <span class="slot-class-count text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200">Wajib Pilih Kelas</span>
-                    </div>
+         
 
                     <!-- Filter Tingkat & Search Box -->
                     <div class="flex items-center gap-1.5 flex-wrap">
@@ -914,15 +979,7 @@
             }
         });
 
-        if (countBadge) {
-            if (checked.length > 0) {
-                countBadge.className = 'slot-class-count text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200';
-                countBadge.textContent = `${checked.length} Kelas Dipilih`;
-            } else {
-                countBadge.className = 'slot-class-count text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200';
-                countBadge.textContent = `Wajib Pilih Kelas`;
-            }
-        }
+     
 
         if (toggleBtn) {
             const allVisibleChecked = visibleBoxes.length > 0 && visibleBoxes.every(cb => cb.checked);
@@ -1032,20 +1089,12 @@
             const dateInput = slot.querySelector('.schedule-date');
             const timeInput = slot.querySelector('.schedule-time');
             const durationInput = slot.querySelector('.schedule-duration');
-            const previewEl = slot.querySelector('.schedule-preview');
 
             const customDur = durationInput && durationInput.value ? parseInt(durationInput.value) : null;
             const effectiveDur = (customDur && customDur > 0) ? customDur : durationVal;
             const durStatusEl = slot.querySelector('.slot-dur-status');
 
-            if (durStatusEl) {
-                if (customDur && customDur > 0) {
-                    durStatusEl.innerHTML = `<span class="text-amber-700 font-bold inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Khusus sesi ini: ${customDur}m (${formatJP(customDur)})</span>`;
-                } else {
-                    durStatusEl.innerHTML = `Sesuai default (<span class="slot-default-hint">${durationVal}m / ${formatJP(durationVal)}</span>)`;
-                }
-            }
-
+           
             // Update status tombol preset durasi sesi
             const durButtons = slot.querySelectorAll('.slot-dur-btn');
             durButtons.forEach(b => {
@@ -1066,25 +1115,6 @@
             const defaultHint = slot.querySelector('.slot-default-hint');
             if (defaultHint) {
                 defaultHint.textContent = `${durationVal}m / ${formatJP(durationVal)}`;
-            }
-
-            if (!dateInput.value || !timeInput.value) {
-                if (previewEl) previewEl.textContent = '—';
-                return;
-            }
-
-            const startDT = new Date(`${dateInput.value}T${timeInput.value}`);
-            const endDT = new Date(startDT.getTime() + effectiveDur * 60000);
-
-            const sH = String(startDT.getHours()).padStart(2, '0');
-            const sM = String(startDT.getMinutes()).padStart(2, '0');
-            const eH = String(endDT.getHours()).padStart(2, '0');
-            const eM = String(endDT.getMinutes()).padStart(2, '0');
-
-            if (previewEl) {
-                previewEl.textContent = customDur 
-                    ? `${sH}:${sM}–${eH}:${eM} WIB (${customDur}m kustom)`
-                    : `${sH}:${sM}–${eH}:${eM} WIB (${effectiveDur}m)`;
             }
         });
     }
@@ -1244,6 +1274,64 @@
     }
 
     // ==========================================
+    // KATEGORI UJIAN (UAS vs UTS)
+    // ==========================================
+    function setExamType(type) {
+        const radioUas = document.getElementById('radioTypeUas');
+        const radioUts = document.getElementById('radioTypeUts');
+        const cardUas = document.getElementById('cardExamTypeUas');
+        const cardUts = document.getElementById('cardExamTypeUts');
+        const indUas = document.getElementById('indicatorTypeUas');
+        const indUts = document.getElementById('indicatorTypeUts');
+
+        if (!radioUas || !radioUts) return;
+
+        if (type === 'uts') {
+            radioUts.checked = true;
+            radioUas.checked = false;
+
+            if (cardUts) {
+                cardUts.className = 'relative flex items-center justify-between p-3.5 rounded-xl border-2 border-emerald-600 bg-emerald-50/40 ring-2 ring-emerald-500/20 cursor-pointer transition-all duration-150 select-none shadow-xs';
+            }
+            if (indUts) {
+                indUts.className = 'w-5 h-5 rounded-full border-2 border-emerald-600 bg-emerald-600 text-white flex items-center justify-center shrink-0 transition-all';
+                indUts.innerHTML = '<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>';
+            }
+
+            if (cardUas) {
+                cardUas.className = 'relative flex items-center justify-between p-3.5 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60 cursor-pointer transition-all duration-150 select-none';
+            }
+            if (indUas) {
+                indUas.className = 'w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0 transition-all';
+                indUas.innerHTML = '';
+            }
+        } else {
+            radioUas.checked = true;
+            radioUts.checked = false;
+
+            if (cardUas) {
+                cardUas.className = 'relative flex items-center justify-between p-3.5 rounded-xl border-2 border-indigo-600 bg-indigo-50/40 ring-2 ring-indigo-500/20 cursor-pointer transition-all duration-150 select-none shadow-xs';
+            }
+            if (indUas) {
+                indUas.className = 'w-5 h-5 rounded-full border-2 border-indigo-600 bg-indigo-600 text-white flex items-center justify-center shrink-0 transition-all';
+                indUas.innerHTML = '<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>';
+            }
+
+            if (cardUts) {
+                cardUts.className = 'relative flex items-center justify-between p-3.5 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60 cursor-pointer transition-all duration-150 select-none';
+            }
+            if (indUts) {
+                indUts.className = 'w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0 transition-all';
+                indUts.innerHTML = '';
+            }
+        }
+
+        if (typeof triggerAutosave === 'function') {
+            triggerAutosave();
+        }
+    }
+
+    // ==========================================
     // AUTOSAVE DRAFT FORM UJIAN
     // ==========================================
     const DRAFT_STORAGE_KEY = 'exambro_exam_create_draft_v2';
@@ -1251,6 +1339,7 @@
 
     function getFormDraftData() {
         const title = document.querySelector('input[name="title"]')?.value || '';
+        const type = document.querySelector('input[name="type"]:checked')?.value || 'uas';
         const description = document.querySelector('textarea[name="description"]')?.value || '';
         const google_form_url = document.querySelector('input[name="google_form_url"]')?.value || '';
         const duration = document.querySelector('input[name="duration"]')?.value || '70';
@@ -1272,6 +1361,7 @@
         return {
             currentStep,
             title,
+            type,
             description,
             google_form_url,
             duration,
@@ -1356,6 +1446,9 @@
             if (data.status) {
                 selectExamStatus(data.status);
             }
+            if (data.type) {
+                setExamType(data.type);
+            }
 
             const container = document.getElementById('scheduleContainer');
             container.innerHTML = '';
@@ -1415,6 +1508,9 @@
         const restored = restoreExamDraft();
         if (!restored) {
             renderScheduleSlot(scheduleIndex++);
+            const urlType = new URLSearchParams(window.location.search).get('type');
+            const defaultType = urlType || (document.getElementById('radioTypeUts')?.checked ? 'uts' : 'uas');
+            setExamType(defaultType);
         }
 
         // Auto-clear invalid state on user typing

@@ -20,7 +20,7 @@ class AdminAuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (Auth::attempt($credentials)) {
+        if (Auth::attempt(['username' => $credentials['username'], 'password' => $credentials['password'], 'status' => 'active'])) {
             $user = Auth::user();
             if (in_array($user->role, ['admin', 'guru'])) {
                 $request->session()->regenerate();
@@ -70,6 +70,7 @@ class AdminAuthController extends Controller
         $user->update([
             'password' => Hash::make($request->password),
         ]);
+        $request->session()->regenerate();
 
         return back()->with('success', 'Password berhasil diperbarui.');
     }

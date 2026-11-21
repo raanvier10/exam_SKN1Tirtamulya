@@ -124,4 +124,59 @@ class ExamExpiredAndSortingTest extends TestCase
         // Expected order: XI TJKT 1 (Anisa, Budi), XI TJKT 2 (Ahmad, Zaky)
         $this->assertEquals(['Anisa', 'Budi', 'Ahmad', 'Zaky'], $names);
     }
+
+    public function test_student_sees_exam_history_up_to_one_week_but_not_older(): void
+    {
+        $student = User::factory()->create([
+            'role' => 'siswa',
+            'status' => 'active',
+            'api_token' => hash('sha256', 'token-abc'),
+        ]);
+
+        // Ujian 3 hari lalu (masuk riwayat 1 pekan)
+        $exam3DaysAgo = Exam::create([
+            'title' => 'Ujian 3 Hari Lalu',
+            'google_form_url' => 'https://forms.gle/test3',
+            'start_at' => Carbon::now()->subDays(3),
+            'end_at' => Carbon::now()->subDays(3)->addHours(2),
+            'duration' => 120,
+            'max_violation' => 3,
+            'status' => 'active',
+        ]);
+
+        // Ujian Hari Ini
+        $examToday = Exam::create([
+            'title' => 'Ujian Hari Ini',
+            'google_form_url' => 'https://forms.gle/today',
+            'start_at' => Carbon::now()->subMinutes(10),
+            'end_at' => Carbon::now()->addMinutes(50),
+            'duration' => 60,
+            'max_violation' => 3,
+            'status' => 'active',
+        ]);
+
+        // Ujian 10 hari lalu (harus keluar dari riwayat 1 pekan)
+        $exam10DaysAgo = Exam::create([
+            'title' => 'Ujian 10 Hari Lalu',
+            'google_form_url' => 'https://forms.gle/old',
+            'start_at' => Carbon::now()->subDays(10),
+            'end_at' => Carbon::now()->subDays(10)->addHours(2),
+            'duration' => 120,
+            'max_violation' => 3,
+            'status' => 'active',
+        ]);
+
+        $response = $this->withHeader('Authorization', 'Bearer token-abc')
+            ->getJson('/api/student/exams/today');
+
+        $response->assertStatus(200);
+        $titles = collect($response->json('data'))->pluck('title')->toArray();
+
+        $this->assertContains('Ujian Hari Ini', $titles);
+        $this->assertContains('Ujian 3 Hari Lalu', $titles);
+        $this->assertNotContains('Ujian 10 Hari Lalu', $titles);
+
+        // Ujian hari ini yang sedang berlangsung harus berada di urutan pertama
+        $this->assertEquals('Ujian Hari Ini', $titles[0]);
+    }
 }
