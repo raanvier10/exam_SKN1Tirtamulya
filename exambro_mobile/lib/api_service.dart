@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,28 +15,34 @@ class ApiService {
     'http://192.168.1.5:8000/api',
   ];
 
+  static const List<String> _webCandidateUrls = [
+    'http://localhost:8000/api',
+    'http://127.0.0.1:8000/api',
+  ];
+
   static String? _cachedBaseUrl;
 
   static Future<String> getBaseUrl() async {
     if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
     if (_cachedBaseUrl != null) return _cachedBaseUrl!;
-    return candidateUrls.first;
+    return kIsWeb ? _webCandidateUrls.first : candidateUrls.first;
   }
 
   static Future<http.Response> _requestWithFallback(
     Future<http.Response> Function(String baseUrl) requestFn,
   ) async {
+    final defaults = kIsWeb ? _webCandidateUrls : candidateUrls;
     final urls = _envBaseUrl.isNotEmpty
         ? <String>[_envBaseUrl]
         : <String>[
             ?_cachedBaseUrl,
-            ...candidateUrls.where((u) => u != _cachedBaseUrl),
+            ...defaults.where((u) => u != _cachedBaseUrl),
           ];
 
     Object? lastError;
     for (final base in urls) {
       try {
-        final res = await requestFn(base).timeout(const Duration(seconds: 4));
+        final res = await requestFn(base).timeout(const Duration(seconds: 8));
         _cachedBaseUrl = base;
         return res;
       } catch (e) {
@@ -98,6 +105,38 @@ class ApiService {
     };
   }
 
+  static Map<String, dynamic> _decodeResponse(http.Response response) {
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic>) {
+        if (response.statusCode == 429 && !decoded.containsKey('success')) {
+          return {
+            'success': false,
+            'message': 'Terlalu banyak permintaan. Tunggu beberapa detik lalu coba lagi.',
+          };
+        }
+        return decoded;
+      }
+    } catch (_) {}
+
+    if (response.statusCode == 429) {
+      return {
+        'success': false,
+        'message': 'Terlalu banyak percobaan. Tunggu 1 menit lalu coba lagi.',
+      };
+    }
+    if (response.statusCode == 401) {
+      return {
+        'success': false,
+        'message': 'Unauthenticated.',
+      };
+    }
+    return {
+      'success': false,
+      'message': 'Server sedang sibuk atau gangguan jaringan (HTTP ${response.statusCode}).',
+    };
+  }
+
   static Future<Map<String, dynamic>> login(
     String username,
     String password,
@@ -112,7 +151,7 @@ class ApiService {
         body: jsonEncode({'username': username, 'password': password}),
       ),
     );
-    return jsonDecode(response.body);
+    return _decodeResponse(response);
   }
 
   static Future<Map<String, dynamic>> getExamsToday() async {
@@ -123,7 +162,7 @@ class ApiService {
         headers: headers,
       ),
     );
-    return jsonDecode(response.body);
+    return _decodeResponse(response);
   }
 
   static Future<Map<String, dynamic>> startExamSession(
@@ -144,7 +183,7 @@ class ApiService {
         body: jsonEncode(body),
       ),
     );
-    return jsonDecode(response.body);
+    return _decodeResponse(response);
   }
 
   static Future<Map<String, dynamic>> finishExamSession(int examId) async {
@@ -155,7 +194,7 @@ class ApiService {
         headers: headers,
       ),
     );
-    return jsonDecode(response.body);
+    return _decodeResponse(response);
   }
 
   static Future<Map<String, dynamic>> getMe() async {
@@ -163,7 +202,7 @@ class ApiService {
     final response = await _requestWithFallback(
       (base) => http.get(Uri.parse('$base/me'), headers: headers),
     );
-    return jsonDecode(response.body);
+    return _decodeResponse(response);
   }
 
   static Future<Map<String, dynamic>> updateGoogleStatus(
@@ -181,7 +220,7 @@ class ApiService {
         body: jsonEncode(payload),
       ),
     );
-    return jsonDecode(response.body);
+    return _decodeResponse(response);
   }
 
   static Future<Map<String, dynamic>> reportViolation(
@@ -204,7 +243,7 @@ class ApiService {
           }),
         ),
       );
-      return jsonDecode(response.body);
+      return _decodeResponse(response);
     } catch (_) {
       return {'success': false, 'message': 'Gagal mengirim laporan pelanggaran'};
     }

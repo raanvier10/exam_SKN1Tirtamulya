@@ -103,6 +103,19 @@ class MainActivity: FlutterActivity() {
                     e.printStackTrace()
                 }
                 result.success(true)
+            } else if (call.method == "hasGoogleCookies") {
+                var hasAuthCookie = false
+                try {
+                    val cookies = CookieManager.getInstance().getCookie("https://accounts.google.com") ?: ""
+                    hasAuthCookie = cookies.contains("SID=") ||
+                        cookies.contains("LSID=") ||
+                        cookies.contains("SAPISID=") ||
+                        cookies.contains("__Secure-1PSID=") ||
+                        cookies.contains("__Secure-3PSID=")
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                result.success(hasAuthCookie)
             } else if (call.method == "clearCookies") {
                 // Hapus seluruh cookie & storage WebView saat siswa logout agar tidak tertukar saat HP dipinjamkan
                 try {

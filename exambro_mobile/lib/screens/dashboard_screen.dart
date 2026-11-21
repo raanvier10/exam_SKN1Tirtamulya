@@ -40,6 +40,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _checkGoogleStatus() async {
     final prefs = await SharedPreferences.getInstance();
     bool localConnected = prefs.getBool('is_google_connected') ?? false;
+
+    // Verifikasi apakah cookie sesi Google benar-benar ada di WebView perangkat ini
+    bool? hasNativeCookie;
+    try {
+      const platform = MethodChannel('exam.bro/secure');
+      hasNativeCookie = await platform.invokeMethod<bool>('hasGoogleCookies');
+    } catch (_) {}
+
+    if (hasNativeCookie != null) {
+      localConnected = hasNativeCookie;
+      await prefs.setBool('is_google_connected', localConnected);
+    }
+
     if (mounted) {
       setState(() {
         _isGoogleConnected = localConnected;
@@ -47,16 +60,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     // Sinkronisasi status dengan Database Server:
-    // Database server adalah single source of truth untuk akun siswa yang sedang login.
     try {
       final userRes = await ApiService.getMe();
       if (userRes['success'] == true && userRes['data'] != null) {
         final userData = userRes['data'];
         bool dbConnected = (userData['google_connected'] == true || userData['google_connected'] == 1);
 
-        // Selalu samakan status lokal HP dengan status asli akun siswa dari database
-        await prefs.setBool('is_google_connected', dbConnected);
-        localConnected = dbConnected;
+        if (hasNativeCookie != null) {
+          // Jika perangkat ini punya/tidak punya cookie fisik yang berbeda dari DB (mis. ganti HP), sinkronkan ke DB
+          if (dbConnected != hasNativeCookie) {
+            await ApiService.updateGoogleStatus(hasNativeCookie);
+          }
+          localConnected = hasNativeCookie;
+        } else {
+          // Fallback (mis. iOS / Web): gunakan status lokal jika sudah true, atau ikuti DB
+          await prefs.setBool('is_google_connected', localConnected || dbConnected);
+          localConnected = localConnected || dbConnected;
+        }
 
         if (mounted && _isGoogleConnected != localConnected) {
           setState(() {

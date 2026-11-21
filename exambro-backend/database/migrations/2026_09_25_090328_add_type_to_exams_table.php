@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('exams', function (Blueprint $table) {
-            $table->string('type', 10)->default('uas')->after('title');
-        });
+        if (!Schema::hasColumn('exams', 'type')) {
+            Schema::table('exams', function (Blueprint $table) {
+                $table->string('type', 10)->default('uas')->after('title');
+            });
+        }
     }
 
     /**
@@ -21,8 +23,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('exams', function (Blueprint $table) {
-            $table->dropColumn('type');
-        });
+        if (Schema::hasColumn('exams', 'type')) {
+            Schema::table('exams', function (Blueprint $table) {
+                $table->dropColumn('type');
+            });
+        }
     }
 };

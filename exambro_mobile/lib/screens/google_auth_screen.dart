@@ -51,8 +51,10 @@ class _GoogleAuthScreenState extends State<GoogleAuthScreen> {
 
               final bool isLoginSuccess = host.contains('myaccount.google.com') ||
                   path.contains('manageaccount') ||
-                  url.contains('CheckCookie') ||
-                  (host.contains('accounts.google.com') && (path == '/' || path.isEmpty || path.startsWith('/b/')));
+                  (host.contains('accounts.google.com') &&
+                      (path.contains('/manageaccount') ||
+                          path.contains('/ signoutoptions') ||
+                          url.contains('ManageAccount')));
 
               if (isLoginSuccess && !_hasSaved) {
                 _hasSaved = true;

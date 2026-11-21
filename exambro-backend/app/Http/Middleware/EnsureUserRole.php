@@ -23,6 +23,19 @@ class EnsureUserRole
 
         $user = Auth::user();
 
+        if ($user->status !== 'active') {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Akun Anda sedang dinonaktifkan. Hubungi administrator.',
+                ], 403);
+            }
+            Auth::logout();
+            return redirect()->route('admin.login')->withErrors([
+                'username' => 'Akun Anda sedang dinonaktifkan.',
+            ]);
+        }
+
         if (empty($roles)) {
             return $next($request);
         }

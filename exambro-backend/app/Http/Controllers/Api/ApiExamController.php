@@ -46,11 +46,15 @@ class ApiExamController extends Controller
                           });
                   });
             })
+            ->with([
+                'participants' => fn ($q) => $q->where('user_id', $user->id),
+                'sessions' => fn ($q) => $q->where('user_id', $user->id)->where('status', 'ACTIVE')->latest('id'),
+            ])
             ->get();
 
         // Pastikan record participant terdaftar & lampirkan status pengerjaan siswa
         foreach ($exams as $exam) {
-            $participant = \App\Models\ExamParticipant::firstOrCreate([
+            $participant = $exam->participants->first() ?? \App\Models\ExamParticipant::firstOrCreate([
                 'exam_id' => $exam->id,
                 'user_id' => $user->id,
             ], [
@@ -59,11 +63,7 @@ class ApiExamController extends Controller
 
             // Sinkronisasi jika waktu sesi pengerjaan siswa telah habis saat aplikasi ditutup
             if ($participant->status === 'working') {
-                $activeSession = ExamSession::where('exam_id', $exam->id)
-                    ->where('user_id', $user->id)
-                    ->where('status', 'ACTIVE')
-                    ->latest('id')
-                    ->first();
+                $activeSession = $exam->sessions->first();
                 if ($activeSession && $activeSession->expired_at && $now->gt($activeSession->expired_at)) {
                     $activeSession->update(['status' => 'COMPLETED']);
                     $participant->update([
@@ -74,6 +74,8 @@ class ApiExamController extends Controller
             }
 
             $exam->student_status = $participant->status;
+            $exam->unsetRelation('participants');
+            $exam->unsetRelation('sessions');
             $exam->makeHidden(['google_form_url']);
         }
 
@@ -154,8 +156,9 @@ class ApiExamController extends Controller
             ], 403);
         }
 
-        // Validasi GPS untuk Siswa Reguler (Bukan PKL)
-        if (!$user->is_pkl) {
+        // Validasi GPS untuk Siswa Reguler (Bukan PKL & Bukan Ujian Khusus PKL)
+        $isExamPkl = strtolower((string) ($exam->type ?? '')) === 'pkl';
+        if (!$user->is_pkl && !$isExamPkl) {
             $request->validate([
                 'latitude' => 'required|numeric|between:-90,90',
                 'longitude' => 'required|numeric|between:-180,180',
@@ -218,6 +221,10 @@ class ApiExamController extends Controller
             return response()->json(['success' => false, 'message' => 'Ujian belum dimulai'], 400);
         }
 
+        if ($exam->end_at && $now->gt($exam->end_at)) {
+            return response()->json(['success' => false, 'message' => 'Waktu ujian telah berakhir.'], 400);
+        }
+
         // Perhitungan waktu kedaluwarsa sesi (tidak boleh melebihi end_at ujian)
         $sessionDuration = (int)($exam->duration ?: 60);
         $calculatedExpiry = $now->copy()->addMinutes($sessionDuration);
@@ -257,6 +264,14 @@ class ApiExamController extends Controller
                 'status' => 'ACTIVE'
             ]);
         } else {
+            // Tolak jika sesi aktif dimiliki perangkat lain (device binding)
+            if (!empty($session->device_id) && $session->device_id !== $request->device_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sesi ujian ini sedang aktif di perangkat lain. Hubungi pengawas jika Anda berganti perangkat.',
+                ], 403);
+            }
+
             // Sesi aktif sudah berjalan di database! Berarti siswa keluar dari ujian sebelumnya (HP dimatikan / restart / aplikasi ditutup paksa).
             // Cek apakah ini re-entry legal pertama tepat setelah admin membuka kunci (unlocked_at).
             $isFreshUnlockReentry = false;

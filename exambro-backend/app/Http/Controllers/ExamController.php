@@ -69,7 +69,7 @@ class ExamController extends Controller
 
             \App\Models\ExamSession::whereIn('exam_id', $expiredExamIds)
                 ->whereIn('status', ['ACTIVE', 'LOCKED'])
-                ->update(['status' => 'FINISHED']);
+                ->update(['status' => 'COMPLETED']);
         }
 
         $exams = $query->get();
@@ -398,7 +398,7 @@ class ExamController extends Controller
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'type' => 'nullable|in:uas,uts',
+            'type' => 'nullable|in:uas,uts,pkl',
             'description' => 'nullable|string|max:2000',
             'google_form_url' => 'required|url:http,https|max:2048',
             'duration' => 'required|integer|min:1',
@@ -488,7 +488,7 @@ class ExamController extends Controller
 
             \App\Models\ExamSession::where('exam_id', $exam->id)
                 ->whereIn('status', ['ACTIVE', 'LOCKED'])
-                ->update(['status' => 'FINISHED']);
+                ->update(['status' => 'COMPLETED']);
         }
 
         // Dukungan filter ruang kelas spesifik (misal saat dipantau dari daftar per ruang kelas UAS)
@@ -593,7 +593,7 @@ class ExamController extends Controller
         // Update active/locked sessions back to ACTIVE and record unlock timestamp
         \App\Models\ExamSession::where('exam_id', $exam->id)
             ->where('user_id', $user->id)
-            ->where('status', 'LOCKED')
+            ->whereIn('status', ['LOCKED', 'ACTIVE'])
             ->update([
                 'status' => 'ACTIVE',
                 'unlocked_at' => \Carbon\Carbon::now(),
@@ -651,7 +651,7 @@ class ExamController extends Controller
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'type' => 'nullable|in:uas,uts',
+            'type' => 'nullable|in:uas,uts,pkl',
             'description' => 'nullable|string|max:2000',
             'google_form_url' => 'required|url:http,https|max:2048',
             'start_at' => 'required|date',
@@ -667,6 +667,8 @@ class ExamController extends Controller
 
         if (Auth::user()->isTeacher()) {
             $validated['type'] = 'uts';
+        } elseif (empty($validated['type'])) {
+            $validated['type'] = $exam->type ?? 'uas';
         }
 
         $validated['end_at'] = \Carbon\Carbon::parse($validated['start_at'])->addMinutes((int)$validated['duration']);
@@ -882,7 +884,7 @@ class ExamController extends Controller
                     }
 
                     $examType = Auth::user()->isTeacher() ? 'uts' : (
-                        !empty($row['tipe']) && in_array(strtolower($row['tipe']), ['uas', 'uts']) ? strtolower($row['tipe']) : (
+                        !empty($row['tipe']) && in_array(strtolower($row['tipe']), ['uas', 'uts', 'pkl']) ? strtolower($row['tipe']) : (
                             preg_match('/\b(uts|pts|tengah)/i', $row['judul_ujian']) ? 'uts' : 'uas'
                         )
                     );

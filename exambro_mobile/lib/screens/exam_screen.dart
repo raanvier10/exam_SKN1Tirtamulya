@@ -28,11 +28,15 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
   bool _isLoading = true;
   int _violationCount = 0;
   bool _isLocked = false;
+  bool _isExiting = false;
+  bool _isWarningDialogOpen = false;
   bool _timeExpiredHandled = false;
   int? _sessionId;
   String? _originalFormUrl;
   Timer? _examTimer;
   late DateTime _endTime;
+  Future<void>? _startSessionFuture;
+  Future<void>? _pendingViolationReport;
 
   DateTime? _awayStartTime;
   DateTime? _entryTime;
@@ -193,10 +197,9 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                    path.startsWith('/about'));
 
               final isDocsNonForm = host == 'docs.google.com' &&
-                  (path.startsWith('/document') ||
-                   path.startsWith('/spreadsheets') ||
-                   path.startsWith('/presentation') ||
-                   path.startsWith('/drawings'));
+                  !(path.startsWith('/forms/d/') ||
+                      (path.startsWith('/forms/') &&
+                          (path.contains('/viewform') || path.contains('/formresponse'))));
 
               if (blockedGoogleHosts.contains(host) || isSearch || isGoogleJunkPage || isDocsNonForm) {
                 _handleViolation(
@@ -266,9 +269,9 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
             },
           ),
         );
-
-      _startExamSession();
     }
+
+    _startSessionFuture = _startExamSession();
   }
 
   Future<void> _secureScreen() async {
@@ -402,7 +405,9 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
             formUrl = '$formUrl${sep}embedded=true';
           }
           _originalFormUrl = formUrl;
-          _controller.loadRequest(Uri.parse(formUrl));
+          if (!kIsWeb) {
+            _controller.loadRequest(Uri.parse(formUrl));
+          }
         }
       } else if (response['locked'] == true) {
         if (!mounted) return;
@@ -434,11 +439,36 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _exitExam([String? result]) async {
+    if (_isExiting || !mounted) return;
+    _isExiting = true;
+    if (_pendingViolationReport != null) {
+      await _pendingViolationReport!.timeout(
+        const Duration(seconds: 3),
+        onTimeout: () {},
+      );
+    }
+    if (!mounted) return;
+    final examRoute = ModalRoute.of(context);
+    Navigator.of(context).popUntil((route) => route == examRoute || route.isFirst);
+    if (mounted && examRoute != null && examRoute.isCurrent) {
+      Navigator.of(context).pop(result);
+    }
+  }
+
   void _lockExamPermanently() {
     if (!mounted || _isLocked) return;
     setState(() {
       _isLocked = true;
     });
+
+    if (_isWarningDialogOpen) {
+      final examRoute = ModalRoute.of(context);
+      if (examRoute != null) {
+        Navigator.of(context).popUntil((route) => route == examRoute || route.isFirst);
+      }
+      _isWarningDialogOpen = false;
+    }
 
     final int maxViolations = int.tryParse(widget.exam['max_violation']?.toString() ?? '3') ?? 3;
 
@@ -612,10 +642,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                   height: 48,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pop(dialogContext);
-                      if (mounted) {
-                        Navigator.pop(context, 'locked');
-                      }
+                      _exitExam('locked');
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFEF4444),
@@ -731,11 +758,15 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                 child: ElevatedButton(
                   onPressed: () async {
                     Navigator.pop(dialogContext);
+                    final int examId = int.tryParse(widget.exam['id']?.toString() ?? '0') ?? 0;
                     try {
-                      await ApiService.finishExamSession(widget.exam['id']);
+                      await platform.invokeMethod('flushCookies');
+                    } catch (_) {}
+                    try {
+                      await ApiService.finishExamSession(examId);
                     } catch (_) {}
                     if (!mounted) return;
-                    Navigator.pop(context);
+                    _exitExam();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF2563EB),
@@ -753,16 +784,38 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
     );
   }
 
+  Future<void> _sendViolationWithRetry(
+    int examId,
+    String type,
+    String desc,
+  ) async {
+    if (_sessionId == null && _startSessionFuture != null) {
+      await _startSessionFuture;
+    }
+    if (_sessionId == null) return;
+
+    var res = await ApiService.reportViolation(examId, _sessionId!, type, desc);
+    if (res['success'] != true) {
+      await Future.delayed(const Duration(milliseconds: 800));
+      if (_sessionId != null) {
+        res = await ApiService.reportViolation(examId, _sessionId!, type, desc);
+      }
+    }
+    if (res['locked'] == true && !_isLocked && mounted) {
+      _lockExamPermanently();
+    }
+  }
+
   Future<void> _handleViolation(String type, String desc, {bool reportToServer = true}) async {
     if (_isLocked) return;
 
     final now = DateTime.now();
-    // 1. Grace period saat pertama kali masuk (5 detik pertama)
-    // Cegah dialog sistem Android (Sematkan Aplikasi / Immersive Mode / Keyboard) dihitung pelanggaran
+    // 1. Grace period saat pertama kali masuk (2 detik pertama)
+    // Cegah dialog sistem Android (Sematkan Aplikasi / Immersive Mode) dihitung pelanggaran
     if (type != 'SCREEN_OFF' &&
         type != 'APP_RESTART_OR_DEVICE_OFF' &&
         _entryTime != null &&
-        now.difference(_entryTime!).inSeconds < 5) {
+        now.difference(_entryTime!).inSeconds < 2) {
       return;
     }
 
@@ -781,24 +834,18 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
       setState(() {
         _violationCount++;
       });
-
-      if (_sessionId != null) {
-        ApiService.reportViolation(examId, _sessionId!, type, desc).then((res) {
-          if (res['locked'] == true && !_isLocked) {
-            _lockExamPermanently();
-          }
-        }).catchError((_) {});
-      }
+      _pendingViolationReport = _sendViolationWithRetry(examId, type, desc);
     }
 
     if (!mounted) return;
 
     if (_violationCount >= maxViolations) {
       _lockExamPermanently();
-    } else {
+    } else if (!_isWarningDialogOpen && !_isLocked) {
       final int remainingChances = maxViolations - _violationCount;
       final bool isCritical = remainingChances == 1;
 
+      _isWarningDialogOpen = true;
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -1047,11 +1094,10 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                   height: 48,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pop(dialogContext);
                       if (_isLocked || _violationCount >= maxViolations) {
-                        if (mounted) {
-                          Navigator.pop(context, 'locked');
-                        }
+                        _exitExam('locked');
+                      } else {
+                        Navigator.pop(dialogContext);
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -1079,7 +1125,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
             ),
           ),
         ),
-      );
+      ).whenComplete(() => _isWarningDialogOpen = false);
     }
   }
 
@@ -1290,7 +1336,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
       } catch (_) {}
       await ApiService.finishExamSession(examId);
       if (!mounted) return;
-      Navigator.pop(context);
+      _exitExam();
     }
   }
 
@@ -1558,9 +1604,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                                   const SizedBox(height: 24),
                                   ElevatedButton.icon(
                                     onPressed: () {
-                                      if (mounted) {
-                                        Navigator.pop(context, 'locked');
-                                      }
+                                      _exitExam('locked');
                                     },
                                     icon: const Icon(Icons.home_rounded, size: 18),
                                     label: const Text(

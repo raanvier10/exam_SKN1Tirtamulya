@@ -114,6 +114,10 @@ class StudentController extends Controller
 
         $student->update($data);
 
+        if ($data['status'] !== 'active') {
+            $student->forceFill(['api_token' => null])->save();
+        }
+
         return redirect()->route('admin.students.index')->with('success', 'Data siswa berhasil diupdate');
     }
 
