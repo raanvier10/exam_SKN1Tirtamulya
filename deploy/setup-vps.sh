@@ -73,10 +73,13 @@ cd /var/www/exam_SKN1Tirtamulya/exambro-backend
 # Setup file .env jika belum ada
 if [ ! -f ".env" ]; then
     cp .env.example .env
-    php artisan key:generate --force
 fi
 
+# Install dependensi PHP Composer terlebih dahulu sebelum artisan
 composer install --no-dev --optimize-autoloader --no-interaction
+
+# Generate App Key jika belum ada
+php artisan key:generate --force
 php artisan storage:link || true
 php artisan migrate --force || true
 
