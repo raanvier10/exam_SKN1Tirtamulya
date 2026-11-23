@@ -8,14 +8,16 @@ class ApiService {
   // Gunakan --dart-define=API_BASE_URL=https://domain-sekolah/api saat build production
   static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
 
-  // Daftar URL server kandidat lokal (dipakai hanya jika API_BASE_URL tidak disetel)
+  // Daftar URL server kandidat (dipakai hanya jika API_BASE_URL tidak disetel)
   static const List<String> candidateUrls = [
+    'https://smkn1tirtamulya.site/api',
     'http://127.0.0.1:8000/api',
     'http://10.122.152.181:8000/api',
     'http://192.168.1.5:8000/api',
   ];
 
   static const List<String> _webCandidateUrls = [
+    'https://smkn1tirtamulya.site/api',
     'http://localhost:8000/api',
     'http://127.0.0.1:8000/api',
   ];
