@@ -230,6 +230,20 @@
                 </div>
             @endif
 
+            @if($errors->any())
+                <div class="mb-6 sm:mb-8 p-4 rounded-xl bg-rose-50/80 border border-rose-200/80 text-rose-900 text-sm shadow-xs animate-fade-in">
+                    <div class="flex items-center gap-2 mb-1.5 font-bold text-rose-950">
+                        <div class="w-2 h-2 rounded-full bg-rose-500 ring-4 ring-rose-100 shrink-0"></div>
+                        <span>Peringatan Validasi:</span>
+                    </div>
+                    <ul class="list-disc list-inside text-xs space-y-1 ml-4 text-rose-800">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             @yield('content')
         </div>
     </main>
