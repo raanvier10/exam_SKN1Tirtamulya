@@ -56,6 +56,7 @@ systemctl enable php8.3-fpm
 
 # 5. Clone atau Setup Direktori Proyek
 echo "📂 [5/7] Mengatur direktori web di /var/www/exam_SKN1Tirtamulya..."
+git config --global --add safe.directory '*'
 mkdir -p /var/www
 cd /var/www
 

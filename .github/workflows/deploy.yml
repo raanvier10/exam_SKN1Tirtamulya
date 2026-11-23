@@ -24,6 +24,7 @@ jobs:
           script_stop: true
           script: |
             echo "🚀 [CI/CD] Memulai proses deploy otomatis..."
+            git config --global --add safe.directory '*'
             cd /var/www/exam_SKN1Tirtamulya
             
             # 1. Tarik perubahan terbaru dari GitHub
