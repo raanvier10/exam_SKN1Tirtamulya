@@ -1,17 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'Exambro Admin')</title>
+    <title>@yield('title', 'ExaSatrya Admin')</title>
     <link rel="icon" type="image/webp" href="{{ asset('images/logo.webp') }}">
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}">
     <link rel="apple-touch-icon" href="{{ asset('images/logo.webp') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #0F172A; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #F5F8FF;
+            color: #0F172A;
+        }
 
         dialog[open] {
             animation: modalScaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -46,58 +52,62 @@
         }
     </style>
 </head>
-<body class="antialiased min-h-screen flex selection:bg-indigo-500 selection:text-white bg-slate-50">
+<body class="antialiased min-h-screen flex selection:bg-[#2457E8] selection:text-white bg-[#F5F8FF]">
 
     <!-- Sidebar Backdrop for Mobile -->
     <div id="sidebarBackdrop" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 lg:hidden hidden transition-opacity duration-300" onclick="toggleSidebar(false)"></div>
 
-    <!-- Sidebar -->
-    <aside id="adminSidebar" class="w-64 bg-white flex flex-col fixed inset-y-0 left-0 h-full z-50 border-r border-slate-200/80 shadow-[1px_0_10px_rgba(0,0,0,0.02)] transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0">
-        <div class="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between">
+    <!-- Dark Navy Sidebar -->
+    <aside id="adminSidebar" class="w-64 bg-[#0D2149] text-white flex flex-col fixed inset-y-0 left-0 h-full z-50 border-r border-[#142C5C] transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0">
+        <div class="px-5 py-5 border-b border-white/10 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <img src="{{ asset('images/logo.webp') }}" class="w-9 h-9 object-contain shrink-0" alt="Logo">
+                <div class="w-9 h-9 rounded-xl bg-white p-1 flex items-center justify-center shrink-0">
+                    <img src="{{ asset('images/logo.webp') }}" class="w-full h-full object-contain" alt="Logo">
+                </div>
                 <div>
-                    <h1 class="text-base font-bold tracking-tight text-slate-900 leading-none">Exambro</h1>
-                    <span class="text-[11px] font-medium text-slate-400">{{ auth()->user()->role === 'admin' ? 'Admin Kurikulum' : 'Portal Guru & Pengawas' }}</span>
+                    <h1 class="text-base font-extrabold tracking-tight text-white leading-none">ExaSatrya</h1>
+                    <span class="text-[11px] font-medium text-blue-200">SMKN 1 Tirtamulya</span>
                 </div>
             </div>
             <!-- Mobile Close Button -->
-            <button type="button" onclick="toggleSidebar(false)" class="lg:hidden p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors" aria-label="Tutup Menu">
+            <button type="button" onclick="toggleSidebar(false)" class="lg:hidden p-1.5 rounded-xl text-blue-200 hover:text-white hover:bg-white/10 transition-colors" aria-label="Tutup Menu">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
             </button>
         </div>
-        
-        <nav class="flex-1 px-3 py-6 space-y-1.5 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <a href="{{ route('admin.dashboard') }}" 
-               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.dashboard') ? 'bg-indigo-50 text-indigo-600 font-semibold shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}">
-                <svg class="w-5 h-5 {{ request()->routeIs('admin.dashboard') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+        <nav class="flex-1 px-3 py-5 space-y-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div class="px-3.5 pb-2 text-[10px] font-bold uppercase tracking-wider text-blue-200/75">Utama</div>
+
+            <a href="{{ route('admin.dashboard') }}"
+               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.dashboard') ? 'bg-[#2457E8] text-white font-semibold shadow-sm' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
+                <svg class="w-5 h-5 {{ request()->routeIs('admin.dashboard') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
                 Dashboard
             </a>
 
             @if(auth()->user()->isAdmin())
-            <a href="{{ route('admin.classes.index') }}" 
-               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.classes.*') ? 'bg-indigo-50 text-indigo-600 font-semibold shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}">
-                <svg class="w-5 h-5 {{ request()->routeIs('admin.classes.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <a href="{{ route('admin.classes.index') }}"
+               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.classes.*') ? 'bg-[#2457E8] text-white font-semibold shadow-sm' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
+                <svg class="w-5 h-5 {{ request()->routeIs('admin.classes.*') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
                 Master Kelas
             </a>
 
-            <a href="{{ route('admin.students.index') }}" 
-               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.students.*') ? 'bg-indigo-50 text-indigo-600 font-semibold shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}">
-                <svg class="w-5 h-5 {{ request()->routeIs('admin.students.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <a href="{{ route('admin.students.index') }}"
+               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.students.*') ? 'bg-[#2457E8] text-white font-semibold shadow-sm' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
+                <svg class="w-5 h-5 {{ request()->routeIs('admin.students.*') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
                 Master Siswa
             </a>
 
-            <a href="{{ route('admin.teachers.index') }}" 
-               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.teachers.*') ? 'bg-indigo-50 text-indigo-600 font-semibold shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}">
-                <svg class="w-5 h-5 {{ request()->routeIs('admin.teachers.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <a href="{{ route('admin.teachers.index') }}"
+               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.teachers.*') ? 'bg-[#2457E8] text-white font-semibold shadow-sm' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
+                <svg class="w-5 h-5 {{ request()->routeIs('admin.teachers.*') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 14l9-5-9-5-9 5 9 5z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6" />
@@ -108,18 +118,18 @@
 
             <!-- Accordion Menu: Manajemen Ujian -->
             <div class="space-y-1">
-                <button type="button" 
+                <button type="button"
                         id="examMenuTrigger"
-                        onclick="toggleExamAccordion()" 
-                        class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group {{ request()->routeIs('admin.exams.*') ? 'bg-indigo-50 text-indigo-600 font-semibold shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}"
+                        onclick="toggleExamAccordion()"
+                        class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group {{ request()->routeIs('admin.exams.*') ? 'bg-[#2457E8] text-white font-semibold shadow-sm' : 'text-slate-200 hover:text-white hover:bg-white/10' }}"
                         aria-expanded="{{ request()->routeIs('admin.exams.*') ? 'true' : 'false' }}">
                     <div class="flex items-center gap-3">
-                        <svg class="w-5 h-5 {{ request()->routeIs('admin.exams.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="w-5 h-5 {{ request()->routeIs('admin.exams.*') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                         </svg>
                         <span>Manajemen Ujian</span>
                     </div>
-                    <svg id="examMenuChevron" class="w-4 h-4 transition-transform duration-200 {{ request()->routeIs('admin.exams.*') ? 'rotate-180 text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg id="examMenuChevron" class="w-4 h-4 transition-transform duration-200 {{ request()->routeIs('admin.exams.*') ? 'rotate-180 text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                     </svg>
                 </button>
@@ -127,31 +137,28 @@
                 <!-- Submenu Items (UTS & UAS) -->
                 <div id="examSubmenu" class="accordion-menu {{ request()->routeIs('admin.exams.*') ? 'expanded' : '' }} pl-4 pr-1">
                     <div class="accordion-menu-inner space-y-1">
-                        <div class="pl-3 border-l-2 border-slate-200/80 space-y-1 py-1">
+                        <div class="pl-3 border-l border-white/20 space-y-1 py-1">
                             @php
                                 $userIsTeacher = auth()->user()?->isTeacher();
                                 $defaultSubmenuMode = $userIsTeacher ? 'uts' : 'uas';
-                                $currentSubmenuMode = request('mode', request('category', $defaultSubmenuMode));
-                                $isUtsActive = request()->routeIs('admin.exams.index') && ($currentSubmenuMode === 'uts');
-                                $isUasActive = request()->routeIs('admin.exams.index') && ($currentSubmenuMode === 'uas');
+                                $routeExamType = isset($exam) ? ($exam->type ?? null) : null;
+                                $currentSubmenuMode = request('mode', request('category', request('type', $routeExamType ?? $defaultSubmenuMode)));
+                                $isUtsActive = request()->routeIs('admin.exams.*') && ($currentSubmenuMode === 'uts');
+                                $isUasActive = request()->routeIs('admin.exams.*') && ($currentSubmenuMode === 'uas');
                             @endphp
                             <!-- UTS Submenu -->
-                            <a href="{{ route('admin.exams.index', ['mode' => 'uts']) }}" 
+                            <a href="{{ route('admin.exams.index', ['mode' => 'uts']) }}"
                                id="cardCategoryUts"
-                               class="sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 {{ $isUtsActive ? 'bg-indigo-50 text-indigo-700 font-bold shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}">
-                                <svg class="w-3.5 h-3.5 shrink-0 {{ $isUtsActive ? 'text-indigo-600' : 'text-slate-400' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                </svg>
+                               class="sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 {{ $isUtsActive ? 'bg-white/15 text-white font-bold' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $isUtsActive ? 'bg-[#DCE9FF]' : 'bg-blue-200/60' }}"></span>
                                 <span>UTS</span>
                             </a>
 
                             <!-- UAS Submenu -->
-                            <a href="{{ route('admin.exams.index', ['mode' => 'uas']) }}" 
+                            <a href="{{ route('admin.exams.index', ['mode' => 'uas']) }}"
                                id="cardCategoryUas"
-                               class="sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 {{ $isUasActive ? 'bg-indigo-50 text-indigo-700 font-bold shadow-2xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}">
-                                <svg class="w-3.5 h-3.5 shrink-0 {{ $isUasActive ? 'text-indigo-600' : 'text-slate-400' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                </svg>
+                               class="sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 {{ $isUasActive ? 'bg-white/15 text-white font-bold' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $isUasActive ? 'bg-[#DCE9FF]' : 'bg-blue-200/60' }}"></span>
                                 <span>UAS</span>
                             </a>
                         </div>
@@ -159,79 +166,75 @@
                 </div>
             </div>
 
-            <a href="{{ route('admin.change-password') }}" 
-               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.change-password*') ? 'bg-indigo-50 text-indigo-600 font-semibold shadow-xs' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50' }}">
-                <svg class="w-5 h-5 {{ request()->routeIs('admin.change-password*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <a href="{{ route('admin.change-password') }}"
+               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.change-password*') ? 'bg-[#2457E8] text-white font-semibold shadow-sm' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
+                <svg class="w-5 h-5 {{ request()->routeIs('admin.change-password*') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                 </svg>
                 Ganti Password
             </a>
         </nav>
 
-        <div class="p-4 border-t border-slate-100 space-y-3">
-            <div class="px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0">
-                    {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 2)) }}
-                </div>
-                <div class="overflow-hidden">
-                    <div class="text-xs font-semibold text-slate-800 truncate">{{ auth()->user()->name }}</div>
-                    <div class="text-[10px] font-medium text-slate-400">
-                        @if(auth()->user()->isAdmin())
-                            <span class="text-indigo-600 font-semibold">Administrator</span>
-                        @else
-                            <span class="text-emerald-600 font-semibold">Guru Pengampu</span>
-                        @endif
+        <!-- Bottom Profile + Logout -->
+        <div class="p-3.5 border-t border-white/10">
+            <div class="px-3 py-2.5 rounded-xl bg-white/[0.08] border border-white/10 flex items-center justify-between gap-2.5">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div class="w-8 h-8 rounded-full bg-[#2457E8] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                        {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 2)) }}
+                    </div>
+                    <div class="overflow-hidden">
+                        <div class="text-xs font-semibold text-white truncate">{{ auth()->user()->name }}</div>
+                        <div class="text-[10px] font-medium text-blue-200">
+                            {{ auth()->user()->isAdmin() ? 'Administrator' : 'Guru Pengampu' }}
+                        </div>
                     </div>
                 </div>
+                <form action="{{ route('admin.logout') }}" method="POST" class="shrink-0">
+                    @csrf
+                    <button type="submit" title="Logout" class="p-1.5 rounded-lg text-blue-200 hover:text-rose-300 hover:bg-white/10 transition-colors">
+                        <svg class="w-4.5 h-4.5 w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                    </button>
+                </form>
             </div>
-
-            <form action="{{ route('admin.logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-all duration-150 group">
-                    <svg class="w-5 h-5 text-slate-400 group-hover:text-rose-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    Logout
-                </button>
-            </form>
         </div>
     </aside>
 
     <!-- Main Content -->
     <main class="flex-1 lg:ml-64 min-h-screen flex flex-col w-full min-w-0">
-        <!-- Sticky Mobile Topbar Header -->
-        <header class="sticky top-0 z-30 flex items-center justify-between bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 lg:hidden shadow-xs">
-            <div class="flex items-center gap-2.5">
-                <button type="button" onclick="toggleSidebar(true)" class="p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors active:scale-95" aria-label="Buka Menu">
-                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <!-- Top Header Bar -->
+        <header class="sticky top-0 z-30 flex items-center justify-between bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 lg:px-8 py-3.5">
+            <div class="flex items-center gap-3">
+                <button type="button" onclick="toggleSidebar(true)" class="lg:hidden p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors active:scale-95" aria-label="Buka Menu">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
-                <div class="flex items-center gap-2">
-                    <img src="{{ asset('images/logo.webp') }}" class="w-7 h-7 object-contain shrink-0" alt="Logo">
-                    <span class="font-bold text-slate-900 text-sm tracking-tight">Exambro</span>
-                </div>
+                <h2 class="text-base sm:text-lg font-extrabold text-[#142C5C] tracking-tight">
+                    @yield('header_title', View::hasSection('title') ? html_entity_decode(trim(View::yieldContent('title')), ENT_QUOTES, 'UTF-8') : 'Dashboard Overview')
+                </h2>
             </div>
         </header>
 
         <!-- Content Area -->
         <div class="p-4 sm:p-6 lg:p-8 flex-1 w-full">
             @if(session('success'))
-                <div class="mb-6 sm:mb-8 p-4 rounded-xl bg-emerald-50/80 border border-emerald-200/80 text-emerald-900 text-sm flex items-center gap-3 shadow-xs animate-fade-in">
+                <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-sm flex items-center gap-3 shadow-2xs">
                     <div class="w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-100 shrink-0"></div>
                     <span class="font-medium">{{ session('success') }}</span>
                 </div>
             @endif
 
             @if(session('error'))
-                <div class="mb-6 sm:mb-8 p-4 rounded-xl bg-rose-50/80 border border-rose-200/80 text-rose-900 text-sm flex items-center gap-3 shadow-xs animate-fade-in">
+                <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-sm flex items-center gap-3 shadow-2xs">
                     <div class="w-2 h-2 rounded-full bg-rose-500 ring-4 ring-rose-100 shrink-0"></div>
                     <span class="font-medium">{{ session('error') }}</span>
                 </div>
             @endif
 
             @if($errors->any())
-                <div class="mb-6 sm:mb-8 p-4 rounded-xl bg-rose-50/80 border border-rose-200/80 text-rose-900 text-sm shadow-xs animate-fade-in">
+                <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-sm shadow-2xs">
                     <div class="flex items-center gap-2 mb-1.5 font-bold text-rose-950">
                         <div class="w-2 h-2 rounded-full bg-rose-500 ring-4 ring-rose-100 shrink-0"></div>
                         <span>Peringatan Validasi:</span>
@@ -253,7 +256,7 @@
             const sidebar = document.getElementById('adminSidebar');
             const backdrop = document.getElementById('sidebarBackdrop');
             if (!sidebar || !backdrop) return;
-            
+
             if (open) {
                 sidebar.classList.remove('-translate-x-full');
                 backdrop.classList.remove('hidden');
@@ -278,56 +281,167 @@
             }
         }
 
-
-        // Close on Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                toggleSidebar(false);
-            }
-        });
-
-        document.addEventListener('click', function(e) {
-            // Close all custom selects if clicked outside
+        function closeAllSelects(except = null) {
             document.querySelectorAll('.custom-select').forEach(function(el) {
-                if (!el.contains(e.target)) {
+                if (el !== except) {
                     el.querySelector('.select-options')?.classList.add('hidden');
                     el.querySelector('.chevron')?.classList.remove('rotate-180');
                 }
             });
+        }
 
-            // Toggle select on trigger click
+        function filterSelectOptions(parent, query) {
+            const q = (query || '').toLowerCase().trim();
+            let visibleCount = 0;
+            parent.querySelectorAll('.option-item').forEach(function(opt) {
+                const match = opt.textContent.toLowerCase().includes(q);
+                opt.classList.toggle('hidden', !match);
+                if (match) visibleCount++;
+            });
+            const emptyMsg = parent.querySelector('.select-empty');
+            if (emptyMsg) emptyMsg.classList.toggle('hidden', visibleCount > 0);
+        }
+
+        function attachSelectSearch(parent) {
+            const optionsBox = parent.querySelector('.select-options');
+            if (!optionsBox || optionsBox.querySelector('.select-search-wrap')) return;
+            if (parent.querySelectorAll('.option-item').length <= 4 && parent.dataset.searchable !== 'true') return;
+
+            const wrap = document.createElement('div');
+            wrap.className = 'select-search-wrap p-2 border-b border-slate-100 bg-slate-50/80 sticky top-0 z-10';
+            wrap.innerHTML = `
+                <div class="relative">
+                    <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input type="text" class="select-search w-full bg-white border border-slate-200 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8]" placeholder="Cari..." autocomplete="off">
+                </div>
+            `;
+            optionsBox.prepend(wrap);
+
+            const empty = document.createElement('div');
+            empty.className = 'select-empty hidden px-3 py-3 text-center text-xs text-slate-400';
+            empty.textContent = 'Tidak ada hasil.';
+            optionsBox.appendChild(empty);
+
+            wrap.querySelector('.select-search').addEventListener('input', function() {
+                filterSelectOptions(parent, this.value);
+            });
+        }
+
+        function initSearchableSelects() {
+            document.querySelectorAll('main select').forEach(function(select) {
+                if (select.dataset.enhanced || select.multiple || select.hasAttribute('data-native') || select.classList.contains('bg-transparent')) {
+                    return;
+                }
+                select.dataset.enhanced = 'true';
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'relative custom-select w-full';
+
+                const trigger = document.createElement('button');
+                trigger.type = 'button';
+                trigger.className = 'select-trigger w-full flex items-center justify-between gap-2 bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 hover:border-slate-300 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all text-left cursor-pointer';
+
+                const selectedSpan = document.createElement('span');
+                selectedSpan.className = 'selected-text truncate font-medium';
+                const currentOpt = select.options[select.selectedIndex];
+                selectedSpan.textContent = currentOpt ? currentOpt.textContent.trim() : 'Pilih...';
+                if (!select.value) selectedSpan.classList.add('text-slate-600');
+                else selectedSpan.classList.add('text-slate-900');
+
+                trigger.appendChild(selectedSpan);
+                trigger.insertAdjacentHTML('beforeend', `<svg class="w-4 h-4 text-slate-400 chevron transition-transform duration-200 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>`);
+
+                const menu = document.createElement('div');
+                menu.className = 'select-options hidden absolute left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl z-[70] max-h-60 overflow-y-auto';
+
+                const list = document.createElement('div');
+                list.className = 'p-1.5 space-y-0.5';
+
+                Array.from(select.options).forEach(function(opt) {
+                    const isSelected = opt.selected;
+                    const item = document.createElement('div');
+                    item.dataset.value = opt.value;
+                    item.className = `option-item px-3 py-2 rounded-xl text-xs sm:text-sm cursor-pointer transition-colors flex items-center justify-between gap-2 ${isSelected ? 'bg-[#F5F8FF] text-[#2457E8] font-semibold' : 'text-slate-700 hover:bg-[#F5F8FF] hover:text-[#2457E8]'}`;
+                    item.innerHTML = `<span class="truncate">${opt.textContent.trim()}</span><svg class="w-4 h-4 text-[#2457E8] shrink-0 check-icon ${isSelected ? '' : 'hidden'}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7" /></svg>`;
+                    list.appendChild(item);
+                });
+
+                menu.appendChild(list);
+                wrapper.appendChild(trigger);
+                wrapper.appendChild(menu);
+
+                select.classList.add('sr-only');
+                select.tabIndex = -1;
+                select.parentNode.insertBefore(wrapper, select.nextSibling);
+                wrapper.appendChild(select);
+                attachSelectSearch(wrapper);
+            });
+
+            document.querySelectorAll('.custom-select').forEach(attachSelectSearch);
+        }
+
+        document.addEventListener('DOMContentLoaded', initSearchableSelects);
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                toggleSidebar(false);
+                closeAllSelects();
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            const activeSelect = e.target.closest('.custom-select');
+            closeAllSelects(activeSelect);
+
             const trigger = e.target.closest('.select-trigger');
             if (trigger) {
                 const parent = trigger.closest('.custom-select');
                 const options = parent.querySelector('.select-options');
                 const chevron = parent.querySelector('.chevron');
                 const isHidden = options.classList.toggle('hidden');
+                chevron?.classList.toggle('rotate-180', !isHidden);
                 if (!isHidden) {
-                    chevron?.classList.add('rotate-180');
-                } else {
-                    chevron?.classList.remove('rotate-180');
+                    const searchInput = parent.querySelector('.select-search');
+                    if (searchInput) {
+                        searchInput.value = '';
+                        filterSelectOptions(parent, '');
+                        setTimeout(() => searchInput.focus(), 10);
+                    }
                 }
+                return;
             }
 
-            // Select an option
             const option = e.target.closest('.option-item');
             if (option) {
                 const parent = option.closest('.custom-select');
                 const val = option.getAttribute('data-value');
                 const text = option.querySelector('span')?.textContent || option.textContent;
-                const input = parent.querySelector('input[type="hidden"]');
+                const nativeSelect = parent.querySelector('select');
+                const hiddenInput = parent.querySelector('input[type="hidden"]');
                 const selectedText = parent.querySelector('.selected-text');
-                
-                if (input) input.value = val;
+
                 if (selectedText) {
                     selectedText.textContent = text.trim();
                     selectedText.classList.remove('text-slate-400', 'text-slate-500');
                     selectedText.classList.add('text-slate-900', 'font-medium');
                 }
-                parent.querySelectorAll('.option-item').forEach(opt => opt.classList.remove('bg-indigo-50', 'text-indigo-600', 'font-semibold'));
-                option.classList.add('bg-indigo-50', 'text-indigo-600', 'font-semibold');
-                parent.querySelector('.select-options')?.classList.add('hidden');
-                parent.querySelector('.chevron')?.classList.remove('rotate-180');
+                parent.querySelectorAll('.option-item').forEach(opt => {
+                    opt.classList.remove('bg-indigo-50', 'text-indigo-600', 'bg-[#F5F8FF]', 'text-[#2457E8]', 'font-semibold');
+                    opt.querySelector('.check-icon')?.classList.add('hidden');
+                });
+                option.classList.add('bg-[#F5F8FF]', 'text-[#2457E8]', 'font-semibold');
+                option.querySelector('.check-icon')?.classList.remove('hidden');
+
+                closeAllSelects();
+
+                if (nativeSelect) {
+                    nativeSelect.value = val;
+                    nativeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                } else if (hiddenInput) {
+                    hiddenInput.value = val;
+                }
             }
         });
     </script>

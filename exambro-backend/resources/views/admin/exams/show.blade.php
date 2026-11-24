@@ -1,33 +1,24 @@
 @extends('layouts.admin')
-@section('title', 'Detail & Monitoring Ujian - ' . $exam->title)
+@section('title', 'Detail & Monitoring Ujian')
 
 @section('content')
 <div class="w-full space-y-6">
     <!-- Header & Action Bar -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-            <div class="flex items-center gap-2 mb-2">
-                <a href="{{ route('admin.exams.index', ['mode' => 'uas']) }}" class="text-xs sm:text-sm font-medium text-slate-500 hover:text-indigo-600 transition-colors inline-flex items-center gap-1.5">
+            <div class="flex items-center gap-2 mb-1.5">
+                <a href="{{ route('admin.exams.index', ['mode' => 'uas']) }}" class="text-xs sm:text-sm font-medium text-slate-500 hover:text-[#2457E8] transition-colors inline-flex items-center gap-1.5">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
                     Kembali ke Jadwal Ujian
                 </a>
             </div>
-            <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
-                <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">{{ $exam->title }}</h2>
+            <div class="flex items-center gap-3 flex-wrap">
+                <h2 class="text-xl sm:text-2xl font-extrabold text-[#142C5C] tracking-tight">{{ $exam->title }}</h2>
                 @if(isset($selectedClass) && $selectedClass)
-                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 text-white shadow-2xs">
+                    <span class="text-xs font-bold text-[#142C5C] bg-[#F5F8FF] border border-blue-200 px-2.5 py-1 rounded-lg">
                         Ruang Kelas {{ $selectedClass->name }}
-                    </span>
-                @endif
-                @if($exam->status === 'active')
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Sesi Aktif
-                    </span>
-                @else
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 ring-1 ring-slate-400/20">
-                        <span class="w-2 h-2 rounded-full bg-slate-400"></span> Draft / Nonaktif
                     </span>
                 @endif
             </div>
@@ -36,40 +27,27 @@
         @php
             $canManageExam = auth()->user()->isAdmin() || ($exam->created_by === auth()->id());
         @endphp
-        <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-full md:w-auto">
-            <!-- Tombol Pintasan Cepat ke Log Pelanggaran -->
-            <a href="#violationsSection" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-white border border-slate-200/80 text-slate-700 rounded-xl text-xs sm:text-sm font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 shadow-xs transition-all active:scale-[0.98] w-full sm:w-auto" title="Gulir cepat ke Riwayat Pelanggaran Siswa">
-                <svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                </svg>
-                <span>Log Pelanggaran ({{ $stats['total_violations'] }})</span>
-            </a>
+        <div class="flex flex-wrap items-center gap-2.5">
+            @if($exam->status === 'active')
+                <span class="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-emerald-700 whitespace-nowrap">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Sesi Aktif
+                </span>
+            @else
+                <span class="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-500 whitespace-nowrap">
+                    <span class="w-2 h-2 rounded-full bg-slate-400"></span> Draft / Nonaktif
+                </span>
+            @endif
 
-            <!-- Tombol Auto Refresh -->
-            <button id="autoRefreshBtn" onclick="toggleAutoRefresh()" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-white border border-slate-200/80 text-slate-700 rounded-xl text-xs sm:text-sm font-medium hover:bg-indigo-50 hover:text-indigo-600 shadow-xs transition-all active:scale-[0.98] w-full sm:w-auto">
-                <span class="w-2 h-2 rounded-full bg-slate-400 shrink-0" id="autoRefreshIndicator"></span>
-                <span id="autoRefreshText" class="truncate">Auto Refresh: OFF</span>
-            </button>
-
-            <!-- Tombol Manual Refresh -->
-            <button onclick="window.location.reload();" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-white border border-slate-200/80 text-slate-700 rounded-xl text-xs sm:text-sm font-medium hover:bg-slate-50 hover:text-indigo-600 shadow-xs transition-all active:scale-[0.98] w-full sm:w-auto">
-                <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <span>Refresh Data</span>
-            </button>
-
-            <!-- Tombol Export Pelanggaran -->
-            <a href="{{ route('admin.exams.export-violations', $exam->id) }}" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-white border border-slate-200/80 text-slate-700 rounded-xl text-xs sm:text-sm font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 shadow-xs transition-all active:scale-[0.98] w-full sm:w-auto {{ $canManageExam ? '' : 'col-span-2' }}" title="Download Rekap Riwayat Pelanggaran Siswa (CSV)">
-                <svg class="w-4 h-4 text-rose-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <a href="{{ route('admin.exams.export-violations', $exam->id) }}" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-semibold hover:border-[#2457E8] hover:text-[#2457E8] shadow-2xs transition whitespace-nowrap">
+                <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
-                <span>{{ $canManageExam ? 'Export CSV' : 'Export Rekap Pelanggaran (CSV)' }}</span>
+                <span>{{ $canManageExam ? 'Export CSV' : 'Export Pelanggaran (CSV)' }}</span>
             </a>
 
             @if($canManageExam)
-            <a href="{{ route('admin.exams.edit', $exam->id) }}" class="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-white border border-slate-200/80 text-slate-700 rounded-xl text-xs sm:text-sm font-medium hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 shadow-xs transition-all active:scale-[0.98] w-full sm:w-auto">
-                <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <a href="{{ route('admin.exams.edit', $exam->id) }}" class="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#2457E8] hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition whitespace-nowrap">
+                <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
                 <span>Edit Ujian</span>
@@ -88,244 +66,224 @@
         </div>
     @endif
 
-    <!-- Quick Stat Cards (Master Card on top for mobile, balanced 2x2 grid, 5-col on desktop) -->
+    <!-- Quick Stat Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-        <!-- 1. Total Peserta (Master Card) -->
-        <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-xs col-span-2 lg:col-span-1 flex items-center justify-between lg:block">
-            <div class="flex items-center gap-2.5 lg:block">
-                <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs shrink-0 lg:hidden">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                </div>
-                <div>
-                    <div class="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-wider mb-0.5 lg:mb-1">Total Peserta</div>
-                    <div class="text-[10px] sm:text-[11px] text-slate-400">Siswa Terdaftar</div>
-                </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs col-span-2 lg:col-span-1 flex items-center justify-between lg:block">
+            <div>
+                <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Total Peserta</div>
+                <div class="text-[11px] text-slate-400 mt-0.5 lg:hidden">Siswa Terdaftar</div>
             </div>
-            <div class="text-xl sm:text-2xl font-bold text-slate-900">{{ $stats['total_participants'] }}</div>
+            <div class="text-2xl font-bold text-[#142C5C] lg:mt-1">{{ $stats['total_participants'] }}</div>
+            <div class="text-[11px] text-slate-500 mt-0.5 hidden lg:block">Siswa Terdaftar</div>
         </div>
 
-        <!-- 2. Belum Mulai / Tidak Mengerjakan -->
-        <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-xs col-span-1">
-            <div class="text-[10px] sm:text-xs font-semibold {{ ($exam->end_at && now()->gt($exam->end_at) && $stats['registered'] > 0) ? 'text-rose-600' : 'text-slate-500' }} uppercase tracking-wider mb-1">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+            <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                 {{ ($exam->end_at && now()->gt($exam->end_at)) ? 'Tidak Mengerjakan' : 'Belum Mulai' }}
             </div>
-            <div class="text-xl sm:text-2xl font-bold {{ ($exam->end_at && now()->gt($exam->end_at) && $stats['registered'] > 0) ? 'text-rose-600' : 'text-slate-600' }}">{{ $stats['registered'] }}</div>
-            <div class="text-[10px] sm:text-[11px] {{ ($exam->end_at && now()->gt($exam->end_at) && $stats['registered'] > 0) ? 'text-rose-500 font-medium' : 'text-slate-400' }} mt-0.5 truncate">
+            <div class="text-2xl font-bold text-[#142C5C] mt-1">{{ $stats['registered'] }}</div>
+            <div class="text-[11px] text-slate-500 mt-0.5 truncate">
                 {{ ($exam->end_at && now()->gt($exam->end_at)) ? 'Tidak Mengikuti' : 'Menunggu Jadwal' }}
             </div>
         </div>
 
-        <!-- 3. Mengerjakan -->
-        <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-xs col-span-1">
-            <div class="text-[10px] sm:text-xs font-semibold text-emerald-600 uppercase tracking-wider mb-1">Mengerjakan</div>
-            <div class="text-xl sm:text-2xl font-bold text-emerald-600">{{ $stats['working'] }}</div>
-            <div class="text-[10px] sm:text-[11px] text-emerald-600/80 mt-0.5 truncate">Sesi Aktif di App</div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+            <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Mengerjakan</div>
+            <div class="text-2xl font-bold text-[#2457E8] mt-1">{{ $stats['working'] }}</div>
+            <div class="text-[11px] text-slate-500 mt-0.5 truncate">Sesi Aktif di App</div>
         </div>
 
-        <!-- 4. Terkunci (Locked) -->
-        <div class="bg-white p-3.5 sm:p-4 rounded-2xl border {{ $stats['locked'] > 0 ? 'border-rose-400 bg-rose-50/40 ring-1 ring-rose-200' : 'border-slate-200' }} shadow-xs col-span-1">
-            <div class="text-[10px] sm:text-xs font-semibold {{ $stats['locked'] > 0 ? 'text-rose-600' : 'text-slate-500' }} uppercase tracking-wider mb-1">Terkunci</div>
-            <div class="text-xl sm:text-2xl font-bold {{ $stats['locked'] > 0 ? 'text-rose-600' : 'text-slate-700' }}">{{ $stats['locked'] }}</div>
-            <div class="text-[10px] sm:text-[11px] {{ $stats['locked'] > 0 ? 'text-rose-500 font-medium' : 'text-slate-400' }} mt-0.5 truncate">Butuh Buka Kunci</div>
+        <div class="bg-white p-4 rounded-2xl border {{ $stats['locked'] > 0 ? 'border-rose-300 bg-rose-50/30' : 'border-slate-200' }} shadow-2xs">
+            <div class="text-[11px] font-semibold {{ $stats['locked'] > 0 ? 'text-rose-600' : 'text-slate-500' }} uppercase tracking-wider">Terkunci</div>
+            <div class="text-2xl font-bold {{ $stats['locked'] > 0 ? 'text-rose-600' : 'text-[#142C5C]' }} mt-1">{{ $stats['locked'] }}</div>
+            <div class="text-[11px] {{ $stats['locked'] > 0 ? 'text-rose-600 font-medium' : 'text-slate-500' }} mt-0.5 truncate">Butuh Buka Kunci</div>
         </div>
 
-        <!-- 5. Selesai -->
-        <div class="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-xs col-span-1">
-            <div class="text-[10px] sm:text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">Selesai</div>
-            <div class="text-xl sm:text-2xl font-bold text-indigo-600">{{ $stats['finished'] }}</div>
-            <div class="text-[10px] sm:text-[11px] text-indigo-500/80 mt-0.5 truncate">Submit Form</div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
+            <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Selesai</div>
+            <div class="text-2xl font-bold text-emerald-600 mt-1">{{ $stats['finished'] }}</div>
+            <div class="text-[11px] text-slate-500 mt-0.5 truncate">Submit Form</div>
         </div>
     </div>
 
-    <!-- Informasi Ujian Box -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 items-stretch">
-        <!-- Kolom Kiri: Informasi Utama & Link -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 sm:p-6 lg:col-span-2 flex flex-col justify-between space-y-4">
-            <div>
-                @if(isset($selectedClass) && $selectedClass)
-                    <div class="flex items-center justify-between gap-3 mb-4 p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
-                        <div class="flex items-center gap-2">
-                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ruang Pengawasan:</span>
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 text-white shadow-2xs">
-                                Ruang Kelas {{ $selectedClass->name }}
-                            </span>
-                            <span class="text-xs text-slate-500 font-medium">({{ $stats['total_participants'] }} Siswa Terdaftar)</span>
-                        </div>
-                        @if($exam->classes->count() > 1)
-                            <a href="{{ route('admin.exams.show', $exam->id) }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold hover:underline">
-                                Lihat Semua Kelas
-                            </a>
-                        @endif
-                    </div>
-                @elseif($exam->classes->count() > 1)
-                    <div class="flex items-center justify-between gap-3 mb-4 p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex-wrap">
-                        <div class="flex items-center gap-2">
-                            <label for="roomSelectFilter" class="text-xs font-semibold text-slate-500 uppercase tracking-wider shrink-0">Filter Ruang Pengawasan:</label>
-                            <select id="roomSelectFilter" onchange="window.location.href = this.value" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500/20">
-                                <option value="{{ route('admin.exams.show', $exam->id) }}" selected>Semua Ruang Kelas ({{ $exam->classes->count() }} Kelas)</option>
-                                @foreach($exam->classes as $cls)
-                                    <option value="{{ route('admin.exams.show', ['exam' => $exam->id, 'class_id' => $cls->id]) }}">Ruang Kelas {{ $cls->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <span class="text-xs text-slate-400">Total {{ $stats['total_participants'] }} Siswa</span>
-                    </div>
-                @elseif($exam->classes->count() === 1)
-                    <div class="flex items-center gap-2 mb-4 p-3 bg-slate-50 border border-slate-200/80 rounded-xl">
-                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ruang Kelas:</span>
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 text-white shadow-2xs">
-                            Ruang Kelas {{ $exam->classes->first()->name }}
-                        </span>
-                    </div>
-                @endif
+    <!-- Segmented Tab Navigation -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-2xs p-1 grid grid-cols-1 sm:grid-cols-3 gap-1">
+        <button type="button" id="tabBtn-monitoring" onclick="switchShowTab('monitoring')" class="py-2.5 px-4 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-2 bg-[#1E40AF] text-white shadow-2xs cursor-pointer">
+            <span>Monitoring Peserta ({{ $stats['total_participants'] }})</span>
+        </button>
+        <button type="button" id="tabBtn-info" onclick="switchShowTab('info')" class="py-2.5 px-4 rounded-lg text-xs sm:text-sm font-medium transition flex items-center justify-center gap-2 text-slate-600 hover:text-[#142C5C] hover:bg-slate-50 cursor-pointer">
+            <span>Informasi &amp; Akses Ujian</span>
+        </button>
+        <button type="button" id="tabBtn-violations" onclick="switchShowTab('violations')" class="py-2.5 px-4 rounded-lg text-xs sm:text-sm font-medium transition flex items-center justify-center gap-2 text-slate-600 hover:text-[#142C5C] hover:bg-slate-50 cursor-pointer">
+            <span>Log Pelanggaran ({{ $violations->count() }})</span>
+        </button>
+    </div>
 
-                <div class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">Deskripsi Ujian</div>
-                <div class="text-slate-700 text-xs sm:text-sm leading-relaxed bg-slate-50 p-3.5 rounded-xl border border-slate-200">{{ $exam->description ?: 'Tidak ada deskripsi tambahan untuk ujian ini.' }}</div>
+    <!-- TAB 2: Informasi & Akses Ujian -->
+    <div id="tabPanel-info" class="hidden">
+        @php
+            $sebWebUrl = \App\Http\Controllers\SebExamController::getExamWebUrl($exam);
+            $sebSchemeUrl = \App\Http\Controllers\SebExamController::getSebSchemeUrl($exam);
+            $serverHost = \App\Http\Controllers\SebExamController::getPublicServerBaseUrl();
+        @endphp
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-100">
+                <h3 class="text-sm sm:text-base font-bold text-[#142C5C]">Informasi, Parameter &amp; Akses Ujian</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Jadwal pelaksanaan, aturan keamanan, tautan Google Form, dan akses Safe Exam Browser (iOS).</p>
             </div>
-            
-            <div class="p-3.5 sm:p-4 rounded-xl bg-indigo-50/60 border border-indigo-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div class="overflow-hidden min-w-0">
-                    <div class="text-indigo-900 text-xs font-semibold uppercase tracking-wider mb-1 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-indigo-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                        </svg>
-                        Google Form URL (Secure Gateway)
-                    </div>
-                    <a href="{{ $exam->google_form_url }}" target="_blank" class="text-indigo-600 text-xs hover:underline font-mono break-all font-medium flex items-center gap-1 mt-0.5">
-                        {{ $exam->google_form_url }}
-                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                    </a>
-                </div>
-                
-                @if(auth()->user()->isAdmin() || ($exam->created_by === auth()->id()))
-                <!-- Tombol Ubah Link Google Form Cepat -->
-                <button type="button" onclick="document.getElementById('quickEditFormModal').showModal()" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white hover:bg-indigo-600 text-indigo-700 hover:text-white border border-indigo-200 hover:border-indigo-600 rounded-xl text-xs font-bold shadow-2xs transition-all shrink-0 active:scale-[0.98]">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                    Ubah Link Form
-                </button>
-                @endif
-            </div>
-
-            @php
-                $sebWebUrl = \App\Http\Controllers\SebExamController::getExamWebUrl($exam);
-                $sebSchemeUrl = \App\Http\Controllers\SebExamController::getSebSchemeUrl($exam);
-                $serverHost = \App\Http\Controllers\SebExamController::getPublicServerBaseUrl();
-            @endphp
-            <!-- Card Akses Safe Exam Browser (iOS / SEB) -->
-            <div class="p-3.5 sm:p-4 rounded-xl bg-purple-50/60 border border-purple-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div class="overflow-hidden min-w-0">
-                    <div class="text-purple-900 text-xs font-semibold uppercase tracking-wider mb-1 flex items-center gap-1.5 flex-wrap">
-                        <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded bg-purple-600 text-white text-[10px] font-extrabold tracking-wide shrink-0 shadow-2xs">
-                            SEB
-                        </span>
-                        <span>Akses Siswa iOS</span>
-                        <span class="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-purple-200/70 text-purple-800 whitespace-nowrap">iPhone</span>
-                    </div>
-                    <div class="text-purple-700 text-xs font-mono truncate select-all">
-                        {{ $sebSchemeUrl }}
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2 shrink-0">
-                    <button type="button" onclick="openSebQrModal()" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-200 hover:border-purple-600 rounded-xl text-xs font-bold shadow-2xs transition-all shrink-0 active:scale-[0.98]">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                        </svg>
-                        Tampilkan QR
-                    </button>
-                    <a href="{{ route('seb.exam.config', $exam) }}" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-200 hover:border-purple-600 rounded-xl text-xs font-bold shadow-2xs transition-all shrink-0 active:scale-[0.98]" title="Unduh file konfigurasi .seb">
-                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                        .seb
-                    </a>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-3 border-t border-slate-200 text-xs">
-                <div>
-                    <div class="text-slate-400 font-semibold uppercase tracking-wider mb-1">Waktu Mulai</div>
-                    <div class="text-slate-900 font-semibold text-sm">{{ \Carbon\Carbon::parse($exam->start_at)->format('d M Y, H:i') }} WIB</div>
-                </div>
-                <div>
-                    <div class="text-slate-400 font-semibold uppercase tracking-wider mb-1">Waktu Selesai</div>
-                    <div class="text-slate-900 font-semibold text-sm">{{ \Carbon\Carbon::parse($exam->end_at)->format('d M Y, H:i') }} WIB</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Kolom Kanan: Pengaturan & Toleransi -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 sm:p-6 flex flex-col justify-between">
-            <div>
-                <div class="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-4">Parameter Keamanan</div>
-                
-                <div class="space-y-4 text-sm">
-                    <div class="flex justify-between items-center pb-3 border-b border-slate-200">
-                        <span class="text-slate-500 font-medium">Durasi Ujian</span>
-                        <span class="text-slate-900 font-bold flex items-center gap-1.5">
-                            {{ $exam->duration }} Menit
-                            <span class="text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-md">
-                                {{ round($exam->duration / 35, 1) }} JP
-                            </span>
-                        </span>
-                    </div>
-
-                    <div class="flex justify-between items-center pb-3 border-b border-slate-200">
-                        <span class="text-slate-500 font-medium">Batas Pelanggaran (Max)</span>
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 ring-1 ring-rose-600/20">
-                            {{ $exam->max_violation }}x Keluar / Switch
-                        </span>
-                    </div>
-
-                    <div class="flex justify-between items-center">
-                        <span class="text-slate-500 font-medium">Total Pelanggaran Tercatat</span>
-                        <span class="text-slate-900 font-bold text-amber-600">{{ $stats['total_violations'] }} Kejadian</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pt-4 border-t border-slate-200 mt-4">
-                <div class="text-[11px] text-slate-400 leading-relaxed flex items-center gap-1.5">
-                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0"></span>
-                    Siswa yang melebihi batas {{ $exam->max_violation }}x otomatis terkunci dan harus dibuka oleh pengawas.
-                </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-sm">
+                    <thead>
+                        <tr class="bg-[#0D2149] text-white text-[11px] uppercase tracking-wider font-bold">
+                            <th class="py-3.5 px-6 w-56 whitespace-nowrap">Parameter</th>
+                            <th class="py-3.5 px-6">Informasi / Tautan</th>
+                            <th class="py-3.5 px-6 text-right whitespace-nowrap w-48">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs sm:text-sm">
+                        <tr class="hover:bg-[#F5F8FF] transition-colors">
+                            <td class="py-3.5 px-6 font-semibold text-slate-700 whitespace-nowrap">Waktu Mulai</td>
+                            <td class="py-3.5 px-6 text-slate-700">{{ \Carbon\Carbon::parse($exam->start_at)->format('d M Y, H:i') }} WIB</td>
+                            <td class="py-3.5 px-6 text-right text-slate-400">-</td>
+                        </tr>
+                        <tr class="hover:bg-[#F5F8FF] transition-colors">
+                            <td class="py-3.5 px-6 font-semibold text-slate-700 whitespace-nowrap">Waktu Selesai</td>
+                            <td class="py-3.5 px-6 text-slate-700">{{ \Carbon\Carbon::parse($exam->end_at)->format('d M Y, H:i') }} WIB</td>
+                            <td class="py-3.5 px-6 text-right text-slate-400">-</td>
+                        </tr>
+                        <tr class="hover:bg-[#F5F8FF] transition-colors">
+                            <td class="py-3.5 px-6 font-semibold text-slate-700 whitespace-nowrap">Durasi Ujian</td>
+                            <td class="py-3.5 px-6 text-slate-700">{{ $exam->duration }} Menit ({{ round($exam->duration / 35, 1) }} JP)</td>
+                            <td class="py-3.5 px-6 text-right text-slate-400">-</td>
+                        </tr>
+                        <tr class="hover:bg-[#F5F8FF] transition-colors">
+                            <td class="py-3.5 px-6 font-semibold text-slate-700 whitespace-nowrap">Batas Pelanggaran</td>
+                            <td class="py-3.5 px-6 text-rose-700 font-medium">{{ $exam->max_violation }}x Keluar / Switch</td>
+                            <td class="py-3.5 px-6 text-right text-slate-400">-</td>
+                        </tr>
+                        <tr class="hover:bg-[#F5F8FF] transition-colors">
+                            <td class="py-3.5 px-6 font-semibold text-slate-700 whitespace-nowrap">Total Pelanggaran</td>
+                            <td class="py-3.5 px-6 text-slate-700">{{ $stats['total_violations'] }} Kejadian</td>
+                            <td class="py-3.5 px-6 text-right text-slate-400">-</td>
+                        </tr>
+                        <tr class="hover:bg-[#F5F8FF] transition-colors">
+                            <td class="py-3.5 px-6 font-semibold text-slate-700 whitespace-nowrap">Deskripsi Ujian</td>
+                            <td class="py-3.5 px-6 text-slate-700">{{ $exam->description ?: 'Tidak ada deskripsi tambahan.' }}</td>
+                            <td class="py-3.5 px-6 text-right text-slate-400">-</td>
+                        </tr>
+                        <tr class="hover:bg-[#F5F8FF] transition-colors">
+                            <td class="py-3.5 px-6 font-semibold text-slate-700 whitespace-nowrap">Google Form URL</td>
+                            <td class="py-3.5 px-6 max-w-md">
+                                <a href="{{ $exam->google_form_url }}" target="_blank" class="text-[#2457E8] text-xs hover:underline font-mono truncate block" title="{{ $exam->google_form_url }}">
+                                    {{ $exam->google_form_url }}
+                                </a>
+                            </td>
+                            <td class="py-3.5 px-6 text-right whitespace-nowrap">
+                                @if(auth()->user()->isAdmin() || ($exam->created_by === auth()->id()))
+                                    <button type="button" onclick="document.getElementById('quickEditFormModal').showModal()" class="inline-flex items-center px-3 py-1.5 bg-white hover:bg-[#2457E8] text-[#142C5C] hover:text-white border border-slate-200 hover:border-[#2457E8] rounded-lg text-xs font-semibold shadow-2xs transition cursor-pointer">
+                                        Ubah Link Form
+                                    </button>
+                                @else
+                                    <span class="text-slate-400">-</span>
+                                @endif
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-[#F5F8FF] transition-colors">
+                            <td class="py-3.5 px-6 font-semibold text-slate-700 whitespace-nowrap">Akses Siswa iOS (SEB)</td>
+                            <td class="py-3.5 px-6 max-w-md">
+                                <div class="text-slate-600 text-xs font-mono truncate select-all">{{ $sebSchemeUrl }}</div>
+                            </td>
+                            <td class="py-3.5 px-6 text-right whitespace-nowrap space-x-1.5">
+                                <button type="button" onclick="openSebQrModal()" class="inline-flex items-center px-3 py-1.5 bg-white hover:bg-[#2457E8] text-slate-700 hover:text-white border border-slate-200 hover:border-[#2457E8] rounded-lg text-xs font-semibold shadow-2xs transition cursor-pointer">
+                                    Tampilkan QR
+                                </button>
+                                <a href="{{ route('seb.exam.config', $exam) }}" class="inline-flex items-center px-3 py-1.5 bg-white hover:bg-[#2457E8] text-slate-700 hover:text-white border border-slate-200 hover:border-[#2457E8] rounded-lg text-xs font-semibold shadow-2xs transition" title="Unduh file konfigurasi .seb">
+                                    .seb
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- TABEL 1: Live Monitoring Peserta Ujian (Dual Mode: Desktop Table + Mobile Cards) -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-        <div class="p-4 sm:p-6 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-            <div>
-                <h3 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Monitoring Peserta Ujian</h3>
-                <p class="text-xs text-slate-500 mt-0.5">Daftar siswa yang terdaftar, status pengerjaan, dan kontrol buka kunci sesi.</p>
+    <!-- TAB 1: Monitoring Peserta Ujian (Default Active) -->
+    <div id="tabPanel-monitoring" class="space-y-5">
+        <!-- Card Filter Peserta -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs p-5">
+            <div class="mb-4">
+                <h3 class="text-sm font-bold text-[#142C5C]">Filter Peserta Ujian</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Saring daftar peserta berdasarkan ruang kelas atau cari nama/NIS siswa.</p>
             </div>
-            
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
-                <div class="flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 rounded-xl px-2.5 py-1.5 shrink-0 justify-between sm:justify-start">
-                    <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Tampil:</span>
-                    <select id="perPageSelect" onchange="changePerPage(this.value)" class="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                <div class="md:col-span-4">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Ruang Kelas</label>
+                    @if(isset($selectedClass) && $selectedClass)
+                        <div class="flex items-center justify-between px-3.5 h-[42px] bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                            <span class="font-semibold text-[#142C5C]">{{ $selectedClass->name }}</span>
+                            @if($exam->classes->count() > 1)
+                                <a href="{{ route('admin.exams.show', $exam->id) }}" class="text-[#2457E8] hover:underline font-semibold">Semua Kelas</a>
+                            @endif
+                        </div>
+                    @elseif($exam->classes->count() > 1)
+                        <select id="roomSelectFilter" onchange="window.location.href = this.value" class="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-800">
+                            <option value="{{ route('admin.exams.show', $exam->id) }}" selected>Semua Ruang Kelas ({{ $exam->classes->count() }} Kelas)</option>
+                            @foreach($exam->classes as $cls)
+                                <option value="{{ route('admin.exams.show', ['exam' => $exam->id, 'class_id' => $cls->id]) }}">Ruang Kelas {{ $cls->name }}</option>
+                            @endforeach
+                        </select>
+                    @elseif($exam->classes->count() === 1)
+                        <div class="flex items-center px-3.5 h-[42px] bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#142C5C]">
+                            {{ $exam->classes->first()->name }}
+                        </div>
+                    @else
+                        <div class="flex items-center px-3.5 h-[42px] bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-500">
+                            Semua Kelas
+                        </div>
+                    @endif
+                </div>
+
+                <div class="md:col-span-6">
+                    <label for="searchStudent" class="block text-xs font-semibold text-slate-700 mb-1.5">Cari Nama / NIS</label>
+                    <input type="text" id="searchStudent" placeholder="Cari nama atau NIS siswa..." class="w-full h-[42px] px-3.5 text-xs sm:text-sm bg-white text-slate-900 placeholder:text-slate-400 border border-slate-200 rounded-xl focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15" onkeyup="filterStudents()">
+                </div>
+
+                <div class="md:col-span-2">
+                    <label for="perPageSelect" class="block text-xs font-semibold text-slate-700 mb-1.5">Tampilkan</label>
+                    <select id="perPageSelect" onchange="changePerPage(this.value)" data-native="true" class="w-full h-[42px] px-3 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:border-[#2457E8] cursor-pointer">
                         <option value="5">5 baris</option>
                         <option value="10" selected>10 baris</option>
                         <option value="25">25 baris</option>
                         <option value="all">Semua</option>
                     </select>
                 </div>
-                <input type="text" id="searchStudent" placeholder="Cari nama atau NIS siswa..." class="w-full sm:w-60 px-3.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500" onkeyup="filterStudents()">
             </div>
         </div>
+
+        <!-- Card Tabel Monitoring Peserta -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+            <div class="px-5 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                    <h3 class="text-sm sm:text-base font-bold text-[#142C5C]">Daftar Peserta Ujian ({{ $stats['total_participants'] }} Siswa)</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Pantau status pengerjaan siswa dan lakukan buka kunci atau reset sesi jika diperlukan.</p>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <button id="autoRefreshBtn" onclick="toggleAutoRefresh()" class="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition whitespace-nowrap cursor-pointer">
+                        <span class="w-2 h-2 rounded-full bg-slate-400 shrink-0" id="autoRefreshIndicator"></span>
+                        <span id="autoRefreshText">Auto Refresh: OFF</span>
+                    </button>
+                    <button onclick="window.location.reload();" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#1E40AF] hover:bg-blue-800 text-white rounded-xl text-xs font-semibold transition whitespace-nowrap cursor-pointer">
+                        Refresh
+                    </button>
+                </div>
+            </div>
 
         <!-- Desktop Table View (>= md) -->
         <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse" id="studentsTable">
                 <thead>
-                    <tr class="border-b border-slate-100 bg-slate-50/50 text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
+                    <tr class="bg-[#0D2149] text-white text-[11px] uppercase tracking-wider font-bold">
                         <th class="py-3.5 px-6 whitespace-nowrap">No</th>
                         <th class="py-3.5 px-6 min-w-[200px]">Siswa</th>
                         <th class="py-3.5 px-6 whitespace-nowrap">Kelas</th>
@@ -345,73 +303,52 @@
                     <tr class="student-row hover:bg-slate-50/70 transition-colors {{ $isLocked ? 'bg-rose-50/30' : '' }}">
                             <td class="py-4 px-6 text-xs text-slate-400 font-medium whitespace-nowrap">{{ $index + 1 }}</td>
                             <td class="py-4 px-6 min-w-[200px]">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-full {{ $isLocked ? 'bg-rose-100 text-rose-700 ring-2 ring-rose-400' : 'bg-slate-100 text-slate-700' }} flex items-center justify-center font-bold text-xs uppercase shrink-0">
-                                        {{ substr($user->name ?? 'S', 0, 2) }}
-                                    </div>
-                                    <div>
-                                        <div class="font-semibold text-slate-900 student-name">{{ $user->name ?? 'Siswa' }}</div>
-                                        <div class="text-xs text-slate-400 font-mono student-nis">NIS: {{ $user->username ?? '-' }}</div>
-                                    </div>
-                                </div>
+                                <div class="font-bold text-slate-900 student-name">{{ $user->name ?? 'Siswa' }}</div>
+                                <div class="text-xs text-slate-500 font-mono student-nis mt-0.5">NIS: {{ $user->username ?? '-' }}</div>
                             </td>
-                            <td class="py-4 px-6 whitespace-nowrap">
-                                <span class="text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-lg whitespace-nowrap inline-block">
-                                    {{ $user->class->name ?? '-' }}
-                                </span>
+                            <td class="py-4 px-6 whitespace-nowrap text-xs font-medium text-slate-700">
+                                {{ $user->class->name ?? '-' }}
                             </td>
                             <td class="py-4 px-6 whitespace-nowrap">
                                 @php
                                     $isExpired = $exam->end_at && now()->gt($exam->end_at);
                                 @endphp
                                 @if($p->status === 'finished')
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 ring-1 ring-indigo-600/20">
-                                        <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                        </svg>
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-[#2457E8]">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-[#2457E8]"></span>
                                         {{ ($isExpired && $p->started_at && !$p->finished_at) ? 'Selesai (Waktu Habis)' : 'Selesai' }}
                                     </span>
                                 @elseif($isLocked)
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-700 ring-1 ring-rose-500/30">
-                                        <svg class="w-3.5 h-3.5 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                        </svg>
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-bold text-rose-700">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
                                         TERKUNCI (LOCKED)
                                     </span>
                                 @elseif($p->status === 'working')
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Sedang Mengerjakan
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Sedang Mengerjakan
                                     </span>
                                 @else
                                     @if($isExpired)
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 ring-1 ring-rose-600/20">
-                                            <svg class="w-3.5 h-3.5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                            Tidak Mengerjakan
+                                        <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-rose-600">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Tidak Mengerjakan
                                         </span>
                                     @else
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                                            Belum Mulai
+                                        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Belum Mulai
                                         </span>
                                     @endif
                                 @endif
                             </td>
                             <td class="py-4 px-6 whitespace-nowrap">
                                 @if($p->total_violation_count > 0)
-                                    <div>
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold {{ $p->violation_count >= $exam->max_violation ? 'bg-rose-50 text-rose-700 ring-1 ring-rose-300' : ($p->violation_count > 0 ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-300' : 'bg-slate-100 text-slate-700') }}">
-                                            <svg class="w-3.5 h-3.5 {{ $p->violation_count >= $exam->max_violation ? 'text-rose-500' : 'text-amber-500' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                            </svg>
-                                            {{ $p->violation_count }} / {{ $exam->max_violation }}
-                                        </span>
-                                        @if($p->total_violation_count > $p->violation_count)
-                                            <div class="text-[10px] text-slate-400 mt-0.5 font-medium">({{ $p->total_violation_count }} total riwayat)</div>
-                                        @endif
+                                    <div class="text-xs font-bold {{ $p->violation_count >= $exam->max_violation ? 'text-rose-700' : 'text-amber-700' }}">
+                                        {{ $p->violation_count }} / {{ $exam->max_violation }}
                                     </div>
+                                    @if($p->total_violation_count > $p->violation_count)
+                                        <div class="text-[10px] text-slate-400 mt-0.5 font-medium">({{ $p->total_violation_count }} total riwayat)</div>
+                                    @endif
                                 @else
-                                    <span class="text-xs text-slate-400 font-medium">0 / {{ $exam->max_violation }}</span>
+                                    <span class="text-xs text-slate-500 font-medium">0 / {{ $exam->max_violation }}</span>
                                 @endif
                             </td>
                             <td class="py-4 px-6 text-xs text-slate-500 whitespace-nowrap">
@@ -445,7 +382,7 @@
                                         </form>
                                     </div>
                                 @elseif($isExpired)
-                                    <span class="text-xs text-slate-400 font-medium">Ujian Selesai</span>
+                                    <span class="text-xs text-slate-400 font-mono">-</span>
                                 @else
                                     @if($isLocked)
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200" title="Buka kunci ujian UAS ditangani langsung oleh Kurikulum">
@@ -619,22 +556,18 @@
         </div>
     </div>
 
-    <!-- TABEL 2: Realtime Violation Logs (Dual Mode: Desktop Table + Mobile Cards) -->
-    <div id="violationsSection" class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 sm:p-6 scroll-mt-6">
-        <div class="flex items-center justify-between mb-4">
-            <div>
-                <h3 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    Log Riwayat Pelanggaran Siswa
-                </h3>
-                <p class="text-xs text-slate-500 mt-0.5">Catatan aktivitas mencurigakan yang terdeteksi secara otomatis oleh aplikasi mobile.</p>
+    </div>
+
+    <!-- TAB 3: Log Riwayat Pelanggaran Siswa -->
+    <div id="tabPanel-violations" class="hidden">
+        <div id="violationsSection" class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden scroll-mt-6">
+            <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-3">
+                <div>
+                    <h3 class="text-sm sm:text-base font-bold text-[#142C5C]">Log Riwayat Pelanggaran Siswa ({{ $violations->count() }})</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Catatan aktivitas mencurigakan yang terdeteksi secara otomatis oleh aplikasi mobile.</p>
+                </div>
             </div>
-            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 shrink-0">
-                {{ $violations->count() }} Log
-            </span>
-        </div>
+            <div class="p-4 sm:p-6">
 
         @if($violations->count() > 0)
             <!-- Desktop Table View (>= md) -->
@@ -782,10 +715,25 @@
                 <span>Belum ada pelanggaran keamanan yang tercatat untuk ujian ini.</span>
             </div>
         @endif
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
+function switchShowTab(tab) {
+    ['monitoring', 'info', 'violations'].forEach(function(name) {
+        const panel = document.getElementById('tabPanel-' + name);
+        const btn = document.getElementById('tabBtn-' + name);
+        const isActive = (name === tab);
+        if (panel) panel.classList.toggle('hidden', !isActive);
+        if (btn) {
+            btn.className = isActive
+                ? 'py-2.5 px-4 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center justify-center gap-2 bg-[#1E40AF] text-white shadow-2xs cursor-pointer'
+                : 'py-2.5 px-4 rounded-lg text-xs sm:text-sm font-medium transition flex items-center justify-center gap-2 text-slate-600 hover:text-[#142C5C] hover:bg-slate-50 cursor-pointer';
+        }
+    });
+}
 // ==============================================================
 // PAGINATION & FILTER MONITORING PESERTA (Maksimal 5/10 ke bawah)
 // ==============================================================

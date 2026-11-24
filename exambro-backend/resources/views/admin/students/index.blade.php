@@ -2,24 +2,24 @@
 @section('title', 'Master Siswa')
 
 @section('content')
-<div class="flex items-center justify-between mb-8">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
     <div>
-        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Daftar Siswa</h2>
-        <p class="text-sm text-slate-500 mt-1">Kelola akun dan kredensial akses siswa.</p>
+        <h2 class="text-xl sm:text-2xl font-extrabold text-[#142C5C] tracking-tight">Daftar Siswa</h2>
+        <p class="text-xs sm:text-sm text-slate-600 mt-1">Kelola akun dan kredensial akses siswa.</p>
     </div>
-    <div class="flex items-center gap-3">
-        <button onclick="importModal.showModal()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200/80 text-slate-700 rounded-xl text-sm font-medium hover:bg-slate-50 hover:border-slate-300 hover:text-indigo-600 shadow-xs transition-all duration-150 active:scale-[0.98]">
+    <div class="flex items-center gap-2.5">
+        <button onclick="importModal.showModal()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-50 hover:border-[#2457E8] hover:text-[#2457E8] shadow-2xs transition active:scale-[0.98]">
             <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
             Import Excel
         </button>
-        <a href="{{ route('admin.students.create') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium shadow-sm shadow-indigo-500/20 hover:shadow-md hover:shadow-indigo-500/30 transition-all duration-150 active:scale-[0.98]">
+        <button type="button" onclick="createModal.showModal()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#2457E8] hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs transition active:scale-[0.98] cursor-pointer">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
             Tambah Siswa
-        </a>
+        </button>
     </div>
 </div>
 
@@ -96,41 +96,147 @@
     </form>
 </dialog>
 
-<div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden mb-6 p-4">
-    <form method="GET" action="{{ route('admin.students.index') }}" class="flex flex-wrap items-center gap-3">
-        <div class="flex-1 min-w-[200px]">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau NIS siswa..." class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15">
+<!-- Modal Tambah Siswa -->
+<dialog id="createModal" class="backdrop:bg-slate-900/50 backdrop:backdrop-blur-xs p-0 rounded-2xl border border-slate-200 shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto m-auto">
+    <div class="bg-[#0D2149] px-6 py-4 text-white flex items-center justify-between gap-3 sticky top-0 z-10">
+        <div>
+            <h3 class="text-base font-bold tracking-tight">Tambah Siswa Baru</h3>
+            <p class="text-xs text-blue-200 mt-0.5">Buat akun siswa baru untuk mengikuti ujian.</p>
         </div>
-        <div class="w-44">
-            <select name="class_id" onchange="this.form.submit()" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-indigo-500">
-                <option value="">Semua Kelas</option>
-                @foreach($classes as $c)
-                    <option value="{{ $c->id }}" {{ request('class_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div class="w-36">
-            <select name="status" onchange="this.form.submit()" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-indigo-500">
-                <option value="">Semua Status</option>
-                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Aktif</option>
-                <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Nonaktif</option>
-            </select>
-        </div>
-        <div class="w-40">
-            <select name="is_pkl" onchange="this.form.submit()" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3 py-2 text-sm text-slate-700 focus:outline-none focus:border-indigo-500">
-                <option value="">Semua Mode GPS</option>
-                <option value="0" {{ request('is_pkl') === '0' ? 'selected' : '' }}>Reguler (Wajib GPS)</option>
-                <option value="1" {{ request('is_pkl') === '1' ? 'selected' : '' }}>PKL (Bebas GPS)</option>
-            </select>
-        </div>
-        <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-colors shadow-2xs">
-            Filter
+        <button type="button" onclick="createModal.close()" class="p-1.5 rounded-lg text-blue-200 hover:text-white hover:bg-white/10 transition" aria-label="Tutup">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
-        @if(request()->hasAny(['search', 'class_id', 'status', 'is_pkl']))
-            <a href="{{ route('admin.students.index') }}" class="px-3 py-2 text-sm text-slate-500 hover:text-rose-600 transition-colors">
-                Reset
-            </a>
-        @endif
+    </div>
+
+    <form action="{{ route('admin.students.store') }}" method="POST" autocomplete="off" class="bg-white">
+        @csrf
+        <input type="hidden" name="_form" value="create">
+
+        <div class="p-6 space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Nama Lengkap</label>
+                    <input type="text" name="name" value="{{ old('_form') === 'create' ? old('name') : '' }}" required autocomplete="off" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15" placeholder="Contoh: Budi Santoso">
+                    @if(old('_form') === 'create') @error('name') <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span> @enderror @endif
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">NIS / Username</label>
+                    <input type="text" name="username" value="{{ old('_form') === 'create' ? old('username') : '' }}" required autocomplete="off" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 font-mono" placeholder="Contoh: 12345678">
+                    @if(old('_form') === 'create') @error('username') <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span> @enderror @endif
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Password</label>
+                    <input type="password" name="password" required autocomplete="new-password" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15" placeholder="Minimal 6 karakter">
+                    @if(old('_form') === 'create') @error('password') <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span> @enderror @endif
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Konfirmasi Password</label>
+                    <input type="password" name="password_confirmation" required autocomplete="new-password" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15" placeholder="Ulangi password">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Pilih Kelas</label>
+                    <select name="student_class_id" required class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:border-[#2457E8]">
+                        <option value="">-- Pilih Kelas --</option>
+                        @foreach($classes as $c)
+                            <option value="{{ $c->id }}" {{ old('_form') === 'create' && old('student_class_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                        @endforeach
+                    </select>
+                    @if(old('_form') === 'create') @error('student_class_id') <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span> @enderror @endif
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Status Akun</label>
+                    <select name="status" required class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:border-[#2457E8]">
+                        <option value="active" {{ old('_form') === 'create' ? (old('status', 'active') === 'active' ? 'selected' : '') : 'selected' }}>Aktif</option>
+                        <option value="inactive" {{ old('_form') === 'create' && old('status') === 'inactive' ? 'selected' : '' }}>Nonaktif</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="p-4 bg-[#F5F8FF] border border-blue-100 rounded-xl">
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <span class="block text-sm font-bold text-[#142C5C]">Siswa Sedang PKL / Magang Luar Sekolah</span>
+                        <p class="text-xs text-slate-600 mt-0.5">Jika diaktifkan, pengecekan radius lokasi &amp; GPS di HP siswa akan otomatis dilewati saat ujian.</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer shrink-0">
+                        <input type="checkbox" name="is_pkl" value="1" {{ old('_form') === 'create' && old('is_pkl') ? 'checked' : '' }} class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#2457E8]"></div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-6 py-4 bg-slate-50/80 border-t border-slate-200/80 flex items-center justify-end gap-2.5">
+            <button type="button" onclick="createModal.close()" class="px-4 py-2.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-xs sm:text-sm font-semibold transition">Batal</button>
+            <button type="submit" class="px-5 py-2.5 bg-[#2457E8] hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs transition active:scale-[0.98]">Simpan Siswa</button>
+        </div>
+    </form>
+</dialog>
+@if(old('_form') === 'create' && $errors->any())
+<script>document.addEventListener('DOMContentLoaded', () => document.getElementById('createModal')?.showModal());</script>
+@endif
+
+<div class="bg-white rounded-2xl border border-slate-200 shadow-2xs mb-6">
+    <div class="bg-[#0D2149] px-5 py-3.5 text-white rounded-t-2xl">
+        <h3 class="text-sm font-bold tracking-tight">Parameter Filter Siswa</h3>
+        <p class="text-xs text-blue-200 mt-0.5">Saring data siswa berdasarkan nama, NIS, kelas, status akun, atau mode GPS.</p>
+    </div>
+    <form method="GET" action="{{ route('admin.students.index') }}">
+        <div class="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Cari Nama / NIS</label>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Contoh: Dimas atau NIS..." class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Kelas</label>
+                <select name="class_id" onchange="this.form.submit()" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:border-[#2457E8]">
+                    <option value="">Semua Kelas</option>
+                    @foreach($classes as $c)
+                        <option value="{{ $c->id }}" {{ request('class_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Status Akun</label>
+                <select name="status" onchange="this.form.submit()" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:border-[#2457E8]">
+                    <option value="">Semua Status</option>
+                    <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Aktif</option>
+                    <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Nonaktif</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Mode GPS (PKL)</label>
+                <select name="is_pkl" onchange="this.form.submit()" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:border-[#2457E8]">
+                    <option value="">Semua Mode GPS</option>
+                    <option value="0" {{ request('is_pkl') === '0' ? 'selected' : '' }}>Reguler (Wajib GPS)</option>
+                    <option value="1" {{ request('is_pkl') === '1' ? 'selected' : '' }}>PKL (Bebas GPS)</option>
+                </select>
+            </div>
+        </div>
+        <div class="px-5 py-3 bg-slate-50/80 border-t border-slate-200/80 rounded-b-2xl flex flex-wrap items-center justify-between gap-3">
+            <p class="text-xs text-slate-600">
+                Menampilkan <span class="font-bold text-slate-900">{{ $students->count() }}</span> dari <span class="font-bold text-slate-900">{{ $students->total() }}</span> data siswa.
+            </p>
+            <div class="flex items-center gap-2">
+                @if(request()->hasAny(['search', 'class_id', 'status', 'is_pkl']))
+                    <a href="{{ route('admin.students.index') }}" class="px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:text-rose-600 bg-white border border-slate-200 rounded-xl transition-colors">
+                        Reset
+                    </a>
+                @endif
+                <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#2457E8] hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-2xs">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    Filter Data
+                </button>
+            </div>
+        </div>
     </form>
 </div>
 
@@ -151,13 +257,22 @@
     @csrf
 </form>
 
-<div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+<div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+    <div class="bg-[#0D2149] px-5 py-3.5 text-white flex flex-wrap items-center justify-between gap-3">
+        <h3 class="text-sm font-bold tracking-tight">Daftar Akun Siswa ({{ $students->total() }})</h3>
+        <button type="button" onclick="importModal.showModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/15 text-white rounded-lg text-xs font-semibold transition">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            Import Excel
+        </button>
+    </div>
     <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm text-slate-600">
-            <thead class="bg-slate-50/80 border-b border-slate-200/80 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+        <table class="w-full text-left text-sm text-slate-700">
+            <thead class="bg-slate-50 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-600 font-bold">
                 <tr>
                     <th class="px-4 py-4 w-10">
-                        <input type="checkbox" id="selectAllStudents" class="rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 cursor-pointer">
+                        <input type="checkbox" id="selectAllStudents" class="rounded text-[#2457E8] focus:ring-[#2457E8]/20 border-slate-300 w-4 h-4 cursor-pointer">
                     </th>
                     <th class="px-6 py-4">Nama</th>
                     <th class="px-6 py-4">Username / NIS</th>
@@ -169,24 +284,22 @@
             </thead>
             <tbody class="divide-y divide-slate-100">
                 @forelse($students as $s)
-                <tr class="hover:bg-indigo-50/20 transition-colors duration-150 group">
+                <tr class="hover:bg-[#F5F8FF] transition-colors duration-150 group">
                     <td class="px-4 py-4 align-middle">
-                        <input type="checkbox" class="bulk-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 cursor-pointer" value="{{ $s->id }}">
+                        <input type="checkbox" class="bulk-checkbox rounded text-[#2457E8] focus:ring-[#2457E8]/20 border-slate-300 w-4 h-4 cursor-pointer" value="{{ $s->id }}">
                     </td>
-                    <td class="px-6 py-4 text-slate-900 font-semibold">{{ $s->name }}</td>
-                    <td class="px-6 py-4 font-mono text-slate-500 text-xs">{{ $s->username }}</td>
-                    <td class="px-6 py-4">
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200/60">
-                            {{ $s->class ? $s->class->name : '-' }}
-                        </span>
+                    <td class="px-6 py-4 text-slate-900 font-bold">{{ $s->name }}</td>
+                    <td class="px-6 py-4 font-mono text-slate-700 font-medium text-xs">{{ $s->username }}</td>
+                    <td class="px-6 py-4 text-slate-700 font-medium">
+                        {{ $s->class ? $s->class->name : '-' }}
                     </td>
                     <td class="px-6 py-4">
                         @if($s->status === 'active')
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20">
+                            <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif
                             </span>
                         @else
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 ring-1 ring-slate-400/20">
+                            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
                                 <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Nonaktif
                             </span>
                         @endif
@@ -194,15 +307,15 @@
                     <td class="px-6 py-4">
                         <form action="{{ route('admin.students.toggle-pkl', $s->id) }}" method="POST" class="inline-block">
                             @csrf
-                            <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition-all duration-150 cursor-pointer {{ $s->is_pkl ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-500/30 hover:bg-amber-100' : 'bg-blue-50 text-blue-700 ring-1 ring-blue-500/30 hover:bg-blue-100' }}" title="Klik untuk mengubah status PKL">
+                            <button type="submit" class="inline-flex items-center gap-1.5 text-xs font-semibold transition-colors cursor-pointer {{ $s->is_pkl ? 'text-amber-700 hover:text-amber-800 hover:underline' : 'text-[#2457E8] hover:text-blue-800 hover:underline' }}" title="Klik untuk mengubah status PKL">
                                 @if($s->is_pkl)
-                                    <svg class="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
                                     <span>PKL (GPS Off)</span>
                                 @else
-                                    <svg class="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg class="w-3.5 h-3.5 text-[#2457E8] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                     </svg>
                                     <span>Reguler (GPS On)</span>

@@ -65,6 +65,7 @@ Route::prefix('seb')->name('seb.')->group(function () {
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
+    Route::get('/captcha', [AdminAuthController::class, 'captcha'])->name('captcha');
     Route::post('/login', [AdminAuthController::class, 'login'])->middleware('throttle:10,1')->name('login.post');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
 

@@ -67,25 +67,22 @@
     }
 </style>
 
-<!-- 1. HEADER SECTION (Minimalist, Spacious & High-End) -->
+<!-- 1. HEADER SECTION -->
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-    <div class="flex items-center gap-3">
-        <span id="pageAccentIndicator" class="w-2.5 h-6 {{ $isUts ? 'bg-emerald-600' : 'bg-indigo-600' }} rounded-full inline-block transition-colors"></span>
-        <div>
-            <h2 id="pageTitleHeading" class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Manajemen Ujian {{ $isUts ? 'UTS' : 'UAS' }}</h2>
-            <p class="text-xs sm:text-sm text-slate-500 mt-0.5">Kelola jadwal ujian, pemantauan ruang, dan penilaian siswa.</p>
-        </div>
+    <div>
+        <h2 id="pageTitleHeading" class="text-xl sm:text-2xl font-extrabold text-[#142C5C] tracking-tight">Manajemen Ujian {{ $isUts ? 'UTS' : 'UAS' }}</h2>
+        <p class="text-xs sm:text-sm text-slate-600 mt-1">Kelola jadwal ujian, pemantauan ruang, dan penilaian siswa.</p>
     </div>
-    <div id="headerExamActionButtons" 
+    <div id="headerExamActionButtons"
          style="{{ $hideActionButtons ? 'display: none !important;' : '' }}"
-         class="{{ $hideActionButtons ? '!hidden ' : '' }}grid grid-cols-2 sm:flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
-        <button type="button" onclick="importModal.showModal()" class="inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 bg-white border border-slate-200/80 text-slate-700 rounded-xl text-xs sm:text-sm font-medium hover:bg-slate-50 hover:border-slate-300 hover:text-indigo-600 shadow-2xs transition-all duration-150 active:scale-[0.98] w-full sm:w-auto cursor-pointer">
+         class="{{ $hideActionButtons ? '!hidden ' : '' }}flex items-center gap-2.5 shrink-0">
+        <button type="button" onclick="importModal.showModal()" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-50 hover:border-[#2457E8] hover:text-[#2457E8] shadow-2xs transition active:scale-[0.98] whitespace-nowrap cursor-pointer">
             <svg class="w-4 h-4 text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
             <span>Import Excel</span>
         </button>
-        <a id="btnTambahUjian" href="{{ route('admin.exams.create') }}?type={{ $isUts ? 'uts' : 'uas' }}" class="inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 {{ $isUts ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-500/20' : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20' }} text-white rounded-xl text-xs sm:text-sm font-semibold shadow-sm transition-all duration-150 active:scale-[0.98] w-full sm:w-auto">
+        <a id="btnTambahUjian" href="{{ route('admin.exams.create') }}?type={{ $isUts ? 'uts' : 'uas' }}" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#2457E8] hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs transition active:scale-[0.98] whitespace-nowrap">
             <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
@@ -288,39 +285,46 @@
 <!-- ========================================================================= -->
 <!-- 4. KONTEN MODE UAS (id="uasContainer")                                      -->
 <!-- ========================================================================= -->
-<div id="uasContainer" class="{{ $isUts ? 'hidden' : '' }} space-y-4">
+<div id="uasContainer" class="{{ $isUts ? 'hidden' : '' }} space-y-5">
     <!-- View Switcher & Toolbar UAS -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-3.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs">
+        <div class="bg-[#0D2149] px-5 py-3.5 text-white rounded-t-2xl flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h3 class="text-sm font-bold tracking-tight">Parameter Filter &amp; Tampilan Ujian UAS</h3>
+                <p class="text-xs text-blue-200 mt-0.5">Cari mata pelajaran, pilih ruang kelas, atau saring berdasarkan status ujian.</p>
+            </div>
+        </div>
+        <div class="p-4 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
         <!-- Dual View Segmented Pill -->
         <div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200/70 select-none shrink-0 self-start sm:self-auto">
-            <button type="button" 
-                    id="btnViewUasExams" 
-                    onclick="switchUasSubView('exams')" 
-                    class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-slate-900 shadow-2xs cursor-pointer">
+            <button type="button"
+                    id="btnViewUasExams"
+                    onclick="switchUasSubView('exams')"
+                    class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-[#142C5C] shadow-2xs cursor-pointer">
                 Daftar Ujian UAS ({{ $uasExams->count() }})
             </button>
-            <button type="button" 
-                    id="btnViewUasClasses" 
-                    onclick="switchUasSubView('classes')" 
-                    class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-500 hover:text-slate-900 cursor-pointer">
+            <button type="button"
+                    id="btnViewUasClasses"
+                    onclick="switchUasSubView('classes')"
+                    class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-600 hover:text-slate-900 cursor-pointer">
                 Per Ruang Kelas ({{ $uasClassGroups->count() }})
             </button>
         </div>
 
         <!-- Toolbar: Search & Filters -->
-        <div class="flex items-center gap-2 flex-wrap flex-1 justify-end">
+        <div class="flex items-center gap-2.5 flex-wrap flex-1 min-w-0">
             <!-- Search Input UAS -->
-            <div class="relative w-full sm:w-64">
+            <div class="relative flex-1 min-w-[200px]">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
-                <input 
-                    type="text" 
-                    id="searchUasInput" 
-                    placeholder="Cari ruang kelas atau ujian..." 
-                    class="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                <input
+                    type="text"
+                    id="searchUasInput"
+                    placeholder="Cari ruang kelas atau ujian..."
+                    class="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2457E8]/15 focus:border-[#2457E8] transition-all"
                 >
             </div>
 
@@ -420,127 +424,116 @@
                 </div>
             </div>
         </div>
+        </div>
     </div>
 
-    <!-- SUB-VIEW 1: DAFTAR UJIAN UAS (Clean, Uncluttered Master View - NO 39 DUPLICATE BOXES!) -->
-    <div id="uasViewExamsList" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs divide-y divide-slate-100 overflow-hidden">
-        @forelse($uasExams as $item)
-        @php
-            $primary = $item->primary;
-            $canManage = auth()->user()->isAdmin() || ($primary->created_by === auth()->id());
-            $isExpired = $item->is_expired ?? $primary->isExpired();
-            $isOngoing = $item->is_ongoing ?? $primary->isOngoing();
-            $status = $isOngoing ? 'ongoing' : ($isExpired ? 'finished' : ($item->has_active ? 'active' : 'inactive'));
-            $classList = $item->classes->pluck('name')->implode(', ');
-            $gradesList = implode(',', $item->detected_grades ?? []);
-        @endphp
-        <div class="uas-master-exam-row p-4 sm:p-5 hover:bg-slate-50/70 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
-             data-exam-title="{{ strtolower($item->title) }}"
-             data-exam-classes="{{ strtolower($classList ?: 'semua kelas') }}"
-             data-exam-status="{{ $status }}"
-             data-exam-grades="{{ $gradesList }}">
-            
-            <div class="flex items-start gap-3.5 min-w-0 flex-1">
-                @if($canManage)
-                    @if($isOngoing)
-                        <input type="checkbox" disabled class="rounded text-slate-300 border-slate-200 w-4 h-4 cursor-not-allowed mt-1 shrink-0 opacity-40">
-                    @else
-                        <input type="checkbox" class="bulk-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 cursor-pointer mt-1 shrink-0" value="{{ $primary->id }}">
-                    @endif
-                @endif
-
-                <div class="min-w-0 flex-1">
-                    <div class="flex items-center gap-2.5 flex-wrap">
-                        <h4 class="text-base font-bold text-slate-900 tracking-tight leading-snug">
-                            {{ $item->title }}
-                        </h4>
-
-                        <!-- Status Badge -->
-                        @if($isOngoing)
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-300">
-                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                                Sedang Berlangsung
-                            </span>
-                        @elseif($isExpired)
-                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200/60">
-                                Selesai
-                            </span>
-                        @elseif($item->has_active)
-                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                Aktif
-                            </span>
-                        @else
-                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-500 border border-slate-200/60">
-                                Nonaktif
-                            </span>
-                        @endif
-
-                        <!-- Target Audience Badge -->
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200/70">
-                            {{ $item->classes->count() > 0 ? ($item->classes->count() >= 39 ? 'Semua Kelas (39 Kelas)' : $item->classes->count() . ' Ruang Kelas') : 'Semua Kelas' }}
-                        </span>
-                    </div>
-
-                    <!-- Meta info row -->
-                    <div class="flex items-center gap-2 sm:gap-3 text-xs text-slate-500 mt-2 flex-wrap">
-                        <div class="inline-flex items-center gap-1.5 text-slate-600">
-                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <span class="font-medium text-slate-700">{{ \Carbon\Carbon::parse($primary->start_at)->format('d M Y') }}</span>
-                            <span class="font-mono text-slate-500">({{ \Carbon\Carbon::parse($primary->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($primary->end_at)->format('H:i') }} WIB)</span>
-                        </div>
-
-                        <span class="text-slate-300">•</span>
-
-                        <div class="inline-flex items-center gap-1.5">
-                            <span class="font-semibold text-slate-700">{{ $primary->duration }} Mnt</span>
-                            <span class="text-slate-400">({{ round($primary->duration / 35, 1) }} JP)</span>
-                            <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-rose-50 text-rose-700 border border-rose-100">
-                                Max {{ $primary->max_violation }}x Keluar
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Action buttons -->
-            <div class="flex items-center justify-end gap-2 shrink-0">
-                <a href="{{ route('admin.exams.show', $primary->id) }}" 
-                   class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-xs hover:shadow-md hover:shadow-indigo-500/20 transition-all active:scale-[0.98]">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    <span>Pantau Siswa</span>
-                </a>
-
-                @if($canManage)
-                    <a href="{{ route('admin.exams.edit', $primary->id) }}" class="inline-flex items-center justify-center px-3 py-2 bg-white border border-slate-200/80 hover:bg-slate-50 hover:border-slate-300 text-slate-700 rounded-xl text-xs font-medium shadow-2xs transition-all">
-                        Edit
-                    </a>
-                    @if(!$isOngoing)
-                        <form action="{{ route('admin.exams.destroy', $primary->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus ujian ini? Data sesi ujian akan dihapus.');">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="inline-flex items-center justify-center px-3 py-2 bg-white border border-slate-200/80 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-700 rounded-xl text-xs font-medium shadow-2xs transition-all cursor-pointer">
-                                Hapus
-                            </button>
-                        </form>
-                    @endif
-                @endif
-            </div>
+    <!-- SUB-VIEW 1: DAFTAR UJIAN UAS -->
+    <div id="uasViewExamsList" class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+        <div class="bg-[#0D2149] px-5 py-3.5 text-white flex items-center justify-between gap-3">
+            <h3 class="text-sm font-bold tracking-tight">Daftar Jadwal Ujian UAS ({{ $uasExams->count() }})</h3>
         </div>
-        @empty
+        @if($uasExams->count() > 0)
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-700">
+                <thead class="bg-slate-50 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-600 font-bold">
+                    <tr>
+                        <th class="px-4 py-3.5 w-10"></th>
+                        <th class="px-5 py-3.5">Mata Pelajaran / Ujian</th>
+                        <th class="px-5 py-3.5">Jadwal &amp; Waktu</th>
+                        <th class="px-5 py-3.5">Durasi &amp; Batas</th>
+                        <th class="px-5 py-3.5">Ruang Kelas</th>
+                        <th class="px-5 py-3.5">Status</th>
+                        <th class="px-5 py-3.5 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @foreach($uasExams as $item)
+                    @php
+                        $primary = $item->primary;
+                        $canManage = auth()->user()->isAdmin() || ($primary->created_by === auth()->id());
+                        $isExpired = $item->is_expired ?? $primary->isExpired();
+                        $isOngoing = $item->is_ongoing ?? $primary->isOngoing();
+                        $status = $isOngoing ? 'ongoing' : ($isExpired ? 'finished' : ($item->has_active ? 'active' : 'inactive'));
+                        $classList = $item->classes->pluck('name')->implode(', ');
+                        $gradesList = implode(',', $item->detected_grades ?? []);
+                    @endphp
+                    <tr class="uas-master-exam-row hover:bg-[#F5F8FF] transition-colors"
+                        data-exam-title="{{ strtolower($item->title) }}"
+                        data-exam-classes="{{ strtolower($classList ?: 'semua kelas') }}"
+                        data-exam-status="{{ $status }}"
+                        data-exam-grades="{{ $gradesList }}">
+                        <td class="px-4 py-4 align-middle">
+                            @if($canManage)
+                                @if($isOngoing)
+                                    <input type="checkbox" disabled class="rounded text-slate-300 border-slate-200 w-4 h-4 cursor-not-allowed opacity-40">
+                                @else
+                                    <input type="checkbox" class="bulk-checkbox rounded text-[#2457E8] focus:ring-[#2457E8]/20 border-slate-300 w-4 h-4 cursor-pointer" value="{{ $primary->id }}">
+                                @endif
+                            @endif
+                        </td>
+                        <td class="px-5 py-4 align-middle">
+                            <div class="font-bold text-slate-900">{{ $item->title }}</div>
+                        </td>
+                        <td class="px-5 py-4 align-middle whitespace-nowrap">
+                            <div class="font-semibold text-slate-800 text-xs sm:text-sm">{{ \Carbon\Carbon::parse($primary->start_at)->format('d M Y') }}</div>
+                            <div class="font-mono text-xs text-slate-500 mt-0.5">{{ \Carbon\Carbon::parse($primary->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($primary->end_at)->format('H:i') }} WIB</div>
+                        </td>
+                        <td class="px-5 py-4 align-middle whitespace-nowrap">
+                            <div class="font-semibold text-slate-800 text-xs sm:text-sm">{{ $primary->duration }} Mnt <span class="font-normal text-slate-500">({{ round($primary->duration / 35, 1) }} JP)</span></div>
+                            <div class="text-xs text-slate-500 mt-0.5">Max {{ $primary->max_violation }}x keluar</div>
+                        </td>
+                        <td class="px-5 py-4 align-middle text-xs font-medium text-slate-700 whitespace-nowrap">
+                            {{ $item->classes->count() > 0 ? ($item->classes->count() >= 39 ? 'Semua Kelas (39)' : $item->classes->count() . ' Ruang Kelas') : 'Semua Kelas' }}
+                        </td>
+                        <td class="px-5 py-4 align-middle whitespace-nowrap">
+                            @if($isOngoing)
+                                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Sedang Berlangsung
+                                </span>
+                            @elseif($isExpired)
+                                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Selesai
+                                </span>
+                            @elseif($item->has_active)
+                                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Nonaktif
+                                </span>
+                            @endif
+                        </td>
+                        <td class="px-5 py-4 align-middle text-right whitespace-nowrap space-x-1.5">
+                            <a href="{{ route('admin.exams.show', $primary->id) }}"
+                               class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#2457E8] hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition">
+                                Pantau Siswa
+                            </a>
+                            @if($canManage)
+                                <a href="{{ route('admin.exams.edit', $primary->id) }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-medium shadow-2xs transition">
+                                    Edit
+                                </a>
+                                @if(!$isOngoing)
+                                    <form action="{{ route('admin.exams.destroy', $primary->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus ujian ini? Data sesi ujian akan dihapus.');">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-700 rounded-lg text-xs font-medium shadow-2xs transition cursor-pointer">
+                                            Hapus
+                                        </button>
+                                    </form>
+                                @endif
+                            @endif
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        @else
         <div class="py-12 text-center p-8">
-            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center mx-auto mb-3">
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-            </div>
             <h5 class="text-base font-bold text-slate-800">Belum Ada Jadwal Ujian UAS</h5>
             <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">Klik tombol "Tambah Ujian" di atas untuk menambahkan jadwal ujian sekolah (UAS).</p>
         </div>
-        @endforelse
+        @endif
     </div>
 
     <!-- SUB-VIEW 2: RINCIAN PER RUANG KELAS (Compact, Elegant Accordion Directory) -->
@@ -551,50 +544,47 @@
                 $cGrade = strtoupper(trim($cg->grade ?? ''));
                 if ($cGrade === 'X' || preg_match('/\b(X|10)\b/i', $cg->name)) {
                     $badgeText = 'X';
-                    $badgeStyle = 'bg-rose-50 text-rose-700 border border-rose-200/80';
                 } elseif ($cGrade === 'XI' || preg_match('/\b(XI|11)\b/i', $cg->name)) {
                     $badgeText = 'XI';
-                    $badgeStyle = 'bg-sky-50 text-sky-700 border border-sky-200/80';
                 } elseif ($cGrade === 'XII' || preg_match('/\b(XII|12)\b/i', $cg->name)) {
                     $badgeText = 'XII';
-                    $badgeStyle = 'bg-emerald-50 text-emerald-700 border border-emerald-200/80';
                 } else {
                     $badgeText = substr($cg->grade, 0, 3) ?: 'KL';
-                    $badgeStyle = 'bg-slate-100 text-slate-700 border border-slate-200';
                 }
+                $badgeStyle = 'bg-[#F5F8FF] text-[#142C5C] border border-blue-200/80';
             @endphp
-            <div class="uas-class-card bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:border-slate-300 transition-all overflow-hidden"
+            <div class="uas-class-card bg-white rounded-2xl border border-slate-200 shadow-2xs hover:border-slate-300 transition-all overflow-hidden"
                  data-class-id="{{ $cg->id }}"
                  data-class-name="{{ strtolower($cg->name) }}"
                  data-grade="{{ $cg->grade }}">
-                
+
                 <!-- Accordion Header: Ruang Kelas -->
-                <div class="p-3.5 sm:p-4 flex items-center justify-between gap-3 cursor-pointer select-none hover:bg-slate-50/70 transition-colors"
+                <div class="p-3.5 sm:p-4 flex items-center justify-between gap-3 cursor-pointer select-none hover:bg-[#F5F8FF]/60 transition-colors"
                      onclick="toggleUasClassAccordion('{{ $cg->id }}')">
                     <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-8 h-8 rounded-xl {{ $badgeStyle }} flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                        <div class="w-8 h-8 rounded-xl {{ $badgeStyle }} flex items-center justify-center font-bold text-xs shrink-0">
                             {{ $badgeText }}
                         </div>
                         <div class="min-w-0">
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <h5 class="text-sm sm:text-base font-bold text-slate-900 tracking-tight truncate">
+                            <div class="flex items-center gap-2.5 flex-wrap">
+                                <h5 class="text-sm sm:text-base font-bold text-[#142C5C] tracking-tight truncate">
                                     Ruang Kelas {{ $cg->name }}
                                 </h5>
                                 @if($cg->ongoing_exams > 0)
-                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                    <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700">
                                         <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                                        {{ $cg->ongoing_exams }} Sedang Berlangsung
+                                        {{ $cg->ongoing_exams }} Berlangsung
                                     </span>
                                 @endif
                             </div>
-                            <div class="text-[11px] text-slate-500 mt-0.5">
-                                Pengawasan UAS Ruang • <span class="font-semibold text-slate-700">{{ $cg->total_exams }} Jadwal Soal</span>
+                            <div class="text-xs text-slate-500 mt-0.5">
+                                {{ $cg->total_exams }} Jadwal Ujian UAS
                             </div>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-2 shrink-0">
-                        <span class="text-xs font-semibold text-slate-500 bg-slate-50 border border-slate-200/70 px-2 py-0.5 rounded-lg">
+                        <span class="text-xs font-semibold text-slate-600">
                             {{ $cg->total_exams }} Ujian
                         </span>
                         <svg id="chevron-uas-class-{{ $cg->id }}" class="w-4 h-4 text-slate-400 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -603,62 +593,88 @@
                     </div>
                 </div>
 
-                <!-- Accordion Content: Ujian di Kelas ini -->
-                <div id="body-uas-class-{{ $cg->id }}" class="hidden border-t border-slate-100 bg-slate-50/50 p-3 sm:p-4 space-y-2.5">
-                    @foreach($cg->exams as $item)
-                    @php
-                        $primary = $item->target_session ?? $item->primary;
-                        $canManage = auth()->user()->isAdmin() || ($primary->created_by === auth()->id());
-                        $isExpired = $item->is_expired ?? $primary->isExpired();
-                        $isOngoing = $item->is_ongoing ?? $primary->isOngoing();
-                        $status = $isOngoing ? 'ongoing' : ($isExpired ? 'finished' : ($item->has_active ? 'active' : 'inactive'));
-                    @endphp
-                    <div class="uas-exam-row bg-white rounded-xl border border-slate-200/80 p-3.5 hover:border-indigo-300 transition-all flex flex-col md:flex-row md:items-center justify-between gap-3"
-                         data-exam-title="{{ strtolower($item->title) }}"
-                         data-exam-status="{{ $status }}">
-                        <div class="flex items-start gap-3 min-w-0 flex-1">
-                            @if($canManage)
-                                @if($isOngoing)
-                                    <input type="checkbox" disabled class="rounded text-slate-300 border-slate-200 w-4 h-4 cursor-not-allowed mt-0.5 shrink-0 opacity-40">
-                                @else
-                                    <input type="checkbox" class="bulk-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4 cursor-pointer mt-0.5 shrink-0" value="{{ $primary->id }}">
-                                @endif
-                            @endif
-                            <div class="min-w-0 flex-1">
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <h6 class="text-sm font-bold text-slate-900 tracking-tight">{{ $item->title }}</h6>
-                                    @if($isOngoing)
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-300">Sedang Berlangsung</span>
-                                    @elseif($isExpired)
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200/60">Selesai</span>
-                                    @elseif($item->has_active)
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Aktif</span>
+                <!-- Accordion Content: Tabel Ujian di Kelas ini -->
+                <div id="body-uas-class-{{ $cg->id }}" class="hidden border-t border-slate-200 bg-white overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-700">
+                        <thead class="bg-slate-50 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-600 font-bold">
+                            <tr>
+                                <th class="px-4 py-3 w-10"></th>
+                                <th class="px-4 py-3">Mata Pelajaran / Ujian</th>
+                                <th class="px-4 py-3">Jadwal &amp; Waktu</th>
+                                <th class="px-4 py-3">Durasi &amp; Batas</th>
+                                <th class="px-4 py-3">Status</th>
+                                <th class="px-4 py-3 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach($cg->exams as $item)
+                            @php
+                                $primary = $item->target_session ?? $item->primary;
+                                $canManage = auth()->user()->isAdmin() || ($primary->created_by === auth()->id());
+                                $isExpired = $item->is_expired ?? $primary->isExpired();
+                                $isOngoing = $item->is_ongoing ?? $primary->isOngoing();
+                                $status = $isOngoing ? 'ongoing' : ($isExpired ? 'finished' : ($item->has_active ? 'active' : 'inactive'));
+                            @endphp
+                            <tr class="uas-exam-row hover:bg-[#F5F8FF] transition-colors"
+                                data-exam-title="{{ strtolower($item->title) }}"
+                                data-exam-status="{{ $status }}">
+                                <td class="px-4 py-3.5 align-middle">
+                                    @if($canManage)
+                                        @if($isOngoing)
+                                            <input type="checkbox" disabled class="rounded text-slate-300 border-slate-200 w-4 h-4 cursor-not-allowed opacity-40">
+                                        @else
+                                            <input type="checkbox" class="bulk-checkbox rounded text-[#2457E8] focus:ring-[#2457E8]/20 border-slate-300 w-4 h-4 cursor-pointer" value="{{ $primary->id }}">
+                                        @endif
                                     @endif
-                                </div>
-                                <div class="flex items-center gap-2 text-xs text-slate-500 mt-1 flex-wrap">
-                                    <span>{{ \Carbon\Carbon::parse($primary->start_at)->format('d M Y') }} ({{ \Carbon\Carbon::parse($primary->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($primary->end_at)->format('H:i') }} WIB)</span>
-                                    <span class="text-slate-300">•</span>
-                                    <span>{{ $primary->duration }} Mnt ({{ round($primary->duration / 35, 1) }} JP)</span>
-                                    <span class="text-rose-600 font-semibold text-[10px]">Max {{ $primary->max_violation }}x</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-end gap-2 shrink-0">
-                            <a href="{{ route('admin.exams.show', array_merge([$primary->id], ($cg->class ? ['class_id' => $cg->id] : []))) }}" class="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow-2xs">
-                                Pantau Siswa
-                            </a>
-                            @if($canManage)
-                                <a href="{{ route('admin.exams.edit', $primary->id) }}" class="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-medium shadow-2xs">Edit</a>
-                                @if(!$isOngoing)
-                                    <form action="{{ route('admin.exams.destroy', $primary->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus ujian ini?');">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-rose-50 hover:text-rose-600 text-slate-700 rounded-lg text-xs font-medium shadow-2xs cursor-pointer">Hapus</button>
-                                    </form>
-                                @endif
-                            @endif
-                        </div>
-                    </div>
-                    @endforeach
+                                </td>
+                                <td class="px-4 py-3.5 align-middle font-bold text-slate-900 text-xs sm:text-sm">
+                                    {{ $item->title }}
+                                </td>
+                                <td class="px-4 py-3.5 align-middle whitespace-nowrap">
+                                    <div class="font-semibold text-slate-800 text-xs">{{ \Carbon\Carbon::parse($primary->start_at)->format('d M Y') }}</div>
+                                    <div class="font-mono text-[11px] text-slate-500 mt-0.5">{{ \Carbon\Carbon::parse($primary->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($primary->end_at)->format('H:i') }} WIB</div>
+                                </td>
+                                <td class="px-4 py-3.5 align-middle whitespace-nowrap">
+                                    <div class="font-semibold text-slate-800 text-xs">{{ $primary->duration }} Mnt <span class="font-normal text-slate-500">({{ round($primary->duration / 35, 1) }} JP)</span></div>
+                                    <div class="text-[11px] text-slate-500 mt-0.5">Max {{ $primary->max_violation }}x keluar</div>
+                                </td>
+                                <td class="px-4 py-3.5 align-middle whitespace-nowrap">
+                                    @if($isOngoing)
+                                        <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Sedang Berlangsung
+                                        </span>
+                                    @elseif($isExpired)
+                                        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Selesai
+                                        </span>
+                                    @elseif($item->has_active)
+                                        <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Nonaktif
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3.5 align-middle text-right whitespace-nowrap space-x-1.5">
+                                    <a href="{{ route('admin.exams.show', array_merge([$primary->id], ($cg->class ? ['class_id' => $cg->id] : []))) }}" class="inline-flex items-center px-3 py-1.5 bg-[#2457E8] hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition">
+                                        Pantau Siswa
+                                    </a>
+                                    @if($canManage)
+                                        <a href="{{ route('admin.exams.edit', $primary->id) }}" class="inline-flex items-center px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-lg text-xs font-medium shadow-2xs transition">Edit</a>
+                                        @if(!$isOngoing)
+                                            <form action="{{ route('admin.exams.destroy', $primary->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus ujian ini?');">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="inline-flex items-center px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-rose-50 hover:text-rose-600 text-slate-700 rounded-lg text-xs font-medium shadow-2xs transition cursor-pointer">Hapus</button>
+                                            </form>
+                                        @endif
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
             @empty
@@ -679,21 +695,26 @@
 <!-- ========================================================================= -->
 <!-- 5. KONTEN MODE UTS (id="utsContainer")                                      -->
 <!-- ========================================================================= -->
-<div id="utsContainer" class="{{ !$isUts ? 'hidden' : '' }} space-y-4">
+<div id="utsContainer" class="{{ !$isUts ? 'hidden' : '' }} space-y-5">
     <!-- Bar Kontrol UTS -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-3.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs">
+        <div class="bg-[#0D2149] px-5 py-3.5 text-white rounded-t-2xl">
+            <h3 class="text-sm font-bold tracking-tight">Parameter Filter Ujian UTS</h3>
+            <p class="text-xs text-blue-200 mt-0.5">Cari guru pengampu, mata pelajaran, pilih kelas, atau saring status ujian.</p>
+        </div>
+        <div class="p-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <!-- Search Input UTS -->
-        <div class="relative w-full md:w-80">
+        <div class="relative flex-1 min-w-[220px]">
             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
             </div>
-            <input 
-                type="text" 
-                id="searchUtsInput" 
-                placeholder="Cari guru pengampu, mapel, atau kelas..." 
-                class="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+            <input
+                type="text"
+                id="searchUtsInput"
+                placeholder="Cari guru pengampu, mapel, atau kelas..."
+                class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2457E8]/15 focus:border-[#2457E8] transition-all"
             >
         </div>
 
@@ -927,6 +948,7 @@
                     @endif
                 </div>
             </div>
+        </div>
         </div>
     </div>
 
@@ -1245,12 +1267,14 @@
 
         if (category === 'uas') {
             if (cardUas) {
-                cardUas.className = 'sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-150 bg-indigo-50 text-indigo-700 shadow-2xs';
+                cardUas.className = 'sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-150 bg-white/15 text-white';
+                cardUas.querySelector('span')?.classList.replace('bg-blue-200/60', 'bg-[#DCE9FF]');
             }
             if (cardUts) {
-                cardUts.className = 'sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 text-slate-600 hover:text-slate-900 hover:bg-slate-50';
+                cardUts.className = 'sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 text-slate-200 hover:text-white hover:bg-white/10';
+                cardUts.querySelector('span')?.classList.replace('bg-[#DCE9FF]', 'bg-blue-200/60');
             }
-            if (bUas) bUas.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/70';
+            if (bUas) bUas.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-[#2457E8] border border-blue-200/70';
             if (bUts) bUts.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-200/60 text-slate-500';
 
             if (uasContainer) uasContainer.classList.remove('hidden');
@@ -1259,24 +1283,21 @@
             if (statsUtsBar) statsUtsBar.classList.add('hidden');
 
             if (pageTitleHeading) pageTitleHeading.textContent = 'Manajemen Ujian UAS';
-            if (pageAccentIndicator) {
-                pageAccentIndicator.classList.remove('bg-emerald-600');
-                pageAccentIndicator.classList.add('bg-indigo-600');
-            }
             if (btnTambahUjian) {
                 btnTambahUjian.href = '{{ route("admin.exams.create") }}?type=uas';
-                btnTambahUjian.className = 'inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 bg-indigo-600 hover:bg-indigo-700 shadow-sm shadow-indigo-500/20 text-white rounded-xl text-xs sm:text-sm font-semibold transition-all duration-150 active:scale-[0.98] w-full sm:w-auto';
             }
             runUasFilter();
         } else {
             if (cardUas) {
-                cardUas.className = 'sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 text-slate-600 hover:text-slate-900 hover:bg-slate-50';
+                cardUas.className = 'sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 text-slate-200 hover:text-white hover:bg-white/10';
+                cardUas.querySelector('span')?.classList.replace('bg-[#DCE9FF]', 'bg-blue-200/60');
             }
             if (cardUts) {
-                cardUts.className = 'sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-150 bg-indigo-50 text-indigo-700 shadow-2xs';
+                cardUts.className = 'sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-150 bg-white/15 text-white';
+                cardUts.querySelector('span')?.classList.replace('bg-blue-200/60', 'bg-[#DCE9FF]');
             }
             if (bUas) bUas.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-200/60 text-slate-500';
-            if (bUts) bUts.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/70';
+            if (bUts) bUts.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-[#2457E8] border border-blue-200/70';
 
             if (uasContainer) uasContainer.classList.add('hidden');
             if (utsContainer) utsContainer.classList.remove('hidden');
@@ -1284,13 +1305,8 @@
             if (statsUtsBar) statsUtsBar.classList.remove('hidden');
 
             if (pageTitleHeading) pageTitleHeading.textContent = 'Manajemen Ujian UTS';
-            if (pageAccentIndicator) {
-                pageAccentIndicator.classList.remove('bg-indigo-600');
-                pageAccentIndicator.classList.add('bg-emerald-600');
-            }
             if (btnTambahUjian) {
                 btnTambahUjian.href = '{{ route("admin.exams.create") }}?type=uts';
-                btnTambahUjian.className = 'inline-flex items-center justify-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 bg-emerald-600 hover:bg-emerald-700 shadow-sm shadow-emerald-500/20 text-white rounded-xl text-xs sm:text-sm font-semibold transition-all duration-150 active:scale-[0.98] w-full sm:w-auto';
             }
             runUtsFilter();
         }
@@ -1469,8 +1485,9 @@
         });
 
         const noMatchUas = document.getElementById('noMatchUasMessage');
+        const hasAnyUas = {{ $uasExams->count() > 0 ? 'true' : 'false' }};
         if (noMatchUas) {
-            noMatchUas.classList.toggle('hidden', totalVisible > 0);
+            noMatchUas.classList.toggle('hidden', !hasAnyUas || totalVisible > 0);
         }
     }
 
@@ -1636,8 +1653,9 @@
         });
 
         const noMatchUts = document.getElementById('noMatchUtsMessage');
+        const hasAnyUts = {{ $utsTeacherGroups->count() > 0 ? 'true' : 'false' }};
         if (noMatchUts) {
-            noMatchUts.classList.toggle('hidden', totalVisibleTeachers > 0);
+            noMatchUts.classList.toggle('hidden', !hasAnyUts || totalVisibleTeachers > 0);
         }
     }
 
