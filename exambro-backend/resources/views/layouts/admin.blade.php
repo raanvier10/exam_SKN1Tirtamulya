@@ -166,6 +166,14 @@
                 </div>
             </div>
 
+            <a href="{{ route('admin.unlock.index') }}"
+               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.unlock.*') ? 'bg-[#2457E8] text-white font-semibold shadow-sm' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
+                <svg class="w-5 h-5 {{ request()->routeIs('admin.unlock.*') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                </svg>
+                Buka Kunci
+            </a>
+
             <a href="{{ route('admin.change-password') }}"
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.change-password*') ? 'bg-[#2457E8] text-white font-semibold shadow-sm' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
                 <svg class="w-5 h-5 {{ request()->routeIs('admin.change-password*') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -142,6 +142,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::patch('/exams/{exam}/quick-form-url', [ExamController::class, 'quickUpdateGoogleForm'])->name('exams.quick-form-url');
         Route::post('/exams/{exam}/students/{user}/unlock', [ExamController::class, 'unlockStudent'])->name('exams.students.unlock');
         Route::post('/exams/{exam}/students/{user}/reset', [ExamController::class, 'resetStudentSession'])->name('exams.students.reset');
+        Route::get('/unlock', [ExamController::class, 'unlockCenter'])->name('unlock.index');
         Route::post('/exams/bulk-delete', [ExamController::class, 'destroyBulk'])->name('exams.bulk-delete');
         Route::resource('exams', ExamController::class);
 

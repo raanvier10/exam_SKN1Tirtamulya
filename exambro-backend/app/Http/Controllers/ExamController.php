@@ -577,6 +577,35 @@ class ExamController extends Controller
         return view('admin.exams.show', compact('exam', 'participants', 'violations', 'stats', 'selectedClass'));
     }
 
+    public function unlockCenter(Request $request)
+    {
+        $search = trim((string) $request->input('search', ''));
+        $isTeacher = Auth::user()->isTeacher();
+
+        $baseQuery = \App\Models\ExamSession::with(['user.class', 'exam'])
+            ->withCount('violations')
+            ->when($isTeacher, fn ($q) => $q->whereHas('exam', fn ($e) => $e->where('created_by', Auth::id())))
+            ->when($search !== '', function ($q) use ($search) {
+                $q->whereHas('user', function ($u) use ($search) {
+                    $u->where('name', 'like', "%{$search}%")
+                      ->orWhere('username', 'like', "%{$search}%");
+                });
+            });
+
+        $lockedSessions = (clone $baseQuery)
+            ->where('status', 'LOCKED')
+            ->orderByDesc('updated_at')
+            ->get();
+
+        $unlockArchive = (clone $baseQuery)
+            ->whereNotNull('unlocked_at')
+            ->orderByDesc('unlocked_at')
+            ->limit(100)
+            ->get();
+
+        return view('admin.unlock.index', compact('lockedSessions', 'unlockArchive', 'search'));
+    }
+
     public function unlockStudent(Exam $exam, \App\Models\User $user)
     {
         // Untuk UAS (dibuat kurikulum/admin), buka kunci HANYA bisa dilakukan oleh Kurikulum/Admin.
