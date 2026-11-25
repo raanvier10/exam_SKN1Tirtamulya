@@ -109,7 +109,7 @@ class ApiExamController extends Controller
     {
         return $exam->participants()->where('user_id', $user->id)->exists()
             || ($user->class_id && $exam->classes()->where('class_id', $user->class_id)->exists())
-            || ($exam->classes()->count() === 0);
+            || !$exam->classes()->exists();
     }
 
     public function show(Request $request, $id)
@@ -253,6 +253,7 @@ class ApiExamController extends Controller
         }
 
         $resumedViolation = false;
+        $knownViolationsSinceUnlock = null;
         if (!$session) {
             $session = ExamSession::create([
                 'exam_id' => $exam->id,
@@ -276,11 +277,11 @@ class ApiExamController extends Controller
             // Cek apakah ini re-entry legal pertama tepat setelah admin membuka kunci (unlocked_at).
             $isFreshUnlockReentry = false;
             if ($session->unlocked_at) {
-                $violationsSinceUnlock = Violation::where('exam_id', $exam->id)
+                $knownViolationsSinceUnlock = Violation::where('exam_id', $exam->id)
                     ->where('user_id', $user->id)
                     ->where('created_at', '>=', $session->unlocked_at)
                     ->count();
-                if ($violationsSinceUnlock === 0) {
+                if ($knownViolationsSinceUnlock === 0) {
                     $isFreshUnlockReentry = true;
                 }
             }
@@ -305,12 +306,16 @@ class ApiExamController extends Controller
         ]);
 
         // Hitung akumulasi pelanggaran aktif siswa untuk ujian ini (memperhitungkan waktu buka kunci)
-        $activeViolationQuery = Violation::where('exam_id', $exam->id)
-            ->where('user_id', $user->id);
-        if ($session && $session->unlocked_at) {
-            $activeViolationQuery->where('created_at', '>=', $session->unlocked_at);
+        if ($knownViolationsSinceUnlock !== null) {
+            $currentViolations = $knownViolationsSinceUnlock + ($resumedViolation ? 1 : 0);
+        } else {
+            $activeViolationQuery = Violation::where('exam_id', $exam->id)
+                ->where('user_id', $user->id);
+            if ($session && $session->unlocked_at) {
+                $activeViolationQuery->where('created_at', '>=', $session->unlocked_at);
+            }
+            $currentViolations = $activeViolationQuery->count();
         }
-        $currentViolations = $activeViolationQuery->count();
         $maxViolation = (int)($exam->max_violation ?? 3);
 
         if ($currentViolations >= $maxViolation) {

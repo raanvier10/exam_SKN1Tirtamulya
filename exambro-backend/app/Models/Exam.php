@@ -82,6 +82,9 @@ class Exam extends Model
 
         // Atau jika ada sesi ujian siswa yang masih aktif atau terkunci, tapi hanya selama belum lewat batas end_at
         if ($this->status === 'active') {
+            if (array_key_exists('has_active_session', $this->attributes)) {
+                return (bool) $this->attributes['has_active_session'];
+            }
             return $this->sessions()->whereIn('status', ['ACTIVE', 'LOCKED'])->exists();
         }
 
