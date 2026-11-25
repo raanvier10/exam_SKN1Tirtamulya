@@ -3,6 +3,9 @@ import 'screens/splash_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  // Batasi cache bitmap native agar RAM 2GB-3GB tetap lega untuk WebView ujian
+  PaintingBinding.instance.imageCache.maximumSize = 50;
+  PaintingBinding.instance.imageCache.maximumSizeBytes = 25 << 20;
   runApp(const ExambroApp());
 }
 

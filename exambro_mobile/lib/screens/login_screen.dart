@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../api_service.dart';
@@ -88,135 +89,119 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final logoCachePx = (84 * MediaQuery.devicePixelRatioOf(context)).round();
     return Scaffold(
       backgroundColor: const Color(0xFF0A2540),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            physics: const ClampingScrollPhysics(),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: IntrinsicHeight(
-                child: Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color(0xFF07192F),
-                        Color(0xFF0A2540),
-                        Color(0xFF0F3460),
-                      ],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                  ),
-                  child: CustomPaint(
-                    painter: _LoginBackgroundPatternPainter(),
-                    child: SafeArea(
-                      child: Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24.0,
-                            vertical: 32.0,
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              const Spacer(),
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF07192F),
+              Color(0xFF0A2540),
+              Color(0xFF0F3460),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: CustomScrollView(
+          physics: const ClampingScrollPhysics(),
+          slivers: [
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: RepaintBoundary(
+                child: CustomPaint(
+                  painter: _LoginBackgroundPatternPainter(),
+                  child: SafeArea(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24.0,
+                          vertical: 32.0,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Spacer(),
 
-                              // School Logo
-                              Container(
-                                width: 84,
-                                height: 84,
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.35),
-                                    width: 2,
+                            // School Logo
+                            Container(
+                              width: 84,
+                              height: 84,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.35),
+                                  width: 2,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.2),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 6),
                                   ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.25,
-                                      ),
-                                      blurRadius: 24,
-                                      offset: const Offset(0, 10),
-                                    ),
-                                    BoxShadow(
-                                      color: const Color(
-                                        0xFF38BDF8,
-                                      ).withValues(alpha: 0.2),
-                                      blurRadius: 16,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Image.asset(
-                                  'assets/images/logo.webp',
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return const Icon(
-                                      Icons.school_rounded,
-                                      size: 42,
-                                      color: Color(0xFF0A2540),
-                                    );
-                                  },
-                                ),
+                                ],
                               ),
-                              const SizedBox(height: 20),
+                              child: Image.asset(
+                                'assets/images/logo.webp',
+                                cacheWidth: logoCachePx,
+                                cacheHeight: logoCachePx,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Icon(
+                                    Icons.school_rounded,
+                                    size: 42,
+                                    color: Color(0xFF0A2540),
+                                  );
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 20),
 
-                              // Title & Subtitle
-                              const Text(
-                                'Selamat Datang',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w800,
-                                  color: Colors.white,
-                                  letterSpacing: -0.5,
-                                ),
+                            // Title & Subtitle
+                            const Text(
+                              'Selamat Datang',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                                letterSpacing: -0.5,
                               ),
-                              const SizedBox(height: 6),
-                              const Text(
-                                'Portal Ujian SMKN 1 Tirtamulya',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Color(0xFF94A3B8),
-                                  fontWeight: FontWeight.w500,
-                                ),
+                            ),
+                            const SizedBox(height: 6),
+                            const Text(
+                              'Portal Ujian SMKN 1 Tirtamulya',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF94A3B8),
+                                fontWeight: FontWeight.w500,
                               ),
-                              const SizedBox(height: 28),
+                            ),
+                            const SizedBox(height: 28),
 
-                              // Login Form Card
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(
-                                    color: const Color(0xFFE2E8F0),
-                                    width: 1,
+                            // Login Form Card
+                            Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                  color: const Color(0xFFE2E8F0),
+                                  width: 1,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.12),
+                                    blurRadius: 14,
+                                    offset: const Offset(0, 8),
                                   ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(
-                                        alpha: 0.15,
-                                      ),
-                                      blurRadius: 30,
-                                      offset: const Offset(0, 14),
-                                    ),
-                                    BoxShadow(
-                                      color: const Color(
-                                        0xFF0A2540,
-                                      ).withValues(alpha: 0.06),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                padding: const EdgeInsets.all(24),
+                                ],
+                              ),
+                              padding: const EdgeInsets.all(24),
                                 child: Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
@@ -516,8 +501,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
+                          ],
                         ),
                       ),
                     ),
@@ -525,8 +509,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }
@@ -535,41 +519,16 @@ class _LoginScreenState extends State<LoginScreen> {
 class _LoginBackgroundPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    // 1. Ambient Glow 1 (Top Right)
+    // 1. Ambient Glows (lightweight radial paints)
     final glowPaint1 = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          Colors.white.withValues(alpha: 0.08),
-          Colors.white.withValues(alpha: 0.0),
-        ],
-      ).createShader(
-        Rect.fromCircle(
-          center: Offset(size.width * 0.88, 50),
-          radius: 140,
-        ),
-      );
-    canvas.drawCircle(Offset(size.width * 0.88, 50), 140, glowPaint1);
+      ..color = Colors.white.withValues(alpha: 0.04);
+    canvas.drawCircle(Offset(size.width * 0.88, 50), 130, glowPaint1);
 
-    // 2. Ambient Glow 2 (Bottom Left)
     final glowPaint2 = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFF38BDF8).withValues(alpha: 0.12),
-          const Color(0xFF38BDF8).withValues(alpha: 0.0),
-        ],
-      ).createShader(
-        Rect.fromCircle(
-          center: Offset(size.width * 0.12, size.height * 0.75),
-          radius: 140,
-        ),
-      );
-    canvas.drawCircle(
-      Offset(size.width * 0.12, size.height * 0.75),
-      140,
-      glowPaint2,
-    );
+      ..color = const Color(0xFF38BDF8).withValues(alpha: 0.05);
+    canvas.drawCircle(Offset(size.width * 0.12, size.height * 0.75), 130, glowPaint2);
 
-    // 3. Subtle Concentric Decorative Ring
+    // 2. Subtle Concentric Decorative Ring
     final ringPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.04)
       ..style = PaintingStyle.stroke
@@ -577,17 +536,20 @@ class _LoginBackgroundPatternPainter extends CustomPainter {
     canvas.drawCircle(Offset(size.width * 0.5, 120), 100, ringPaint);
     canvas.drawCircle(Offset(size.width * 0.5, 120), 160, ringPaint);
 
-    // 4. Dot Grid Matrix Pattern
+    // 3. Batched Dot Grid Matrix Pattern (1 draw call untuk CPU/GPU rendah)
     final dotPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.06)
-      ..style = PaintingStyle.fill;
+      ..strokeWidth = 2.2
+      ..strokeCap = StrokeCap.round;
 
-    const double step = 22.0;
+    final points = <Offset>[];
+    const double step = 24.0;
     for (double x = 14; x < size.width; x += step) {
       for (double y = 14; y < size.height - 10; y += step) {
-        canvas.drawCircle(Offset(x, y), 1.15, dotPaint);
+        points.add(Offset(x, y));
       }
     }
+    canvas.drawPoints(ui.PointMode.points, points, dotPaint);
   }
 
   @override

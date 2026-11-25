@@ -1,13 +1,16 @@
 package com.example.exambro_mobile
 
+import android.content.ComponentCallbacks2
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.view.WindowManager
 import android.webkit.CookieManager
+import java.io.File
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -19,8 +22,39 @@ class MainActivity: FlutterActivity() {
     private var isActivityPaused = false
     private val focusHandler = Handler(Looper.getMainLooper())
     private var pendingFloatingRunnable: Runnable? = null
+    private var pendingSecureRunnable: Runnable? = null
     private var screenReceiver: BroadcastReceiver? = null
     private var screenTurnedOff = false
+    private var lastCookieFlushMs: Long = 0L
+
+    private fun flushCookiesThrottled(force: Boolean = false) {
+        val now = SystemClock.elapsedRealtime()
+        if (!force && (now - lastCookieFlushMs) < 1500L) return
+        lastCookieFlushMs = now
+        try {
+            CookieManager.getInstance().flush()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun clearTempCacheDir(dir: File?) {
+        if (dir == null || !dir.exists()) return
+        val children = dir.listFiles() ?: return
+        for (child in children) {
+            val name = child.name.lowercase()
+            // Biarkan Chromium WebView mengelola & membersihkan cache miliknya sendiri lewat WebView.clearCache(true)
+            // agar tidak terjadi race condition file index saat halaman baru ditutup.
+            if (name == "webview" || name.contains("chromium")) {
+                continue
+            }
+            if (child.isDirectory) {
+                clearTempCacheDir(child)
+            } else {
+                child.delete()
+            }
+        }
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -71,12 +105,15 @@ class MainActivity: FlutterActivity() {
                 }
 
                 // Beri jeda 4 detik agar dialog sistem Android (Sematkan Aplikasi / Immersive) tidak dianggap pelanggaran
-                focusHandler.postDelayed({
-                    isSecured = true
-                }, 4000)
+                pendingSecureRunnable?.let { focusHandler.removeCallbacks(it) }
+                val secureRunnable = Runnable { isSecured = true }
+                pendingSecureRunnable = secureRunnable
+                focusHandler.postDelayed(secureRunnable, 4000)
                 result.success(true)
             } else if (call.method == "clearSecureScreen") {
                 isSecured = false
+                pendingSecureRunnable?.let { focusHandler.removeCallbacks(it) }
+                pendingSecureRunnable = null
                 screenReceiver?.let {
                     try {
                         unregisterReceiver(it)
@@ -96,9 +133,14 @@ class MainActivity: FlutterActivity() {
                 }
                 result.success(true)
             } else if (call.method == "flushCookies") {
-                // Paksa penyimpanan cookie akun Google ke penyimpanan fisik (disk) agar tidak hilang saat app ditutup
+                // Paksa penyimpanan cookie akun Google ke penyimpanan fisik (disk) dengan opsi force atau throttling I/O
+                val force = (call.arguments as? Boolean) ?: false
+                flushCookiesThrottled(force = force)
+                result.success(true)
+            } else if (call.method == "clearWebCache") {
+                // Bersihkan file cache sementara (gambar/aset) di internal storage tanpa menghapus cookie Google
                 try {
-                    CookieManager.getInstance().flush()
+                    clearTempCacheDir(applicationContext.cacheDir)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -142,10 +184,14 @@ class MainActivity: FlutterActivity() {
         pendingFloatingRunnable = null
 
         // Simpan sesi cookie saat aplikasi di-minimize
-        try {
-            CookieManager.getInstance().flush()
-        } catch (e: Exception) {
-            e.printStackTrace()
+        flushCookiesThrottled(force = true)
+    }
+
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
+            flushCookiesThrottled(force = true)
+            channel?.invokeMethod("onLowMemory", level)
         }
     }
 
@@ -161,6 +207,11 @@ class MainActivity: FlutterActivity() {
     }
 
     override fun onDestroy() {
+        pendingSecureRunnable?.let { focusHandler.removeCallbacks(it) }
+        pendingSecureRunnable = null
+        pendingFloatingRunnable?.let { focusHandler.removeCallbacks(it) }
+        pendingFloatingRunnable = null
+        focusHandler.removeCallbacksAndMessages(null)
         screenReceiver?.let {
             try {
                 unregisterReceiver(it)
@@ -171,11 +222,9 @@ class MainActivity: FlutterActivity() {
         screenReceiver = null
         screenTurnedOff = false
         // Simpan sesi cookie saat aplikasi ditutup
-        try {
-            CookieManager.getInstance().flush()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        flushCookiesThrottled(force = true)
+        channel?.setMethodCallHandler(null)
+        channel = null
         super.onDestroy()
     }
 
