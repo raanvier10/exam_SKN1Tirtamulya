@@ -118,9 +118,6 @@
                     <p class="text-xs text-slate-500 mt-0.5 font-medium">SMKN 1 Tirtamulya</p>
                 </div>
             </div>
-            <a href="{{ route('admin.login') }}" class="text-xs font-semibold px-3.5 py-2 rounded-lg border border-slate-200 bg-white hover:border-blue-600 text-slate-700 hover:text-blue-700 transition whitespace-nowrap">
-                Login Guru / Admin
-            </a>
         </div>
     </header>
 
