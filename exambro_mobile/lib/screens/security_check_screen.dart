@@ -28,6 +28,7 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
   bool _isChecking = true;
   bool _isSecure = false;
   bool _canOpenSettings = false;
+  bool _isNavigatingToExam = false;
   String _statusMessage = 'Memverifikasi profil & lingkungan ujian...';
   double? _detectedLat;
   double? _detectedLng;
@@ -427,20 +428,29 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
                       width: double.infinity,
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: () async {
-                          final nav = Navigator.of(context);
-                          final result = await nav.push(
-                            MaterialPageRoute(
-                              builder: (context) => ExamScreen(
-                                exam: widget.exam,
-                                latitude: _detectedLat,
-                                longitude: _detectedLng,
-                              ),
-                            ),
-                          );
-                          if (!mounted) return;
-                          nav.pop(result);
-                        },
+                        onPressed: _isNavigatingToExam
+                            ? null
+                            : () async {
+                                setState(() => _isNavigatingToExam = true);
+                                try {
+                                  final nav = Navigator.of(context);
+                                  final result = await nav.push(
+                                    MaterialPageRoute(
+                                      builder: (context) => ExamScreen(
+                                        exam: widget.exam,
+                                        latitude: _detectedLat,
+                                        longitude: _detectedLng,
+                                      ),
+                                    ),
+                                  );
+                                  if (!mounted) return;
+                                  nav.pop(result);
+                                } finally {
+                                  if (mounted) {
+                                    setState(() => _isNavigatingToExam = false);
+                                  }
+                                }
+                              },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: const Color(0xFF0B1320),

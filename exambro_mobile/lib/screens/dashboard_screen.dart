@@ -20,6 +20,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<dynamic> _exams = [];
   bool _isLoading = true;
   bool _isGoogleConnected = false;
+  bool _isLaunchingExam = false;
   Timer? _timer;
   final ValueNotifier<DateTime> _clockNotifier = ValueNotifier(DateTime.now());
 
@@ -1206,20 +1207,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                 )
                               : ElevatedButton(
-                                  onPressed: () async {
-                                    final result = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => SecurityCheckScreen(exam: exam),
-                                      ),
-                                    );
-                                    if (result == 'locked' && mounted) {
-                                      setState(() {
-                                        exam['student_status'] = 'locked';
-                                      });
-                                    }
-                                    _fetchExams();
-                                  },
+                                  onPressed: _isLaunchingExam
+                                      ? null
+                                      : () async {
+                                          setState(() => _isLaunchingExam = true);
+                                          try {
+                                            final result = await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => SecurityCheckScreen(exam: exam),
+                                              ),
+                                            );
+                                            if (result == 'locked' && mounted) {
+                                              setState(() {
+                                                exam['student_status'] = 'locked';
+                                              });
+                                            }
+                                            _fetchExams();
+                                          } finally {
+                                            if (mounted) {
+                                              setState(() => _isLaunchingExam = false);
+                                            }
+                                          }
+                                        },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF0A2540),
                                     foregroundColor: Colors.white,

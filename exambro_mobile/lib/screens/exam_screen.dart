@@ -19,6 +19,42 @@ class ExamScreen extends StatefulWidget {
     this.longitude,
   });
 
+  static const Duration startupGracePeriod = Duration(seconds: 5);
+  static const Duration startupTransientPauseAllowance = Duration(seconds: 3);
+
+  /// Evaluasi apakah pelanggaran non-kritis harus diabaikan selama masa stabilisasi awal ujian.
+  @visibleForTesting
+  static bool isWithinStartupGrace({
+    required String type,
+    required DateTime? entryTime,
+    required DateTime now,
+  }) {
+    if (type == 'SCREEN_OFF' || type == 'APP_RESTART_OR_DEVICE_OFF') {
+      return false;
+    }
+    if (entryTime == null) return false;
+    return now.difference(entryTime) < startupGracePeriod;
+  }
+
+  /// Evaluasi apakah jeda lifecycle saat transisi masuk ujian di HP RAM kecil merupakan transisi OS singkat.
+  @visibleForTesting
+  static bool shouldIgnoreResumeViolation({
+    required DateTime? entryTime,
+    required DateTime? awayStartTime,
+    required DateTime now,
+  }) {
+    if (entryTime == null) return false;
+    if (now.difference(entryTime) < startupGracePeriod) {
+      return true;
+    }
+    if (awayStartTime != null &&
+        awayStartTime.difference(entryTime) < startupGracePeriod &&
+        now.difference(awayStartTime) < startupTransientPauseAllowance) {
+      return true;
+    }
+    return false;
+  }
+
   @override
   State<ExamScreen> createState() => _ExamScreenState();
 }
@@ -160,6 +196,10 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
               }
             },
             onNavigationRequest: (NavigationRequest request) {
+              if (!request.isMainFrame) {
+                return NavigationDecision.prevent;
+              }
+
               final uri = Uri.tryParse(request.url);
               final scheme = uri?.scheme.toLowerCase() ?? '';
               final host = uri?.host.toLowerCase() ?? '';
@@ -216,10 +256,14 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                    path.startsWith('/intl') ||
                    path.startsWith('/about'));
 
-              final isDocsNonForm = host == 'docs.google.com' &&
-                  !(path.startsWith('/forms/d/') ||
-                      (path.startsWith('/forms/') &&
-                          (path.contains('/viewform') || path.contains('/formresponse'))));
+              final isAllowedFormPath = path.startsWith('/forms/d/') ||
+                  RegExp(r'^/forms/u/\d+/d/').hasMatch(path) ||
+                  (path.startsWith('/forms/') &&
+                      (path.contains('/viewform') ||
+                       path.contains('/formresponse') ||
+                       path.contains('/alreadyresponded') ||
+                       path.contains('/closedform')));
+              final isDocsNonForm = host == 'docs.google.com' && !isAllowedFormPath;
 
               if (blockedGoogleHosts.contains(host) || isSearch || isGoogleJunkPage || isDocsNonForm) {
                 _handleViolation(
@@ -256,6 +300,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                   host == 'forms.google.com' ||
                   host == 'docs.google.com' ||
                   host == 'accounts.google.com' ||
+                  host == 'accounts.google.co.id' ||
                   host == 'myaccount.google.com' ||
                   host == 'ogs.google.com' ||
                   host == 'apis.google.com' ||
@@ -804,15 +849,33 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_isLocked || _isExiting) return;
+
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
-      _wasPaused = true;
-      _awayStartTime = DateTime.now();
+      // Catat waktu awal jeda hanya saat transisi pertama agar event `hidden` ketika resume
+      // tidak menimpa timestamp _awayStartTime.
+      if (!_wasPaused) {
+        _wasPaused = true;
+        _awayStartTime = DateTime.now();
+      }
     } else if (state == AppLifecycleState.resumed) {
       if (_wasPaused) {
+        final now = DateTime.now();
+        final awayStart = _awayStartTime;
         _wasPaused = false;
-        final secondsAway = _awayStartTime != null
-            ? DateTime.now().difference(_awayStartTime!).inSeconds
+        _awayStartTime = null;
+
+        if (ExamScreen.shouldIgnoreResumeViolation(
+          entryTime: _entryTime,
+          awayStartTime: awayStart,
+          now: now,
+        )) {
+          return;
+        }
+
+        final secondsAway = awayStart != null
+            ? now.difference(awayStart).inSeconds
             : 0;
         _handleViolation(
           'APP_SWITCH',
@@ -924,15 +987,16 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _handleViolation(String type, String desc, {bool reportToServer = true}) async {
-    if (_isLocked) return;
+    if (_isLocked || _isExiting) return;
 
     final now = DateTime.now();
-    // 1. Grace period saat pertama kali masuk (2 detik pertama)
-    // Cegah dialog sistem Android (Sematkan Aplikasi / Immersive Mode) dihitung pelanggaran
-    if (type != 'SCREEN_OFF' &&
-        type != 'APP_RESTART_OR_DEVICE_OFF' &&
-        _entryTime != null &&
-        now.difference(_entryTime!).inSeconds < 2) {
+    // 1. Grace period saat pertama kali masuk (5 detik pertama)
+    // Cegah dialog sistem Android (Sematkan Aplikasi / Immersive Mode) & startup WebView di RAM kecil dihitung pelanggaran
+    if (ExamScreen.isWithinStartupGrace(
+      type: type,
+      entryTime: _entryTime,
+      now: now,
+    )) {
       return;
     }
 

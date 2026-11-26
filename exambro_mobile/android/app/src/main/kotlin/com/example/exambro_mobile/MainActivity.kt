@@ -19,6 +19,8 @@ class MainActivity: FlutterActivity() {
     private val CHANNEL = "exam.bro/secure"
     private var channel: MethodChannel? = null
     private var isSecured = false
+    private var isSecuringSession = false
+    private var awaitingInitialFocus = false
     private var isActivityPaused = false
     private val focusHandler = Handler(Looper.getMainLooper())
     private var pendingFloatingRunnable: Runnable? = null
@@ -26,6 +28,12 @@ class MainActivity: FlutterActivity() {
     private var screenReceiver: BroadcastReceiver? = null
     private var screenTurnedOff = false
     private var lastCookieFlushMs: Long = 0L
+
+    companion object {
+        private const val INITIAL_SECURE_DELAY_MS = 5000L
+        private const val FOCUS_REGAIN_ARM_DELAY_MS = 800L
+        private const val FLOATING_WINDOW_CONFIRM_MS = 1500L
+    }
 
     private fun flushCookiesThrottled(force: Boolean = false) {
         val now = SystemClock.elapsedRealtime()
@@ -70,6 +78,12 @@ class MainActivity: FlutterActivity() {
         channel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
         channel?.setMethodCallHandler { call, result ->
             if (call.method == "secureScreen") {
+                isSecured = false
+                isSecuringSession = true
+                awaitingInitialFocus = false
+                screenTurnedOff = false
+                pendingFloatingRunnable?.let { focusHandler.removeCallbacks(it) }
+                pendingFloatingRunnable = null
                 window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
                 try {
                     startLockTask()
@@ -104,13 +118,24 @@ class MainActivity: FlutterActivity() {
                     registerReceiver(screenReceiver, filter)
                 }
 
-                // Beri jeda 4 detik agar dialog sistem Android (Sematkan Aplikasi / Immersive) tidak dianggap pelanggaran
+                // Beri jeda startup agar dialog sistem Android (Sematkan Aplikasi / Immersive) dan inisialisasi WebView
+                // pada perangkat RAM kecil tidak langsung dianggap pelanggaran, dan pastikan fokus jendela sudah didapat dulu.
                 pendingSecureRunnable?.let { focusHandler.removeCallbacks(it) }
-                val secureRunnable = Runnable { isSecured = true }
+                val secureRunnable = Runnable {
+                    if (!isSecuringSession) return@Runnable
+                    if (!isActivityPaused && hasWindowFocus()) {
+                        isSecured = true
+                        awaitingInitialFocus = false
+                    } else {
+                        awaitingInitialFocus = true
+                    }
+                }
                 pendingSecureRunnable = secureRunnable
-                focusHandler.postDelayed(secureRunnable, 4000)
+                focusHandler.postDelayed(secureRunnable, INITIAL_SECURE_DELAY_MS)
                 result.success(true)
             } else if (call.method == "clearSecureScreen") {
+                isSecuringSession = false
+                awaitingInitialFocus = false
                 isSecured = false
                 pendingSecureRunnable?.let { focusHandler.removeCallbacks(it) }
                 pendingSecureRunnable = null
@@ -190,7 +215,7 @@ class MainActivity: FlutterActivity() {
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
         if (level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW) {
-            flushCookiesThrottled(force = true)
+            flushCookiesThrottled(force = level >= ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN)
             channel?.invokeMethod("onLowMemory", level)
         }
     }
@@ -204,9 +229,13 @@ class MainActivity: FlutterActivity() {
                 channel?.invokeMethod("onScreenOff", "SCREEN_OFF")
             }
         }
+        armSecurityIfFocusedAfterGrace()
     }
 
     override fun onDestroy() {
+        isSecuringSession = false
+        awaitingInitialFocus = false
+        isSecured = false
         pendingSecureRunnable?.let { focusHandler.removeCallbacks(it) }
         pendingSecureRunnable = null
         pendingFloatingRunnable?.let { focusHandler.removeCallbacks(it) }
@@ -235,26 +264,46 @@ class MainActivity: FlutterActivity() {
         }
     }
 
+    private fun armSecurityIfFocusedAfterGrace() {
+        if (isSecuringSession && !isSecured && awaitingInitialFocus && !isActivityPaused && hasWindowFocus()) {
+            awaitingInitialFocus = false
+            pendingSecureRunnable?.let { focusHandler.removeCallbacks(it) }
+            val armRunnable = Runnable {
+                if (!isSecuringSession) return@Runnable
+                isSecured = true
+                if (!isActivityPaused && !hasWindowFocus()) {
+                    scheduleFloatingWindowCheck()
+                }
+            }
+            pendingSecureRunnable = armRunnable
+            focusHandler.postDelayed(armRunnable, FOCUS_REGAIN_ARM_DELAY_MS)
+        }
+    }
+
+    private fun scheduleFloatingWindowCheck() {
+        pendingFloatingRunnable?.let { focusHandler.removeCallbacks(it) }
+        val runnable = Runnable {
+            if (!isActivityPaused && !hasWindowFocus() && isSecured) {
+                channel?.invokeMethod("onWindowFocusLost", "FLOATING_WINDOW")
+            }
+        }
+        pendingFloatingRunnable = runnable
+        focusHandler.postDelayed(runnable, FLOATING_WINDOW_CONFIRM_MS)
+    }
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (!hasFocus) {
             if (isSecured && !isActivityPaused) {
-                // Tunda 500ms: jika activity mengalami pause dalam 500ms, itu adalah APP_SWITCH (bukan floating window).
-                // Namun jika setelah 500ms activity tetap RESUMED/foreground tapi jendela tidak memiliki fokus,
-                // berarti ada jendela mengambang aktif di atas layar (Floating Window / Smart Sidebar / Pop-up).
-                pendingFloatingRunnable?.let { focusHandler.removeCallbacks(it) }
-                val runnable = Runnable {
-                    if (!isActivityPaused && !hasWindowFocus() && isSecured) {
-                        channel?.invokeMethod("onWindowFocusLost", "FLOATING_WINDOW")
-                    }
-                }
-                pendingFloatingRunnable = runnable
-                focusHandler.postDelayed(runnable, 500)
+                // Tunda konfirmasi kehilangan fokus agar glitch relayout WebView / sistem bar pada RAM kecil
+                // tidak dianggap Floating Window, sedangkan jendela mengambang nyata tetap terdeteksi.
+                scheduleFloatingWindowCheck()
             }
         } else {
-            // Fokus layar kembali, bersihkan timer
+            // Fokus layar kembali, bersihkan timer floating window
             pendingFloatingRunnable?.let { focusHandler.removeCallbacks(it) }
             pendingFloatingRunnable = null
+            armSecurityIfFocusedAfterGrace()
         }
     }
 }
