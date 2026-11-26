@@ -148,9 +148,16 @@
             </button>
         </div>
 
+        @php
+            $apkFile = public_path('downloads/ExaSatrya.apk');
+            $apkSizeLabel = file_exists($apkFile)
+                ? '~' . number_format(filesize($apkFile) / (1024 * 1024), 1) . ' MB'
+                : '~50 MB';
+        @endphp
+
         <!-- ================= SECTION 1: ANDROID ================= -->
-        <div id="content-android" class="space-y-4">
-            <div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm text-center">
+        <div id="content-android" class="space-y-[22px]">
+            <div class="bg-white border border-slate-200 rounded-[12px] p-6 shadow-sm text-center">
                 <div class="flex flex-col items-center gap-4">
                     <div class="space-y-2">
                         <h3 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">Aplikasi Ujian ExaSatrya (Android)</h3>
@@ -160,47 +167,47 @@
                     </div>
 
                     <div class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-slate-600">
-                        <span class="inline-flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                            Versi <strong class="text-slate-900">1.0.0</strong>
+                        <span class="inline-flex items-center gap-[6px]">
+                            <svg class="w-[15px] h-[15px] text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                            <span>Versi <strong class="text-slate-900">1.0.0</strong></span>
                         </span>
-                        <span class="inline-flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
-                            Ukuran <strong class="text-slate-900">~51 MB</strong>
+                        <span class="inline-flex items-center gap-[6px]">
+                            <svg class="w-[15px] h-[15px] text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+                            <span>Ukuran <strong class="text-slate-900 tabular-nums">{{ $apkSizeLabel }}</strong></span>
                         </span>
-                        <span class="inline-flex items-center gap-1.5">
-                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                            Android <strong class="text-slate-900">5.0 – 15 (32/64-bit)</strong>
+                        <span class="inline-flex items-center gap-[6px]">
+                            <svg class="w-[15px] h-[15px] text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                            <span>Android <strong class="text-slate-900">7.0 – 16 (32/64-bit)</strong></span>
                         </span>
                     </div>
 
-                    <a href="{{ route('download.apk') }}" class="inline-flex items-center justify-center gap-2.5 w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-sm transition active:scale-[0.98] mt-1">
-                        <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                        Download APK Resmi
+                    <a href="{{ route('download.apk') }}" class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-[8px] shadow-sm transition active:scale-[0.98] mt-1">
+                        <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                        <span>Download APK Resmi</span>
                     </a>
                 </div>
             </div>
 
             <!-- Panduan Mengatasi Kendala Instalasi -->
-            <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
-                <h4 class="text-sm font-bold text-slate-900 mb-3">Panduan &amp; Solusi Kendala Instalasi</h4>
-                <div class="grid sm:grid-cols-3 gap-4 text-xs">
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+            <div class="bg-white border border-slate-200 rounded-[12px] p-6 shadow-sm">
+                <h4 class="text-[15px] font-bold text-slate-900 mb-4 tracking-[-0.01em]">Panduan &amp; Solusi Kendala Instalasi</h4>
+                <div class="grid sm:grid-cols-3 gap-[22px] text-xs">
+                    <div class="bg-slate-50 p-4 rounded-[8px] border border-slate-200/80">
                         <div class="font-bold text-slate-900 mb-1.5">1. Aplikasi Tidak Terinstal</div>
                         <p class="text-slate-600 leading-relaxed text-justify">
                             Hapus / uninstall aplikasi Exambro versi lama di HP terlebih dahulu, lalu pasang APK baru ini.
                         </p>
                     </div>
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+                    <div class="bg-slate-50 p-4 rounded-[8px] border border-slate-200/80">
                         <div class="font-bold text-slate-900 mb-1.5">2. Diblokir Play Protect</div>
                         <p class="text-slate-600 leading-relaxed text-justify">
                             Klik tulisan <strong>Detail selengkapnya</strong> pada peringatan Play Protect, lalu pilih <strong>Tetap instal</strong>.
                         </p>
                     </div>
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+                    <div class="bg-slate-50 p-4 rounded-[8px] border border-slate-200/80">
                         <div class="font-bold text-slate-900 mb-1.5">3. Installer Terhenti</div>
                         <p class="text-slate-600 leading-relaxed text-justify">
-                            Pastikan ukuran file di File Manager utuh (~51 MB) dan unduhan selesai 100% sebelum dibuka.
+                            Pastikan ukuran file di File Manager utuh (<span class="tabular-nums">{{ $apkSizeLabel }}</span>) dan unduhan selesai 100% sebelum dibuka.
                         </p>
                     </div>
                 </div>
