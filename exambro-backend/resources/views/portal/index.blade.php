@@ -12,8 +12,25 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 14px;
+            line-height: 1.55;
             background-color: #F5F8FF;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        h1, h2, h3, h4 {
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+        .flex > *, .grid > * {
+            min-width: 0;
+        }
+        svg[stroke="currentColor"]:not([data-decorative]) {
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex-shrink: 0;
         }
         .bg-geo-grid {
             background-image:

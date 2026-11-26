@@ -3,59 +3,59 @@
 
 @section('content')
 <div class="max-w-3xl mx-auto">
-    <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div class="mb-[22px] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
             <h2 class="text-xl sm:text-2xl font-extrabold text-[#142C5C] tracking-tight">Edit Data Siswa</h2>
             <p class="text-xs sm:text-sm text-slate-600 mt-1">Perbarui informasi akun siswa.</p>
         </div>
-        <a href="{{ route('admin.students.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:border-[#2457E8] hover:text-[#2457E8] transition-colors self-start sm:self-auto">
+        <a href="{{ route('admin.students.index') }}" class="inline-flex items-center gap-[6px] px-3.5 py-2 bg-white border border-slate-200 rounded-[8px] text-xs sm:text-sm font-semibold text-slate-700 hover:border-[#2457E8] hover:text-[#2457E8] transition-colors self-start sm:self-auto whitespace-nowrap">
             &larr; Kembali
         </a>
     </div>
 
-    <form action="{{ route('admin.students.update', $student->id) }}" method="POST" autocomplete="off" class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+    <form action="{{ route('admin.students.update', $student->id) }}" method="POST" autocomplete="off" class="card overflow-hidden">
         @csrf
         @method('PUT')
 
-        <div class="bg-[#0D2149] px-6 py-4 text-white">
-            <h3 class="text-sm font-bold tracking-tight">Perbarui Akun Siswa</h3>
-            <p class="text-xs text-blue-200 mt-0.5">Ubah nama, NIS, kelas, status akun, atau password siswa.</p>
+        <div class="card-header bg-[#0D2149] border-[#142C5C] text-white flex-col items-start gap-0.5">
+            <h3 class="card-title text-white">Perbarui Akun Siswa</h3>
+            <p class="text-xs text-blue-200">Ubah nama, NIS, kelas, status akun, atau password siswa.</p>
         </div>
 
-        <div class="p-6 space-y-5">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div class="card-body space-y-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-[22px]">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1.5">Nama Lengkap</label>
-                    <input type="text" name="name" value="{{ old('name', $student->name) }}" required autocomplete="off" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all">
+                    <input type="text" name="name" value="{{ old('name', $student->name) }}" required autocomplete="off" class="w-full bg-white border border-slate-200 rounded-[8px] px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all">
                     @error('name') <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span> @enderror
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1.5">NIS / Username</label>
-                    <input type="text" name="username" value="{{ old('username', $student->username) }}" required autocomplete="off" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all tabular-nums">
+                    <input type="text" name="username" value="{{ old('username', $student->username) }}" required autocomplete="off" class="w-full bg-white border border-slate-200 rounded-[8px] px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all tabular-nums">
                     @error('username') <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span> @enderror
                 </div>
             </div>
 
-            <div class="p-3.5 bg-[#F5F8FF] rounded-xl border border-blue-100 flex items-center gap-3">
+            <div class="p-3.5 bg-[#F5F8FF] rounded-[8px] border border-blue-100 flex items-center gap-3">
                 <svg class="w-5 h-5 text-[#2457E8] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <p class="text-xs text-[#142C5C] font-medium">Biarkan kolom password kosong jika tidak ingin mengganti password akun ini.</p>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-[22px]">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1.5">Password Baru</label>
-                    <input type="password" name="password" autocomplete="new-password" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all" placeholder="Kosongkan jika tidak diubah">
+                    <input type="password" name="password" autocomplete="new-password" class="w-full bg-white border border-slate-200 rounded-[8px] px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all" placeholder="Kosongkan jika tidak diubah">
                     @error('password') <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span> @enderror
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1.5">Konfirmasi Password Baru</label>
-                    <input type="password" name="password_confirmation" autocomplete="new-password" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all" placeholder="Ulangi password baru">
+                    <input type="password" name="password_confirmation" autocomplete="new-password" class="w-full bg-white border border-slate-200 rounded-[8px] px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all" placeholder="Ulangi password baru">
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-[22px]">
                 <!-- Pilih Kelas -->
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1.5">Pilih Kelas</label>

@@ -4,16 +4,16 @@
 @section('content')
 <div class="max-w-3xl mx-auto">
     <!-- Header -->
-    <div class="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div class="mb-[22px] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
             <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Edit Jadwal Ujian</h2>
             <p class="text-xs sm:text-sm text-slate-500 mt-1">Perbarui parameter jadwal, target kelas, dan tautan kuesioner soal.</p>
         </div>
-        <a href="{{ route('admin.exams.show', $exam->id) }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium text-slate-600 bg-white border border-slate-200/80 hover:bg-slate-50 hover:text-indigo-600 transition-all shadow-2xs self-start sm:self-auto">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <a href="{{ route('admin.exams.show', $exam->id) }}" class="inline-flex items-center gap-[6px] px-3.5 py-2 rounded-[8px] text-xs sm:text-sm font-medium text-slate-600 bg-white border border-slate-200/80 hover:bg-slate-50 hover:text-indigo-600 transition-all shadow-2xs self-start sm:self-auto whitespace-nowrap">
+            <svg class="w-[15px] h-[15px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Kembali ke Monitoring
+            <span>Kembali ke Monitoring</span>
         </a>
     </div>
 

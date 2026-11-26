@@ -14,25 +14,25 @@
 @endphp
 <div class="w-full pb-12">
     <!-- Header -->
-    <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div class="mb-[22px] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
             <div class="flex items-center gap-2.5 flex-wrap">
                 <h2 class="text-xl sm:text-2xl font-extrabold text-[#142C5C] tracking-tight">Buat Jadwal Ujian {{ $lockedType ? strtoupper($lockedType) : 'Baru' }}</h2>
                 <!-- Badge Status Autosave -->
-                <div id="autosaveStatusBadge" class="hidden items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all">
+                <div id="autosaveStatusBadge" class="hidden items-center gap-1.5 px-2.5 py-0.5 rounded-[6px] text-[11px] font-medium transition-all">
                     <span id="autosaveStatusDot" class="w-2 h-2 rounded-full"></span>
                     <span id="autosaveStatusText">Draft tersimpan</span>
                 </div>
             </div>
             <p class="text-xs sm:text-sm text-slate-600 mt-1">Lengkapi informasi soal, pembagian sesi kelas, dan aturan keamanan ujian.</p>
         </div>
-        <div class="flex items-center gap-2 self-start sm:self-auto">
-            <button type="button" id="clearDraftBtn" onclick="clearExamDraft(true)" class="hidden items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-all shadow-2xs cursor-pointer" title="Hapus draf yang tersimpan dan kosongkan formulir">
-                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+        <div class="flex items-center gap-2 self-start sm:self-auto shrink-0">
+            <button type="button" id="clearDraftBtn" onclick="clearExamDraft(true)" class="hidden items-center gap-[6px] px-3 py-2 rounded-[8px] text-xs font-medium text-slate-600 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-all shadow-2xs cursor-pointer" title="Hapus draf yang tersimpan dan kosongkan formulir">
+                <svg class="w-[14px] h-[14px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
                 <span>Reset Draf</span>
             </button>
-            <a href="{{ $backUrl }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 bg-white border border-slate-200 hover:border-[#2457E8] hover:text-[#2457E8] transition-all shadow-2xs">
-                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <a href="{{ $backUrl }}" class="inline-flex items-center gap-[6px] px-3.5 py-2 rounded-[8px] text-xs sm:text-sm font-semibold text-slate-700 bg-white border border-slate-200 hover:border-[#2457E8] hover:text-[#2457E8] transition-all shadow-2xs whitespace-nowrap">
+                <svg class="w-[15px] h-[15px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                 <span>Kembali</span>
             </a>
         </div>

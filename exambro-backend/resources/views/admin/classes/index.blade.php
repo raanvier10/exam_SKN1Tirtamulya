@@ -2,23 +2,23 @@
 @section('title', 'Master Kelas')
 
 @section('content')
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-[22px]">
     <div>
         <h2 class="text-xl sm:text-2xl font-extrabold text-[#142C5C] tracking-tight">Daftar Kelas</h2>
         <p class="text-xs sm:text-sm text-slate-600 mt-1">Kelola rombel dan tingkatan kelas siswa.</p>
     </div>
-    <div class="flex items-center gap-2.5">
-        <button onclick="importModal.showModal()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-50 hover:border-[#2457E8] hover:text-[#2457E8] shadow-2xs transition active:scale-[0.98]">
-            <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div class="flex items-center gap-2.5 shrink-0">
+        <button onclick="importModal.showModal()" class="inline-flex items-center gap-[6px] px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-[8px] text-xs sm:text-sm font-semibold hover:bg-slate-50 hover:border-[#2457E8] hover:text-[#2457E8] shadow-2xs transition active:scale-[0.98] cursor-pointer whitespace-nowrap">
+            <svg class="w-[15px] h-[15px] text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
-            Import Excel
+            <span>Import Excel</span>
         </button>
-        <button type="button" onclick="createModal.showModal()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#2457E8] hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs transition active:scale-[0.98] cursor-pointer">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <button type="button" onclick="createModal.showModal()" class="inline-flex items-center gap-[6px] px-4 py-2.5 bg-[#2457E8] hover:bg-blue-700 text-white rounded-[8px] text-xs sm:text-sm font-bold shadow-xs transition active:scale-[0.98] cursor-pointer whitespace-nowrap">
+            <svg class="w-[15px] h-[15px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
-            Tambah Kelas
+            <span>Tambah Kelas</span>
         </button>
     </div>
 </div>
@@ -113,41 +113,43 @@
 <script>document.addEventListener('DOMContentLoaded', () => document.getElementById('createModal')?.showModal());</script>
 @endif
 
-<div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
-    <div class="bg-[#0D2149] px-5 py-3.5 text-white flex items-center justify-between gap-3">
-        <h3 class="text-sm font-bold tracking-tight">Daftar Ruang Kelas ({{ $classes->count() }})</h3>
-        <button type="button" onclick="importModal.showModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/15 text-white rounded-lg text-xs font-semibold transition">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+<div class="card overflow-hidden">
+    <div class="card-header bg-[#0D2149] border-[#142C5C] text-white">
+        <h3 class="card-title text-white">Daftar Ruang Kelas ({{ $classes->count() }})</h3>
+        <button type="button" onclick="importModal.showModal()" class="inline-flex items-center gap-[6px] px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/15 text-white rounded-[8px] text-xs font-semibold transition cursor-pointer whitespace-nowrap">
+            <svg class="w-[14px] h-[14px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
-            Import Excel
+            <span>Import Excel</span>
         </button>
     </div>
-    <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm text-slate-700">
-            <thead class="bg-slate-50 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-600 font-bold">
+    <div class="table-wrap card-body-flush">
+        <table class="text-slate-700">
+            <thead class="bg-slate-50 text-slate-600">
                 <tr>
-                    <th class="px-6 py-4">Nama Kelas</th>
-                    <th class="px-6 py-4">Deskripsi</th>
-                    <th class="px-6 py-4 text-right">Aksi</th>
+                    <th>Nama Kelas</th>
+                    <th>Deskripsi</th>
+                    <th class="text-right">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
                 @forelse($classes as $c)
                 <tr class="hover:bg-[#F5F8FF] transition-colors duration-150 group">
-                    <td class="px-6 py-4 text-slate-900 font-bold">{{ $c->name }}</td>
-                    <td class="px-6 py-4 text-slate-600">{{ $c->description ?? '-' }}</td>
-                    <td class="px-6 py-4 text-right space-x-1.5">
-                        <a href="{{ route('admin.classes.edit', $c->id) }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 shadow-2xs transition-all duration-150">Edit</a>
-                        <form action="{{ route('admin.classes.destroy', $c->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus kelas ini?');">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 shadow-2xs transition-all duration-150">Hapus</button>
-                        </form>
+                    <td class="text-slate-900 font-bold">{{ $c->name }}</td>
+                    <td class="text-slate-600">{{ $c->description ?? '-' }}</td>
+                    <td class="text-right whitespace-nowrap">
+                        <div class="inline-flex items-center justify-end gap-2">
+                            <a href="{{ route('admin.classes.edit', $c->id) }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-[8px] text-xs font-medium hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 shadow-2xs transition-all duration-150">Edit</a>
+                            <form action="{{ route('admin.classes.destroy', $c->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus kelas ini?');">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-[8px] text-xs font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 shadow-2xs transition-all duration-150 cursor-pointer">Hapus</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="3" class="px-6 py-12 text-center text-slate-400">
+                    <td colspan="3" class="py-12 text-center text-slate-400">
                         Belum ada data kelas yang terdaftar.
                     </td>
                 </tr>

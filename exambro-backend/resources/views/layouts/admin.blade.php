@@ -16,21 +16,121 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             font-size: 14px;
             line-height: 1.55;
-            background-color: #F5F8FF;
+            background-color: #F8FAFC;
             color: #0F172A;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        h1, h2, h3, h4 {
-            font-family: 'Plus Jakarta Sans', sans-serif;
+        h1, h2, h3, h4, h5 {
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             letter-spacing: -0.02em;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
 
         code, pre {
-            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
             font-variant-numeric: tabular-nums;
+        }
+
+        /* Flex & Grid overflow guard */
+        .flex > *,
+        .grid > * {
+            min-width: 0;
+        }
+
+        /* Card & Stat Card Design System */
+        .card {
+            background-color: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.03);
+            margin-bottom: 22px;
+            transition: box-shadow 150ms ease, border-color 150ms ease;
+        }
+        .card:hover {
+            box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06), 0 2px 4px rgba(15, 23, 42, 0.04);
+        }
+        .card-header {
+            padding: 18px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            border-bottom: 1px solid #E2E8F0;
+        }
+        .card-header h3,
+        .card-header h4,
+        .card-title {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+        .card-body {
+            padding: 22px;
+        }
+        .card-body-flush {
+            padding: 0;
+        }
+        .card-footer {
+            padding: 14px 22px;
+            border-top: 1px solid #E2E8F0;
+        }
+        .stat-card {
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            padding: 20px 22px;
+            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.03);
+            transition: box-shadow 150ms ease, border-color 150ms ease;
+        }
+        .stat-card:hover {
+            box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06), 0 2px 4px rgba(15, 23, 42, 0.04);
+        }
+
+        /* Table Standardization */
+        .table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+        .table-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+        .table-wrap th {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding: 13px 18px;
+            white-space: nowrap;
+            border-bottom: 1px solid #E2E8F0;
+        }
+        .table-wrap td {
+            font-size: 13.5px;
+            padding: 15px 18px;
+            vertical-align: middle;
+            border-bottom: 1px solid #F1F5F9;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+        .table-wrap.table-kv td {
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        /* Consistent Outline SVG Icons */
+        svg[stroke="currentColor"]:not([data-decorative]) {
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex-shrink: 0;
         }
 
         dialog[open] {
@@ -66,25 +166,25 @@
         }
     </style>
 </head>
-<body class="antialiased min-h-screen flex selection:bg-[#2457E8] selection:text-white bg-[#F5F8FF]">
+<body class="antialiased min-h-screen flex selection:bg-[#2563EB] selection:text-white bg-[#F8FAFC]">
 
     <!-- Sidebar Backdrop for Mobile -->
     <div id="sidebarBackdrop" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 lg:hidden hidden transition-opacity duration-300" onclick="toggleSidebar(false)"></div>
 
     <!-- Dark Navy Sidebar -->
-    <aside id="adminSidebar" class="w-64 bg-[#0D2149] text-white flex flex-col fixed inset-y-0 left-0 h-full z-50 border-r border-[#142C5C] transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0">
-        <div class="px-5 py-5 border-b border-white/10 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-white p-1 flex items-center justify-center shrink-0">
+    <aside id="adminSidebar" class="w-[270px] bg-[#0D2149] text-white flex flex-col fixed inset-y-0 left-0 h-[100dvh] lg:sticky lg:top-0 lg:w-[270px] lg:h-[100dvh] lg:shrink-0 z-50 border-r border-[#142C5C] transform -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0">
+        <div class="px-5 py-5 border-b border-white/10 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-9 h-9 rounded-[8px] bg-white p-1 flex items-center justify-center shrink-0">
                     <img src="{{ asset('images/logo.webp') }}" class="w-full h-full object-contain" alt="Logo">
                 </div>
-                <div>
+                <div class="min-w-0">
                     <h1 class="text-base font-extrabold tracking-tight text-white leading-none">ExaSatrya</h1>
                     <span class="text-[11px] font-medium text-blue-200">SMKN 1 Tirtamulya</span>
                 </div>
             </div>
             <!-- Mobile Close Button -->
-            <button type="button" onclick="toggleSidebar(false)" class="lg:hidden p-1.5 rounded-xl text-blue-200 hover:text-white hover:bg-white/10 transition-colors" aria-label="Tutup Menu">
+            <button type="button" onclick="toggleSidebar(false)" class="lg:hidden p-1.5 rounded-[8px] text-blue-200 hover:text-white hover:bg-white/10 transition-colors shrink-0" aria-label="Tutup Menu">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -92,11 +192,11 @@
         </div>
 
         <nav class="flex-1 px-3 py-5 space-y-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <div class="px-3.5 pb-2 text-[10px] font-bold uppercase tracking-wider text-blue-200/75">Utama</div>
+            <div class="px-3 pb-2 text-[11px] font-medium uppercase tracking-[0.08em] text-white/50">Utama</div>
 
             <a href="{{ route('admin.dashboard') }}"
-               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.dashboard') ? 'bg-[#2457E8] text-white font-semibold shadow-sm' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
-                <svg class="w-5 h-5 {{ request()->routeIs('admin.dashboard') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               class="flex items-center gap-3 px-3 py-2.5 rounded-[8px] text-sm font-medium transition-colors duration-150 {{ request()->routeIs('admin.dashboard') ? 'bg-[#2563EB] text-white' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
+                <svg class="w-[18px] h-[18px] shrink-0 {{ request()->routeIs('admin.dashboard') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
                 Dashboard
@@ -104,24 +204,24 @@
 
             @if(auth()->user()->isAdmin())
             <a href="{{ route('admin.classes.index') }}"
-               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.classes.*') ? 'bg-[#2457E8] text-white font-semibold shadow-sm' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
-                <svg class="w-5 h-5 {{ request()->routeIs('admin.classes.*') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               class="flex items-center gap-3 px-3 py-2.5 rounded-[8px] text-sm font-medium transition-colors duration-150 {{ request()->routeIs('admin.classes.*') ? 'bg-[#2563EB] text-white' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
+                <svg class="w-[18px] h-[18px] shrink-0 {{ request()->routeIs('admin.classes.*') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
                 Master Kelas
             </a>
 
             <a href="{{ route('admin.students.index') }}"
-               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.students.*') ? 'bg-[#2457E8] text-white font-semibold shadow-sm' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
-                <svg class="w-5 h-5 {{ request()->routeIs('admin.students.*') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               class="flex items-center gap-3 px-3 py-2.5 rounded-[8px] text-sm font-medium transition-colors duration-150 {{ request()->routeIs('admin.students.*') ? 'bg-[#2563EB] text-white' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
+                <svg class="w-[18px] h-[18px] shrink-0 {{ request()->routeIs('admin.students.*') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
                 Master Siswa
             </a>
 
             <a href="{{ route('admin.teachers.index') }}"
-               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.teachers.*') ? 'bg-[#2457E8] text-white font-semibold shadow-sm' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
-                <svg class="w-5 h-5 {{ request()->routeIs('admin.teachers.*') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               class="flex items-center gap-3 px-3 py-2.5 rounded-[8px] text-sm font-medium transition-colors duration-150 {{ request()->routeIs('admin.teachers.*') ? 'bg-[#2563EB] text-white' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
+                <svg class="w-[18px] h-[18px] shrink-0 {{ request()->routeIs('admin.teachers.*') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 14l9-5-9-5-9 5 9 5z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6" />
@@ -135,10 +235,10 @@
                 <button type="button"
                         id="examMenuTrigger"
                         onclick="toggleExamAccordion()"
-                        class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group {{ request()->routeIs('admin.exams.*') ? 'bg-[#2457E8] text-white font-semibold shadow-sm' : 'text-slate-200 hover:text-white hover:bg-white/10' }}"
+                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-[8px] text-sm font-medium transition-colors duration-150 group {{ request()->routeIs('admin.exams.*') ? 'bg-[#2563EB]/90 text-white' : 'text-slate-200 hover:text-white hover:bg-white/10' }}"
                         aria-expanded="{{ request()->routeIs('admin.exams.*') ? 'true' : 'false' }}">
                     <div class="flex items-center gap-3">
-                        <svg class="w-5 h-5 {{ request()->routeIs('admin.exams.*') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="w-[18px] h-[18px] shrink-0 {{ request()->routeIs('admin.exams.*') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                         </svg>
                         <span>Manajemen Ujian</span>
@@ -151,7 +251,7 @@
                 <!-- Submenu Items (UTS & UAS) -->
                 <div id="examSubmenu" class="accordion-menu {{ request()->routeIs('admin.exams.*') ? 'expanded' : '' }} pl-4 pr-1">
                     <div class="accordion-menu-inner space-y-1">
-                        <div class="pl-3 border-l border-white/20 space-y-1 py-1">
+                        <div class="pl-3 border-l border-white/15 space-y-1 py-1">
                             @php
                                 $userIsTeacher = auth()->user()?->isTeacher();
                                 $defaultSubmenuMode = $userIsTeacher ? 'uts' : 'uas';
@@ -163,16 +263,16 @@
                             <!-- UTS Submenu -->
                             <a href="{{ route('admin.exams.index', ['mode' => 'uts']) }}"
                                id="cardCategoryUts"
-                               class="sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 {{ $isUtsActive ? 'bg-white/15 text-white font-bold' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
-                                <span class="w-1.5 h-1.5 rounded-full {{ $isUtsActive ? 'bg-[#DCE9FF]' : 'bg-blue-200/60' }}"></span>
+                               class="sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-[8px] text-[13px] font-medium transition-colors duration-150 {{ $isUtsActive ? 'bg-white/10 text-white' : 'text-slate-300 hover:text-white hover:bg-white/10' }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $isUtsActive ? 'bg-white' : 'bg-blue-200/50' }}"></span>
                                 <span>UTS</span>
                             </a>
 
                             <!-- UAS Submenu -->
                             <a href="{{ route('admin.exams.index', ['mode' => 'uas']) }}"
                                id="cardCategoryUas"
-                               class="sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 {{ $isUasActive ? 'bg-white/15 text-white font-bold' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
-                                <span class="w-1.5 h-1.5 rounded-full {{ $isUasActive ? 'bg-[#DCE9FF]' : 'bg-blue-200/60' }}"></span>
+                               class="sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-[8px] text-[13px] font-medium transition-colors duration-150 {{ $isUasActive ? 'bg-white/10 text-white' : 'text-slate-300 hover:text-white hover:bg-white/10' }}">
+                                <span class="w-1.5 h-1.5 rounded-full {{ $isUasActive ? 'bg-white' : 'bg-blue-200/50' }}"></span>
                                 <span>UAS</span>
                             </a>
                         </div>
@@ -181,16 +281,16 @@
             </div>
 
             <a href="{{ route('admin.unlock.index') }}"
-               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.unlock.*') ? 'bg-[#2457E8] text-white font-semibold shadow-sm' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
-                <svg class="w-5 h-5 {{ request()->routeIs('admin.unlock.*') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               class="flex items-center gap-3 px-3 py-2.5 rounded-[8px] text-sm font-medium transition-colors duration-150 {{ request()->routeIs('admin.unlock.*') ? 'bg-[#2563EB] text-white' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
+                <svg class="w-[18px] h-[18px] shrink-0 {{ request()->routeIs('admin.unlock.*') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
                 </svg>
                 Buka Kunci
             </a>
 
             <a href="{{ route('admin.change-password') }}"
-               class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 {{ request()->routeIs('admin.change-password*') ? 'bg-[#2457E8] text-white font-semibold shadow-sm' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
-                <svg class="w-5 h-5 {{ request()->routeIs('admin.change-password*') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+               class="flex items-center gap-3 px-3 py-2.5 rounded-[8px] text-sm font-medium transition-colors duration-150 {{ request()->routeIs('admin.change-password*') ? 'bg-[#2563EB] text-white' : 'text-slate-200 hover:text-white hover:bg-white/10' }}">
+                <svg class="w-[18px] h-[18px] shrink-0 {{ request()->routeIs('admin.change-password*') ? 'text-white' : 'text-blue-200' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                 </svg>
                 Ganti Password
@@ -224,16 +324,16 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 lg:ml-64 min-h-screen flex flex-col w-full min-w-0">
+    <main class="flex-1 min-w-0 min-h-screen flex flex-col">
         <!-- Top Header Bar -->
-        <header class="sticky top-0 z-30 flex items-center justify-between bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 lg:px-8 py-3.5">
-            <div class="flex items-center gap-3">
-                <button type="button" onclick="toggleSidebar(true)" class="lg:hidden p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors active:scale-95" aria-label="Buka Menu">
+        <header class="sticky top-0 z-30 flex items-center justify-between bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 lg:px-[32px] py-3.5">
+            <div class="flex items-center gap-3 min-w-0">
+                <button type="button" onclick="toggleSidebar(true)" class="lg:hidden p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-[8px] transition-colors active:scale-95 shrink-0" aria-label="Buka Menu">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
-                <h2 class="text-base sm:text-lg font-extrabold text-[#142C5C] tracking-tight">
+                <h2 class="text-base sm:text-lg font-extrabold text-[#142C5C] tracking-tight min-w-0">
                     @yield('header_title', View::hasSection('title') ? html_entity_decode(trim(View::yieldContent('title')), ENT_QUOTES, 'UTF-8') : 'Dashboard Overview')
                 </h2>
             </div>
@@ -296,22 +396,24 @@
         @endif
 
         <!-- Content Area -->
-        <div class="p-4 sm:p-6 lg:p-8 flex-1 w-full">
-            @if($errors->any())
-                <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-sm shadow-2xs">
-                    <div class="flex items-center gap-2 mb-1.5 font-bold text-rose-950">
-                        <div class="w-2 h-2 rounded-full bg-rose-500 ring-4 ring-rose-100 shrink-0"></div>
-                        <span>Peringatan Validasi:</span>
+        <div class="px-4 py-5 sm:px-6 sm:py-6 lg:px-[32px] lg:py-[30px] flex-1 w-full min-w-0">
+            <div class="w-full max-w-[1280px] mx-auto min-w-0">
+                @if($errors->any())
+                    <div class="mb-[22px] p-4 rounded-[12px] bg-rose-50 border border-rose-200 text-rose-900 text-sm shadow-2xs">
+                        <div class="flex items-center gap-2 mb-1.5 font-bold text-rose-950">
+                            <div class="w-2 h-2 rounded-full bg-rose-500 ring-4 ring-rose-100 shrink-0"></div>
+                            <span>Peringatan Validasi:</span>
+                        </div>
+                        <ul class="list-disc list-inside text-xs space-y-1 ml-4 text-rose-800">
+                            @foreach($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
                     </div>
-                    <ul class="list-disc list-inside text-xs space-y-1 ml-4 text-rose-800">
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+                @endif
 
-            @yield('content')
+                @yield('content')
+            </div>
         </div>
     </main>
 
@@ -405,7 +507,7 @@
 
                 const trigger = document.createElement('button');
                 trigger.type = 'button';
-                trigger.className = 'select-trigger w-full flex items-center justify-between gap-2 bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 hover:border-slate-300 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all text-left cursor-pointer';
+                trigger.className = 'select-trigger w-full flex items-center justify-between gap-2 bg-white border border-slate-200 rounded-[8px] px-3.5 py-2.5 text-sm text-slate-800 hover:border-slate-300 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all text-left cursor-pointer';
 
                 const selectedSpan = document.createElement('span');
                 selectedSpan.className = 'selected-text truncate font-medium';

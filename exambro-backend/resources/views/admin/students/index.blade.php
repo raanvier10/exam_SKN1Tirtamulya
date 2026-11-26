@@ -2,23 +2,23 @@
 @section('title', 'Master Siswa')
 
 @section('content')
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-[22px]">
     <div>
         <h2 class="text-xl sm:text-2xl font-extrabold text-[#142C5C] tracking-tight">Daftar Siswa</h2>
         <p class="text-xs sm:text-sm text-slate-600 mt-1">Kelola akun dan kredensial akses siswa.</p>
     </div>
-    <div class="flex items-center gap-2.5">
-        <button onclick="importModal.showModal()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold hover:bg-slate-50 hover:border-[#2457E8] hover:text-[#2457E8] shadow-2xs transition active:scale-[0.98]">
-            <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div class="flex items-center gap-2.5 shrink-0">
+        <button onclick="importModal.showModal()" class="inline-flex items-center gap-[6px] px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-[8px] text-xs sm:text-sm font-semibold hover:bg-slate-50 hover:border-[#2457E8] hover:text-[#2457E8] shadow-2xs transition active:scale-[0.98] cursor-pointer whitespace-nowrap">
+            <svg class="w-[15px] h-[15px] text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
-            Import Excel
+            <span>Import Excel</span>
         </button>
-        <button type="button" onclick="createModal.showModal()" class="inline-flex items-center gap-2 px-4 py-2.5 bg-[#2457E8] hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs transition active:scale-[0.98] cursor-pointer">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <button type="button" onclick="createModal.showModal()" class="inline-flex items-center gap-[6px] px-4 py-2.5 bg-[#2457E8] hover:bg-blue-700 text-white rounded-[8px] text-xs sm:text-sm font-bold shadow-xs transition active:scale-[0.98] cursor-pointer whitespace-nowrap">
+            <svg class="w-[15px] h-[15px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
-            Tambah Siswa
+            <span>Tambah Siswa</span>
         </button>
     </div>
 </div>
@@ -188,20 +188,20 @@
 <script>document.addEventListener('DOMContentLoaded', () => document.getElementById('createModal')?.showModal());</script>
 @endif
 
-<div class="bg-white rounded-2xl border border-slate-200 shadow-2xs mb-6">
-    <div class="bg-[#0D2149] px-5 py-3.5 text-white rounded-t-2xl">
-        <h3 class="text-sm font-bold tracking-tight">Parameter Filter Siswa</h3>
-        <p class="text-xs text-blue-200 mt-0.5">Saring data siswa berdasarkan nama, NIS, kelas, status akun, atau mode GPS.</p>
+<div class="card">
+    <div class="card-header bg-[#0D2149] border-[#142C5C] text-white rounded-t-[12px] flex-col items-start gap-0.5">
+        <h3 class="card-title text-white">Parameter Filter Siswa</h3>
+        <p class="text-xs text-blue-200">Saring data siswa berdasarkan nama, NIS, kelas, status akun, atau mode GPS.</p>
     </div>
     <form method="GET" action="{{ route('admin.students.index') }}">
-        <div class="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="card-body grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[18px]">
             <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1.5">Cari Nama / NIS</label>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Contoh: Dimas atau NIS..." class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Contoh: Dimas atau NIS..." class="w-full bg-white border border-slate-200 rounded-[8px] px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15">
             </div>
             <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1.5">Kelas</label>
-                <select name="class_id" onchange="this.form.submit()" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:border-[#2457E8]">
+                <select name="class_id" onchange="this.form.submit()" class="w-full bg-white border border-slate-200 rounded-[8px] px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:border-[#2457E8]">
                     <option value="">Semua Kelas</option>
                     @foreach($classes as $c)
                         <option value="{{ $c->id }}" {{ request('class_id') == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
@@ -210,7 +210,7 @@
             </div>
             <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1.5">Status Akun</label>
-                <select name="status" onchange="this.form.submit()" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:border-[#2457E8]">
+                <select name="status" onchange="this.form.submit()" class="w-full bg-white border border-slate-200 rounded-[8px] px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:border-[#2457E8]">
                     <option value="">Semua Status</option>
                     <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Aktif</option>
                     <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Nonaktif</option>
@@ -218,28 +218,28 @@
             </div>
             <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1.5">Mode GPS (PKL)</label>
-                <select name="is_pkl" onchange="this.form.submit()" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:border-[#2457E8]">
+                <select name="is_pkl" onchange="this.form.submit()" class="w-full bg-white border border-slate-200 rounded-[8px] px-3.5 py-2.5 text-sm font-medium text-slate-800 focus:outline-none focus:border-[#2457E8]">
                     <option value="">Semua Mode GPS</option>
                     <option value="0" {{ request('is_pkl') === '0' ? 'selected' : '' }}>Reguler (Wajib GPS)</option>
                     <option value="1" {{ request('is_pkl') === '1' ? 'selected' : '' }}>PKL (Bebas GPS)</option>
                 </select>
             </div>
         </div>
-        <div class="px-5 py-3 bg-slate-50/80 border-t border-slate-200/80 rounded-b-2xl flex flex-wrap items-center justify-between gap-3">
+        <div class="card-footer bg-slate-50/80 border-slate-200/80 rounded-b-[12px] flex flex-wrap items-center justify-between gap-3">
             <p class="text-xs text-slate-600">
-                Menampilkan <span class="font-bold text-slate-900">{{ $students->count() }}</span> dari <span class="font-bold text-slate-900">{{ $students->total() }}</span> data siswa.
+                Menampilkan <span class="font-bold text-slate-900 tabular-nums">{{ $students->count() }}</span> dari <span class="font-bold text-slate-900 tabular-nums">{{ $students->total() }}</span> data siswa.
             </p>
             <div class="flex items-center gap-2">
                 @if(request()->hasAny(['search', 'class_id', 'status', 'is_pkl']))
-                    <a href="{{ route('admin.students.index') }}" class="px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:text-rose-600 bg-white border border-slate-200 rounded-xl transition-colors">
+                    <a href="{{ route('admin.students.index') }}" class="px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:text-rose-600 bg-white border border-slate-200 rounded-[8px] transition-colors">
                         Reset
                     </a>
                 @endif
-                <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#2457E8] hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-2xs">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <button type="submit" class="inline-flex items-center gap-[6px] px-4 py-2 bg-[#2457E8] hover:bg-blue-700 text-white rounded-[8px] text-xs sm:text-sm font-bold transition shadow-2xs cursor-pointer">
+                    <svg class="w-[15px] h-[15px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                     </svg>
-                    Filter Data
+                    <span>Filter Data</span>
                 </button>
             </div>
         </div>
@@ -263,65 +263,67 @@
     @csrf
 </form>
 
-<div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
-    <div class="bg-[#0D2149] px-5 py-3.5 text-white flex flex-wrap items-center justify-between gap-3">
-        <h3 class="text-sm font-bold tracking-tight">Daftar Akun Siswa ({{ $students->total() }})</h3>
-        <button type="button" onclick="importModal.showModal()" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/15 text-white rounded-lg text-xs font-semibold transition">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+<div class="card overflow-hidden">
+    <div class="card-header bg-[#0D2149] border-[#142C5C] text-white flex-wrap">
+        <h3 class="card-title text-white">Daftar Akun Siswa ({{ $students->total() }})</h3>
+        <button type="button" onclick="importModal.showModal()" class="inline-flex items-center gap-[6px] px-3 py-1.5 bg-white/10 hover:bg-white/20 border border-white/15 text-white rounded-[8px] text-xs font-semibold transition cursor-pointer whitespace-nowrap">
+            <svg class="w-[14px] h-[14px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
-            Import Excel
+            <span>Import Excel</span>
         </button>
     </div>
-    <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm text-slate-700">
-            <thead class="bg-slate-50 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-600 font-bold">
+    <div class="table-wrap card-body-flush">
+        <table class="text-slate-700">
+            <thead class="bg-slate-50 text-slate-600">
                 <tr>
-                    <th class="px-4 py-4 w-10">
+                    <th class="w-10">
                         <input type="checkbox" id="selectAllStudents" class="rounded text-[#2457E8] focus:ring-[#2457E8]/20 border-slate-300 w-4 h-4 cursor-pointer">
                     </th>
-                    <th class="px-6 py-4">Nama</th>
-                    <th class="px-6 py-4">Username / NIS</th>
-                    <th class="px-6 py-4">Kelas</th>
-                    <th class="px-6 py-4">Status Akun</th>
-                    <th class="px-6 py-4">Status PKL (GPS)</th>
-                    <th class="px-6 py-4 text-right">Aksi</th>
+                    <th>Nama</th>
+                    <th>Username / NIS</th>
+                    <th>Kelas</th>
+                    <th>Status Akun</th>
+                    <th>Status PKL (GPS)</th>
+                    <th class="text-right">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
                 @forelse($students as $s)
                 <tr class="hover:bg-[#F5F8FF] transition-colors duration-150 group">
-                    <td class="px-4 py-4 align-middle">
+                    <td class="align-middle">
                         <input type="checkbox" class="bulk-checkbox rounded text-[#2457E8] focus:ring-[#2457E8]/20 border-slate-300 w-4 h-4 cursor-pointer" value="{{ $s->id }}">
                     </td>
-                    <td class="px-6 py-4 text-slate-900 font-bold">{{ $s->name }}</td>
-                    <td class="px-6 py-4 tabular-nums text-slate-700 font-medium text-xs">{{ $s->username }}</td>
-                    <td class="px-6 py-4 text-slate-700 font-medium">
+                    <td class="text-slate-900 font-bold">{{ $s->name }}</td>
+                    <td class="tabular-nums text-slate-700 font-medium">{{ $s->username }}</td>
+                    <td class="text-slate-700 font-medium">
                         {{ $s->class ? $s->class->name : '-' }}
                     </td>
-                    <td class="px-6 py-4">
+                    <td>
                         @if($s->status === 'active')
-                            <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif
+                            <span class="inline-flex items-center gap-[6px] text-xs font-semibold text-emerald-700">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                <span>Aktif</span>
                             </span>
                         @else
-                            <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500">
-                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Nonaktif
+                            <span class="inline-flex items-center gap-[6px] text-xs font-medium text-slate-500">
+                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>
+                                <span>Nonaktif</span>
                             </span>
                         @endif
                     </td>
-                    <td class="px-6 py-4">
+                    <td>
                         <form action="{{ route('admin.students.toggle-pkl', $s->id) }}" method="POST" class="inline-block">
                             @csrf
-                            <button type="submit" class="inline-flex items-center gap-1.5 text-xs font-semibold transition-colors cursor-pointer {{ $s->is_pkl ? 'text-amber-700 hover:text-amber-800 hover:underline' : 'text-[#2457E8] hover:text-blue-800 hover:underline' }}" title="Klik untuk mengubah status PKL">
+                            <button type="submit" class="inline-flex items-center gap-[6px] text-xs font-semibold transition-colors cursor-pointer {{ $s->is_pkl ? 'text-amber-700 hover:text-amber-800 hover:underline' : 'text-[#2457E8] hover:text-blue-800 hover:underline' }}" title="Klik untuk mengubah status PKL">
                                 @if($s->is_pkl)
-                                    <svg class="w-3.5 h-3.5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg class="w-[14px] h-[14px] text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
                                     <span>PKL (GPS Off)</span>
                                 @else
-                                    <svg class="w-3.5 h-3.5 text-[#2457E8] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <svg class="w-[14px] h-[14px] text-[#2457E8] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                     </svg>
                                     <span>Reguler (GPS On)</span>
@@ -329,17 +331,19 @@
                             </button>
                         </form>
                     </td>
-                    <td class="px-6 py-4 text-right space-x-1.5">
-                        <a href="{{ route('admin.students.edit', $s->id) }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 shadow-2xs transition-all duration-150">Edit</a>
-                        <form action="{{ route('admin.students.destroy', $s->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus siswa ini?');">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 shadow-2xs transition-all duration-150">Hapus</button>
-                        </form>
+                    <td class="text-right whitespace-nowrap">
+                        <div class="inline-flex items-center justify-end gap-2">
+                            <a href="{{ route('admin.students.edit', $s->id) }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-[8px] text-xs font-medium hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 shadow-2xs transition-all duration-150">Edit</a>
+                            <form action="{{ route('admin.students.destroy', $s->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus siswa ini?');">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-[8px] text-xs font-medium hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 shadow-2xs transition-all duration-150 cursor-pointer">Hapus</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="px-6 py-12 text-center text-slate-400">
+                    <td colspan="7" class="py-12 text-center text-slate-400">
                         Belum ada data siswa yang sesuai filter.
                     </td>
                 </tr>

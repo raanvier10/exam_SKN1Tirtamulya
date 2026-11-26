@@ -22,36 +22,37 @@
         .card {
             background: #FFFFFF;
             border: 1px solid #E2E8F0;
-            border-radius: 20px;
-            padding: 34px 26px;
+            border-radius: 12px;
+            padding: 28px 24px;
             max-width: 440px;
             width: 100%;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(13, 33, 73, 0.08);
+            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.03);
         }
         .icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 18px;
+            width: 52px;
+            height: 52px;
+            border-radius: 8px;
             background: #ECFDF5;
             border: 1px solid #A7F3D0;
             color: #059669;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 18px;
+            margin: 0 auto 16px;
         }
-        h2 { font-size: 21px; font-weight: 800; color: #142C5C; margin-bottom: 8px; }
-        p { font-size: 13.5px; color: #475569; line-height: 1.55; margin-bottom: 20px; }
+        h2 { font-size: 20px; font-weight: 800; color: #142C5C; margin-bottom: 8px; overflow-wrap: anywhere; word-break: break-word; }
+        p { font-size: 14px; color: #475569; line-height: 1.55; margin-bottom: 20px; }
         .exam-info {
             background: #F8FAFC;
             border: 1px solid #E2E8F0;
-            border-radius: 14px;
+            border-radius: 8px;
             padding: 16px;
             text-align: left;
-            font-size: 12.5px;
+            font-size: 13px;
+            line-height: 1.5;
             color: #334155;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
         .info-row {
             display: flex;
@@ -60,15 +61,15 @@
             margin-bottom: 8px;
         }
         .info-row:last-child { margin-bottom: 0; }
-        .info-label { color: #64748B; font-weight: 600; }
-        .info-val { font-weight: 700; color: #0F172A; text-align: right; }
+        .info-label { color: #64748B; font-weight: 600; flex-shrink: 0; }
+        .info-val { font-weight: 700; color: #0F172A; text-align: right; overflow-wrap: anywhere; word-break: break-word; }
         .instruction {
-            font-size: 12px;
+            font-size: 12.5px;
             color: #142C5C;
             background: #DCE9FF;
             padding: 12px 14px;
-            border-radius: 12px;
-            line-height: 1.5;
+            border-radius: 8px;
+            line-height: 1.55;
         }
     </style>
 </head>
@@ -112,8 +113,9 @@
 
     @if(!empty($isWebEmergency))
         <div style="margin-top: 18px;">
-            <a href="{{ route('web-exam.index') }}" style="display:inline-block;padding:11px 20px;border-radius:12px;background:#2457E8;color:#FFFFFF;font-size:13px;font-weight:700;text-decoration:none;">
-                &larr; Kembali ke Daftar Ujian
+            <a href="{{ route('web-exam.index') }}" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;padding:0 18px;border-radius:8px;background:#2457E8;color:#FFFFFF;font-size:13.5px;font-weight:700;text-decoration:none;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                <span>Kembali ke Daftar Ujian</span>
             </a>
         </div>
     @endif

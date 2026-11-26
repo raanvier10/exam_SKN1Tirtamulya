@@ -3,51 +3,51 @@
 
 @section('content')
 <div class="max-w-3xl mx-auto">
-    <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <div class="mb-[22px] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
             <h2 class="text-xl sm:text-2xl font-extrabold text-[#142C5C] tracking-tight">Tambah Siswa Baru</h2>
             <p class="text-xs sm:text-sm text-slate-600 mt-1">Buat akun siswa baru untuk mengikuti ujian.</p>
         </div>
-        <a href="{{ route('admin.students.index') }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:border-[#2457E8] hover:text-[#2457E8] transition-colors self-start sm:self-auto">
+        <a href="{{ route('admin.students.index') }}" class="inline-flex items-center gap-[6px] px-3.5 py-2 bg-white border border-slate-200 rounded-[8px] text-xs sm:text-sm font-semibold text-slate-700 hover:border-[#2457E8] hover:text-[#2457E8] transition-colors self-start sm:self-auto whitespace-nowrap">
             &larr; Kembali
         </a>
     </div>
 
-    <form action="{{ route('admin.students.store') }}" method="POST" autocomplete="off" class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+    <form action="{{ route('admin.students.store') }}" method="POST" autocomplete="off" class="card overflow-hidden">
         @csrf
 
-        <div class="bg-[#0D2149] px-6 py-4 text-white">
-            <h3 class="text-sm font-bold tracking-tight">Informasi Akun Siswa</h3>
-            <p class="text-xs text-blue-200 mt-0.5">Lengkapi identitas, kredensial login, kelas, dan mode GPS siswa.</p>
+        <div class="card-header bg-[#0D2149] border-[#142C5C] text-white flex-col items-start gap-0.5">
+            <h3 class="card-title text-white">Informasi Akun Siswa</h3>
+            <p class="text-xs text-blue-200">Lengkapi identitas, kredensial login, kelas, dan mode GPS siswa.</p>
         </div>
 
-        <div class="p-6 space-y-5">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div class="card-body space-y-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-[22px]">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1.5">Nama Lengkap</label>
-                    <input type="text" name="name" value="{{ old('name') }}" required autocomplete="off" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all" placeholder="Contoh: Budi Santoso">
+                    <input type="text" name="name" value="{{ old('name') }}" required autocomplete="off" class="w-full bg-white border border-slate-200 rounded-[8px] px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all" placeholder="Contoh: Budi Santoso">
                     @error('name') <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span> @enderror
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1.5">NIS / Username</label>
-                    <input type="text" name="username" value="{{ old('username') }}" required autocomplete="off" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all tabular-nums" placeholder="Contoh: 12345678 (Gunakan NIS)">
+                    <input type="text" name="username" value="{{ old('username') }}" required autocomplete="off" class="w-full bg-white border border-slate-200 rounded-[8px] px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all tabular-nums" placeholder="Contoh: 12345678 (Gunakan NIS)">
                     @error('username') <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span> @enderror
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-[22px]">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1.5">Password</label>
-                    <input type="password" name="password" required autocomplete="new-password" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all" placeholder="Minimal 6 karakter">
+                    <input type="password" name="password" required autocomplete="new-password" class="w-full bg-white border border-slate-200 rounded-[8px] px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all" placeholder="Minimal 6 karakter">
                     @error('password') <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span> @enderror
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1.5">Konfirmasi Password</label>
-                    <input type="password" name="password_confirmation" required autocomplete="new-password" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all" placeholder="Ulangi password">
+                    <input type="password" name="password_confirmation" required autocomplete="new-password" class="w-full bg-white border border-slate-200 rounded-[8px] px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all" placeholder="Ulangi password">
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-[22px]">
                 <!-- Pilih Kelas -->
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1.5">Pilih Kelas</label>

@@ -22,35 +22,38 @@
         .card {
             background: #FFFFFF;
             border: 1px solid #E2E8F0;
-            border-radius: 20px;
-            padding: 32px 26px;
+            border-radius: 12px;
+            padding: 28px 24px;
             max-width: 420px;
             width: 100%;
             text-align: center;
-            box-shadow: 0 10px 30px rgba(13, 33, 73, 0.08);
+            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.03);
         }
         .icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 16px;
+            width: 52px;
+            height: 52px;
+            border-radius: 8px;
             background: #FEF2F2;
             border: 1px solid #FECACA;
             color: #DC2626;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 18px;
+            margin: 0 auto 16px;
         }
-        h2 { font-size: 20px; font-weight: 800; color: #142C5C; margin-bottom: 8px; }
-        p { font-size: 13.5px; color: #475569; line-height: 1.55; margin-bottom: 20px; }
+        h2 { font-size: 19px; font-weight: 800; color: #142C5C; margin-bottom: 8px; overflow-wrap: anywhere; word-break: break-word; }
+        p { font-size: 14px; color: #475569; line-height: 1.55; margin-bottom: 20px; }
         .exam-info {
             background: #F5F8FF;
             border: 1px solid #DCE9FF;
-            border-radius: 12px;
+            border-radius: 8px;
             padding: 12px 14px;
-            font-size: 12.5px;
+            font-size: 13px;
+            line-height: 1.5;
             color: #142C5C;
             margin-bottom: 20px;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
     </style>
 </head>
@@ -58,7 +61,7 @@
 
 <div class="card">
     <div class="icon">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
     </div>
     <h2>{{ $title }}</h2>
     <p>{{ $message }}</p>
@@ -68,8 +71,9 @@
     </div>
 
     @if(!empty($backUrl))
-        <a href="{{ $backUrl }}" style="display:inline-block;padding:11px 20px;border-radius:12px;background:#2457E8;color:#FFFFFF;font-size:13px;font-weight:700;text-decoration:none;">
-            &larr; Kembali ke Daftar Ujian
+        <a href="{{ $backUrl }}" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;padding:0 18px;border-radius:8px;background:#2457E8;color:#FFFFFF;font-size:13.5px;font-weight:700;text-decoration:none;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            <span>Kembali ke Daftar Ujian</span>
         </a>
     @endif
 </div>

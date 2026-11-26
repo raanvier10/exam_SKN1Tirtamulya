@@ -6,7 +6,7 @@
     <title>Ujian: {{ $exam->title }} ({{ !empty($isWebEmergency) ? 'Web Darurat' : 'Safe Exam Browser' }})</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #2457E8;
@@ -305,7 +305,7 @@
         <div class="tier-identity">
             <div class="identity-left">
                 <span class="exam-badge" style="{{ !empty($isWebEmergency) ? 'background: rgba(245, 158, 11, 0.25); border-color: rgba(251, 191, 36, 0.45); color: #FDE68A;' : '' }}">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                     {{ !empty($isWebEmergency) ? 'WEB DARURAT' : 'SEB KIOSK' }}
                 </span>
                 <div class="exam-meta">
@@ -317,7 +317,7 @@
             <form action="{{ !empty($isWebEmergency) ? route('web-exam.finish', $exam) : route('seb.exam.finish', $exam) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin sudah selesai mengerjakan dan ingin mengirim ujian?');">
                 @csrf
                 <button type="submit" class="btn-finish">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     <span>Selesai</span>
                 </button>
             </form>
@@ -326,23 +326,23 @@
         <!-- Tier 2: Cockpit Bar (Countdown + Tools) -->
         <div class="tier-controls">
             <div id="countdownBadge" class="timer-badge">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                 <span id="countdownText">--:--:--</span>
             </div>
 
             <div class="controls-right">
                 <button type="button" onclick="reloadExamFrame()" class="btn-tool" title="Muat Ulang Soal jika lembar jawaban tidak muncul">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
                     <span>Muat Ulang</span>
                 </button>
 
                 @if(empty($isWebEmergency))
                 <a href="{{ $exam->google_form_url }}" class="btn-tool" title="Buka Google Form Langsung jika layar menampilkan Page Expired">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                     <span>Buka Penuh</span>
                 </a>
                 @else
-                <span class="btn-tool" id="webViolationCounter" style="cursor:default; border-color: rgba(251, 191, 36, 0.45); color: #FDE68A;">
+                <span class="btn-tool" id="webViolationCounter" style="cursor:default; border-color: rgba(251, 191, 36, 0.45); color: #FDE68A; font-variant-numeric: tabular-nums;">
                     Pelanggaran: <span id="webViolationText">{{ $activeViolationCount ?? 0 }} / {{ $exam->max_violation }}</span>
                 </span>
                 @endif
@@ -426,15 +426,18 @@
 
 @if(!empty($isWebEmergency))
 <div id="webExamOverlay" style="position:fixed;inset:0;z-index:999;background:rgba(13,33,73,0.92);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:24px;">
-    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:20px;max-width:420px;width:100%;padding:28px;text-align:center;color:#0F172A;box-shadow:0 24px 60px rgba(13,33,73,0.35);">
-        <div style="display:inline-block;padding:4px 10px;border-radius:8px;background:#DCE9FF;color:#142C5C;font-size:11px;font-weight:700;margin-bottom:12px;">
-            WEB DARURAT &bull; EXASATRYA
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:16px;max-width:420px;width:100%;padding:28px;text-align:center;color:#0F172A;box-shadow:0 24px 60px rgba(13,33,73,0.35);">
+        <div style="width:48px;height:48px;border-radius:8px;background:#DCE9FF;color:#2457E8;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
-        <h3 id="webOverlayTitle" style="font-size:19px;font-weight:800;color:#142C5C;margin-bottom:8px;">Mode Ujian Web Darurat</h3>
-        <p id="webOverlayMessage" style="font-size:13px;color:#475569;line-height:1.55;margin-bottom:22px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#2457E8;margin-bottom:6px;">
+            Web Darurat &bull; ExaSatrya
+        </div>
+        <h3 id="webOverlayTitle" style="font-size:18px;font-weight:800;color:#142C5C;margin-bottom:8px;letter-spacing:-0.01em;overflow-wrap:anywhere;">Mode Ujian Web Darurat</h3>
+        <p id="webOverlayMessage" style="font-size:13.5px;color:#475569;line-height:1.55;margin-bottom:22px;">
             Dilarang berpindah tab, membuka aplikasi lain, atau keluar dari layar penuh. Pelanggaran dicatat otomatis dan akan mengunci ujian Anda.
         </p>
-        <button type="button" id="webOverlayBtn" onclick="enterWebExamMode()" style="width:100%;padding:12px 18px;border-radius:12px;background:#2457E8;color:#FFFFFF;font-size:14px;font-weight:700;border:none;cursor:pointer;">
+        <button type="button" id="webOverlayBtn" onclick="enterWebExamMode()" style="width:100%;height:42px;padding:0 18px;border-radius:8px;background:#2457E8;color:#FFFFFF;font-size:14px;font-weight:700;border:none;cursor:pointer;">
             Masuk Layar Ujian
         </button>
     </div>

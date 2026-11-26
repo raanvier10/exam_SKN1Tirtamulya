@@ -2,140 +2,187 @@
 @section('title', 'Pratinjau Import ' . $entityLabel)
 
 @section('content')
-<div class="w-full space-y-5">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+<div class="w-full max-w-[1200px]">
+    <!-- Header Halaman -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-            <h2 class="text-xl sm:text-2xl font-extrabold text-[#142C5C] tracking-tight">Pratinjau Validasi Import {{ $entityLabel }}</h2>
-            <p class="text-xs sm:text-sm text-slate-600 mt-1">
-                File: <span class="font-semibold text-slate-800">{{ $fileName }}</span> — periksa status validasi setiap baris sebelum disimpan.
+            <h1 class="text-[24px] font-bold text-[#0F172A] tracking-[-0.01em] leading-[1.3]">
+                Pratinjau Validasi Import {{ $entityLabel }}
+            </h1>
+            <p class="text-[14px] font-normal text-[#64748B] leading-[1.5] mt-1">
+                File: <span class="font-medium text-[#0F172A]">{{ $fileName }}</span> — periksa status validasi setiap baris sebelum disimpan.
             </p>
         </div>
-        <a href="{{ $backRoute }}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs sm:text-sm font-semibold hover:border-[#2457E8] hover:text-[#2457E8] shadow-2xs transition self-start sm:self-auto whitespace-nowrap">
-            &larr; Ganti File
+
+        <a href="{{ $backRoute }}"
+           class="inline-flex items-center justify-center h-[40px] px-[16px] bg-white border border-[#E2E8F0] hover:bg-[#F8FAFC] text-[#0F172A] rounded-[8px] text-[14px] font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 self-start sm:self-auto whitespace-nowrap">
+            Ganti File
         </a>
     </div>
 
-    <!-- Main Validation Card -->
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs p-4 sm:p-5 space-y-4">
-        <!-- Filter Tabs & Download Error Bar -->
-        <div class="border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div class="flex items-center gap-5 sm:gap-6 flex-wrap text-xs sm:text-sm">
-                <button type="button" onclick="filterPreviewTab('all', this)" class="preview-tab pb-3 -mb-px border-b-2 border-[#2457E8] text-[#142C5C] font-bold transition cursor-pointer whitespace-nowrap">
-                    Semua ( {{ $counts['all'] }} )
+    <!-- Card Utama -->
+    <div class="bg-white border border-[#E2E8F0] rounded-[12px] shadow-[0_1px_2px_rgba(0,0,0,0.04)] p-6">
+        <!-- Baris Tab & Unduh Laporan Error -->
+        <div class="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2E8F0] pb-3 mb-6">
+            <div class="flex items-center gap-6 flex-wrap" role="tablist">
+                <button type="button" onclick="filterPreviewTab('all', this)"
+                        class="preview-tab inline-flex items-center gap-2 pb-[13px] -mb-[13px] border-b-2 border-[#2563EB] text-[14px] font-semibold text-[#0F172A] transition-colors duration-150 cursor-pointer whitespace-nowrap focus:outline-none">
+                    <span>Semua</span>
+                    <span class="preview-tab-badge inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[12px] font-medium bg-[#F1F5F9] text-[#0F172A] tabular-nums">{{ $counts['all'] }}</span>
                 </button>
-                <button type="button" onclick="filterPreviewTab('ready', this)" class="preview-tab pb-3 -mb-px border-b-2 border-transparent text-slate-500 hover:text-slate-900 font-medium transition cursor-pointer whitespace-nowrap">
-                    Siap ( {{ $counts['ready'] }} )
+                <button type="button" onclick="filterPreviewTab('ready', this)"
+                        class="preview-tab inline-flex items-center gap-2 pb-[13px] -mb-[13px] border-b-2 border-transparent text-[14px] font-medium text-[#64748B] hover:text-[#0F172A] transition-colors duration-150 cursor-pointer whitespace-nowrap focus:outline-none">
+                    <span>Siap</span>
+                    <span class="preview-tab-badge inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[12px] font-medium bg-[#F1F5F9] text-[#64748B] tabular-nums">{{ $counts['ready'] }}</span>
                 </button>
-                <button type="button" onclick="filterPreviewTab('duplicate', this)" class="preview-tab pb-3 -mb-px border-b-2 border-transparent text-slate-500 hover:text-slate-900 font-medium transition cursor-pointer whitespace-nowrap">
-                    Duplikat ( {{ $counts['duplicate'] }} )
+                <button type="button" onclick="filterPreviewTab('duplicate', this)"
+                        class="preview-tab inline-flex items-center gap-2 pb-[13px] -mb-[13px] border-b-2 border-transparent text-[14px] font-medium text-[#64748B] hover:text-[#0F172A] transition-colors duration-150 cursor-pointer whitespace-nowrap focus:outline-none">
+                    <span>Duplikat</span>
+                    <span class="preview-tab-badge inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[12px] font-medium bg-[#F1F5F9] text-[#64748B] tabular-nums">{{ $counts['duplicate'] }}</span>
                 </button>
-                <button type="button" onclick="filterPreviewTab('error', this)" class="preview-tab pb-3 -mb-px border-b-2 border-transparent text-slate-500 hover:text-slate-900 font-medium transition cursor-pointer whitespace-nowrap">
-                    Bermasalah ( {{ $counts['error'] }} )
+                <button type="button" onclick="filterPreviewTab('error', this)"
+                        class="preview-tab inline-flex items-center gap-2 pb-[13px] -mb-[13px] border-b-2 border-transparent text-[14px] font-medium text-[#64748B] hover:text-[#0F172A] transition-colors duration-150 cursor-pointer whitespace-nowrap focus:outline-none">
+                    <span>Bermasalah</span>
+                    <span class="preview-tab-badge inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[12px] font-medium bg-[#F1F5F9] text-[#64748B] tabular-nums">{{ $counts['error'] }}</span>
                 </button>
             </div>
 
             @if($counts['error'] + $counts['duplicate'] > 0)
-                <button type="button" onclick="downloadPreviewErrorsCsv()" class="inline-flex items-center gap-2 px-3.5 py-2 mb-2 sm:mb-2.5 bg-white border border-slate-200 hover:border-[#2457E8] text-slate-700 hover:text-[#2457E8] rounded-xl text-xs font-semibold shadow-2xs transition self-start sm:self-auto whitespace-nowrap cursor-pointer">
-                    <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                <button type="button" onclick="downloadPreviewErrorsCsv()"
+                        class="inline-flex items-center justify-center gap-[8px] h-[40px] px-[16px] bg-white border border-[#E2E8F0] hover:bg-[#F8FAFC] text-[#0F172A] rounded-[8px] text-[14px] font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 whitespace-nowrap cursor-pointer">
+                    <svg class="w-4 h-4 text-[#64748B] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
-                    Unduh Laporan Error (.csv)
+                    <span>Unduh Laporan Error (.csv)</span>
                 </button>
             @endif
         </div>
 
-        <!-- Preview Table -->
-        <div class="rounded-xl border border-slate-200 overflow-hidden">
-            <div class="overflow-x-auto max-h-[520px] overflow-y-auto">
-                <table class="w-full text-left border-collapse text-xs sm:text-sm" id="importPreviewTable">
-                    <thead class="sticky top-0 z-10 bg-slate-50 border-b border-slate-200">
-                        <tr class="text-slate-600 text-xs font-semibold">
-                            <th class="py-3 px-4 whitespace-nowrap w-12">No</th>
-                            <th class="py-3 px-4 whitespace-nowrap">Baris File</th>
-                            @foreach($columns as $colLabel)
-                                <th class="py-3 px-4 whitespace-nowrap">{{ $colLabel }}</th>
-                            @endforeach
-                            <th class="py-3 px-4 whitespace-nowrap">Status</th>
-                            <th class="py-3 px-4 min-w-[260px]">Keterangan</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 bg-white">
-                        @forelse($rows as $idx => $row)
-                        <tr class="preview-row hover:bg-[#F5F8FF] transition-colors" data-status="{{ $row['status'] }}">
-                            <td class="py-3.5 px-4 text-slate-500 font-medium whitespace-nowrap">{{ $idx + 1 }}</td>
-                            <td class="py-3.5 px-4 font-semibold text-slate-800 whitespace-nowrap">Baris {{ $row['excel_row'] }}</td>
-                            @foreach($columns as $colKey => $colLabel)
-                                @php
-                                    $cellText = (string) ($row['cells'][$colKey] ?? '-');
-                                    $isMono = in_array($colKey, ['nis', 'nip'], true);
-                                    $wrapClass = mb_strlen($cellText) <= 32 ? 'whitespace-nowrap' : 'min-w-[200px] leading-snug';
-                                @endphp
-                                <td class="py-3.5 px-4 text-slate-800 {{ $isMono ? 'tabular-nums text-xs' : 'font-medium' }} {{ $wrapClass }}">
-                                    {{ $cellText }}
-                                </td>
-                            @endforeach
-                            <td class="py-3.5 px-4 whitespace-nowrap">
-                                @if($row['status'] === 'ready')
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                        Siap
+        <!-- Tabel Data (satu container border tipis, tanpa card di dalam card) -->
+        <div class="overflow-x-auto border border-[#E2E8F0]">
+            <table class="w-full text-left border-collapse" id="importPreviewTable">
+                <thead class="bg-[#F8FAFC] border-b border-[#E2E8F0]">
+                    <tr>
+                        <th class="py-[12px] px-[16px] w-[56px] text-center text-[12px] font-semibold uppercase tracking-[0.04em] text-[#64748B] whitespace-nowrap">No</th>
+                        <th class="py-[12px] px-[16px] w-[100px] text-center text-[12px] font-semibold uppercase tracking-[0.04em] text-[#64748B] whitespace-nowrap">Baris File</th>
+                        @foreach($columns as $colKey => $colLabel)
+                            @php
+                                $colWidth = match ($colKey) {
+                                    'schedule' => 'w-[220px]',
+                                    'classes' => 'w-[180px]',
+                                    default => '',
+                                };
+                            @endphp
+                            <th class="py-[12px] px-[16px] {{ $colWidth }} text-left text-[12px] font-semibold uppercase tracking-[0.04em] text-[#64748B] whitespace-nowrap">{{ $colLabel }}</th>
+                        @endforeach
+                        <th class="py-[12px] px-[16px] w-[100px] text-left text-[12px] font-semibold uppercase tracking-[0.04em] text-[#64748B] whitespace-nowrap">Status</th>
+                        <th class="py-[12px] px-[16px] min-w-[260px] text-left text-[12px] font-semibold uppercase tracking-[0.04em] text-[#64748B]">Keterangan</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[#F1F5F9] bg-white">
+                    @forelse($rows as $idx => $row)
+                    @php
+                        $missingClassesMap = [];
+                        if ($row['status'] === 'error' && preg_match("/Kelas '([^']+)' tidak ditemukan/i", (string) ($row['note'] ?? ''), $missingMatch)) {
+                            foreach (array_filter(array_map('trim', explode(',', $missingMatch[1]))) as $mc) {
+                                $missingClassesMap[mb_strtolower($mc)] = true;
+                            }
+                        }
+                        $noteText = trim((string) ($row['note'] ?? ''));
+                        $noteText = str_replace([' (akan dilewati)', '(akan dilewati)'], [' Baris ini akan dilewati.', 'Baris ini akan dilewati.'], $noteText);
+                    @endphp
+                    <tr class="preview-row min-h-[56px] hover:bg-[#F8FAFC] transition-colors duration-150" data-status="{{ $row['status'] }}">
+                        <td class="py-[12px] px-[16px] text-center text-[14px] font-normal text-[#64748B] tabular-nums whitespace-nowrap">{{ $idx + 1 }}</td>
+                        <td class="py-[12px] px-[16px] text-center text-[14px] font-normal text-[#0F172A] tabular-nums whitespace-nowrap">Baris {{ $row['excel_row'] }}</td>
+                        @foreach($columns as $colKey => $colLabel)
+                            @php
+                                $cellText = (string) ($row['cells'][$colKey] ?? '-');
+                            @endphp
+                            <td class="py-[12px] px-[16px] text-left text-[14px] leading-[1.5] text-[#0F172A] {{ $colKey === 'title' ? 'font-medium' : 'font-normal' }}">
+                                @if($colKey === 'classes' && $cellText !== '-' && !str_starts_with($cellText, 'Semua Kelas'))
+                                    @php $classParts = array_values(array_filter(array_map('trim', explode(',', $cellText)))); @endphp
+                                    <span class="leading-[1.5]">
+                                        @foreach($classParts as $clsPart)
+                                            @php $isMissingClass = isset($missingClassesMap[mb_strtolower($clsPart)]); @endphp
+                                            <span class="{{ $isMissingClass ? 'text-[#B91C1C] font-medium' : 'text-[#0F172A]' }}">{{ $clsPart }}</span>@if(!$loop->last), @endif
+                                        @endforeach
                                     </span>
-                                @elseif($row['status'] === 'duplicate')
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
-                                        Duplikat
-                                    </span>
+                                @elseif($colKey === 'schedule')
+                                    <span class="whitespace-nowrap tabular-nums">{{ $cellText }}</span>
                                 @else
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-                                        Error
-                                    </span>
+                                    <span class="{{ in_array($colKey, ['nis', 'nip'], true) ? 'tabular-nums whitespace-nowrap' : '' }}">{{ $cellText }}</span>
                                 @endif
                             </td>
-                            <td class="py-3.5 px-4 text-xs leading-relaxed min-w-[260px] {{ $row['status'] === 'error' ? 'text-rose-600 font-medium' : ($row['status'] === 'duplicate' ? 'text-amber-700 font-medium' : 'text-slate-600') }}">
-                                {{ $row['note'] }}
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="{{ count($columns) + 4 }}" class="py-10 text-center text-slate-400">
-                                Tidak ada baris data pada file ini.
-                            </td>
-                        </tr>
-                        @endforelse
-                        <tr id="previewEmptyFilterRow" class="hidden">
-                            <td colspan="{{ count($columns) + 4 }}" class="py-10 text-center text-slate-400 text-xs sm:text-sm">
-                                Tidak ada data pada kategori ini.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                        @endforeach
+                        <td class="py-[12px] px-[16px] whitespace-nowrap">
+                            @if($row['status'] === 'ready')
+                                <span class="inline-flex items-center gap-1.5 px-[10px] py-[2px] rounded-full text-[12px] font-medium bg-[#ECFDF5] text-[#047857] border border-[#A7F3D0]">
+                                    <span class="w-[6px] h-[6px] rounded-full bg-[#047857] shrink-0"></span>
+                                    <span>Siap</span>
+                                </span>
+                            @elseif($row['status'] === 'duplicate')
+                                <span class="inline-flex items-center gap-1.5 px-[10px] py-[2px] rounded-full text-[12px] font-medium bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A]">
+                                    <span class="w-[6px] h-[6px] rounded-full bg-[#B45309] shrink-0"></span>
+                                    <span>Duplikat</span>
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1.5 px-[10px] py-[2px] rounded-full text-[12px] font-medium bg-[#FEF2F2] text-[#B91C1C] border border-[#FECACA]">
+                                    <span class="w-[6px] h-[6px] rounded-full bg-[#B91C1C] shrink-0"></span>
+                                    <span>Error</span>
+                                </span>
+                            @endif
+                        </td>
+                        <td class="py-[12px] px-[16px] text-[13px] font-normal leading-[1.5] min-w-[260px] {{ $row['status'] === 'error' ? 'text-[#B91C1C]' : ($row['status'] === 'duplicate' ? 'text-[#B45309]' : 'text-[#64748B]') }}">
+                            {{ $noteText }}
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="{{ count($columns) + 4 }}" class="py-10 px-4 text-center text-[14px] font-normal text-[#64748B]">
+                            Tidak ada baris data pada file ini.
+                        </td>
+                    </tr>
+                    @endforelse
+                    <tr id="previewEmptyFilterRow" class="hidden">
+                        <td colspan="{{ count($columns) + 4 }}" class="py-10 px-4 text-center text-[14px] font-normal text-[#64748B]">
+                            Tidak ada data pada kategori ini.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
-        <!-- Bottom Action Bar -->
-        <div class="rounded-xl border border-slate-200 bg-slate-50/70 px-4 sm:px-5 py-3.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-            <a href="{{ $backRoute }}" class="inline-flex items-center justify-center sm:justify-start gap-1.5 text-xs sm:text-sm font-semibold text-slate-600 hover:text-[#2457E8] transition">
-                &larr; Kembali / Ganti file
+        <!-- Footer Aksi -->
+        <div class="border-t border-[#E2E8F0] pt-4 mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <a href="{{ $backRoute }}"
+               class="inline-flex items-center justify-center h-[40px] px-[16px] bg-white border border-[#E2E8F0] hover:bg-[#F8FAFC] text-[#0F172A] rounded-[8px] text-[14px] font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 self-start sm:self-auto whitespace-nowrap">
+                Kembali
             </a>
 
-            <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-                <span class="text-xs sm:text-sm text-slate-600 text-center sm:text-right">
-                    <strong class="text-slate-900">{{ $counts['ready'] }}</strong> {{ $unitLabel }} siap disimpan
-                </span>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                <div class="text-left sm:text-right">
+                    <span class="text-[14px] font-normal text-[#64748B]">
+                        <strong class="font-semibold text-[#0F172A] tabular-nums">{{ $counts['ready'] }}</strong> {{ $unitLabel }} siap disimpan
+                    </span>
+                    @if($counts['ready'] === 0)
+                        <p class="text-[12px] font-normal text-[#64748B] mt-0.5">Perbaiki data bermasalah untuk melanjutkan</p>
+                    @endif
+                </div>
 
-                <form action="{{ $actionRoute }}" method="POST" onsubmit="const btn = this.querySelector('button[type=submit]'); if (btn) { btn.disabled = true; btn.classList.add('opacity-70', 'cursor-wait'); btn.textContent = 'Menyimpan...'; }">
+                <form action="{{ $actionRoute }}" method="POST" onsubmit="const btn = this.querySelector('button[type=submit]'); if (btn) { btn.disabled = true; btn.classList.add('opacity-75', 'cursor-wait'); btn.textContent = 'Menyimpan...'; }">
                     @csrf
                     <input type="hidden" name="confirm_import" value="1">
                     <input type="hidden" name="import_token" value="{{ $token }}">
                     @if($counts['ready'] > 0)
-                        <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#2457E8] hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs transition active:scale-[0.98] cursor-pointer">
-                            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                            Simpan {{ $counts['ready'] }} {{ \Illuminate\Support\Str::title($unitLabel) }}
+                        <button type="submit"
+                                class="w-full sm:w-auto inline-flex items-center justify-center h-[40px] px-[20px] bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-[8px] text-[14px] font-semibold transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/35 cursor-pointer whitespace-nowrap">
+                            Simpan {{ \Illuminate\Support\Str::title($unitLabel) }}
                         </button>
                     @else
-                        <button type="button" disabled class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#2457E8]/45 text-white rounded-xl text-xs sm:text-sm font-bold cursor-not-allowed">
-                            Tidak Ada {{ \Illuminate\Support\Str::title($unitLabel) }} Valid
+                        <button type="button" disabled
+                                title="Perbaiki data bermasalah untuk melanjutkan"
+                                class="w-full sm:w-auto inline-flex items-center justify-center h-[40px] px-[20px] bg-[#E5E7EB] text-[#9CA3AF] rounded-[8px] text-[14px] font-medium cursor-not-allowed whitespace-nowrap">
+                            Simpan {{ \Illuminate\Support\Str::title($unitLabel) }}
                         </button>
                     @endif
                 </form>
@@ -150,10 +197,18 @@ const previewColumns = @json($columns);
 
 function filterPreviewTab(status, btn) {
     document.querySelectorAll('.preview-tab').forEach(function(tab) {
-        tab.className = 'preview-tab pb-3 -mb-px border-b-2 border-transparent text-slate-500 hover:text-slate-900 font-medium transition cursor-pointer whitespace-nowrap';
+        tab.className = 'preview-tab inline-flex items-center gap-2 pb-[13px] -mb-[13px] border-b-2 border-transparent text-[14px] font-medium text-[#64748B] hover:text-[#0F172A] transition-colors duration-150 cursor-pointer whitespace-nowrap focus:outline-none';
+        const badge = tab.querySelector('.preview-tab-badge');
+        if (badge) {
+            badge.className = 'preview-tab-badge inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[12px] font-medium bg-[#F1F5F9] text-[#64748B] tabular-nums';
+        }
     });
     if (btn) {
-        btn.className = 'preview-tab pb-3 -mb-px border-b-2 border-[#2457E8] text-[#142C5C] font-bold transition cursor-pointer whitespace-nowrap';
+        btn.className = 'preview-tab inline-flex items-center gap-2 pb-[13px] -mb-[13px] border-b-2 border-[#2563EB] text-[14px] font-semibold text-[#0F172A] transition-colors duration-150 cursor-pointer whitespace-nowrap focus:outline-none';
+        const activeBadge = btn.querySelector('.preview-tab-badge');
+        if (activeBadge) {
+            activeBadge.className = 'preview-tab-badge inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[12px] font-medium bg-[#F1F5F9] text-[#0F172A] tabular-nums';
+        }
     }
 
     let visibleCount = 0;
