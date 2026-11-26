@@ -13,9 +13,77 @@ import 'package:exambro_mobile/screens/exam_screen.dart';
 import 'package:exambro_mobile/screens/login_screen.dart';
 
 void main() {
-  testWidgets('Smoke test for Login Screen', (WidgetTester tester) async {
+  testWidgets('Smoke test for Login Screen with 5-char verification', (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(const MaterialApp(home: LoginScreen()));
     expect(find.text('Selamat Datang'), findsOneWidget);
+    expect(find.text('Kode Verifikasi'), findsOneWidget);
+    expect(find.text('Ganti'), findsOneWidget);
+    expect(find.widgetWithText(TextFormField, 'Masukkan 5 karakter'), findsOneWidget);
+
+    // Isi NIS & Password lalu tekan Masuk tanpa kode verifikasi
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Masukkan NIS atau Username'),
+      '12345678',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Masukkan kata sandi'),
+      'password123',
+    );
+    await tester.ensureVisible(find.text('Masuk Sekarang'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Masuk Sekarang'));
+    await tester.pumpAndSettle();
+    expect(find.text('Kode verifikasi wajib diisi.'), findsOneWidget);
+
+    // Isi kurang dari 5 karakter
+    await tester.ensureVisible(find.widgetWithText(TextFormField, 'Masukkan 5 karakter'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Masukkan 5 karakter'),
+      'abc',
+    );
+    await tester.pump();
+    // UpperCase formatter mengubah input menjadi huruf kapital
+    expect(find.text('ABC'), findsOneWidget);
+    await tester.ensureVisible(find.text('Masuk Sekarang'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Masuk Sekarang'));
+    await tester.pumpAndSettle();
+    expect(find.text('Kode verifikasi harus 5 karakter.'), findsOneWidget);
+
+    // Tombol Ganti mengosongkan input verifikasi
+    await tester.ensureVisible(find.text('Ganti'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ganti'));
+    await tester.pump();
+    expect(find.text('ABC'), findsNothing);
+  });
+
+  group('LoginScreen verification helpers', () {
+    test('generateCaptchaCode always generates 5 valid characters', () {
+      for (int i = 0; i < 20; i++) {
+        final code = LoginScreen.generateCaptchaCode();
+        expect(code.length, 5);
+        for (final ch in code.split('')) {
+          expect(LoginScreen.captchaCharset.contains(ch), isTrue);
+        }
+      }
+    });
+
+    test('validateCaptchaInput enforces required, length 5, and case-insensitive match', () {
+      expect(LoginScreen.validateCaptchaInput('', 'ABC23'), 'Kode verifikasi wajib diisi.');
+      expect(LoginScreen.validateCaptchaInput('ABCD', 'ABC23'), 'Kode verifikasi harus 5 karakter.');
+      expect(
+        LoginScreen.validateCaptchaInput('WRONG', 'ABC23'),
+        'Kode verifikasi tidak sesuai. Silakan coba lagi.',
+      );
+      expect(LoginScreen.validateCaptchaInput('abc23', 'ABC23'), isNull);
+    });
   });
 
   test('Local exam draft save, read, and clear work cleanly', () async {
