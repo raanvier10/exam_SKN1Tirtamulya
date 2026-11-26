@@ -135,46 +135,44 @@ class _SplashScreenState extends State<SplashScreen>
               Center(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: ScaleTransition(
-                      scale: _scaleAnimation,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // Glowing container behind logo
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.4),
-                                width: 2.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.45),
-                                  blurRadius: 36,
-                                  offset: const Offset(0, 14),
+                  child: RepaintBoundary(
+                    child: FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: ScaleTransition(
+                        scale: _scaleAnimation,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // Container behind logo (lightweight shadow for low-end GPU)
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.4),
+                                  width: 2.5,
                                 ),
-                                BoxShadow(
-                                  color: const Color(0xFF38BDF8).withValues(alpha: 0.25),
-                                  blurRadius: 28,
-                                  offset: const Offset(0, 4),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.32),
+                                    blurRadius: 14,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: ClipOval(
+                                child: Image.asset(
+                                  'assets/images/logo.webp',
+                                  width: 105,
+                                  height: 105,
+                                  cacheWidth: (105 * MediaQuery.devicePixelRatioOf(context)).round(),
+                                  cacheHeight: (105 * MediaQuery.devicePixelRatioOf(context)).round(),
+                                  fit: BoxFit.contain,
                                 ),
-                              ],
-                            ),
-                            child: ClipOval(
-                              child: Image.asset(
-                                'assets/images/logo.webp',
-                                width: 105,
-                                height: 105,
-                                fit: BoxFit.contain,
                               ),
                             ),
-                          ),
                           const SizedBox(height: 28),
 
                           // App Name
@@ -227,7 +225,8 @@ class _SplashScreenState extends State<SplashScreen>
                               letterSpacing: 0.5,
                             ),
                           ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),

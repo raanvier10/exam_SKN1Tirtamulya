@@ -28,6 +28,7 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
   bool _isChecking = true;
   bool _isSecure = false;
   bool _canOpenSettings = false;
+  bool _isNavigatingToExam = false;
   String _statusMessage = 'Memverifikasi profil & lingkungan ujian...';
   double? _detectedLat;
   double? _detectedLng;
@@ -427,20 +428,29 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
                       width: double.infinity,
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: () async {
-                          final nav = Navigator.of(context);
-                          final result = await nav.push(
-                            MaterialPageRoute(
-                              builder: (context) => ExamScreen(
-                                exam: widget.exam,
-                                latitude: _detectedLat,
-                                longitude: _detectedLng,
-                              ),
-                            ),
-                          );
-                          if (!mounted) return;
-                          nav.pop(result);
-                        },
+                        onPressed: _isNavigatingToExam
+                            ? null
+                            : () async {
+                                setState(() => _isNavigatingToExam = true);
+                                try {
+                                  final nav = Navigator.of(context);
+                                  final result = await nav.push(
+                                    MaterialPageRoute(
+                                      builder: (context) => ExamScreen(
+                                        exam: widget.exam,
+                                        latitude: _detectedLat,
+                                        longitude: _detectedLng,
+                                      ),
+                                    ),
+                                  );
+                                  if (!mounted) return;
+                                  nav.pop(result);
+                                } finally {
+                                  if (mounted) {
+                                    setState(() => _isNavigatingToExam = false);
+                                  }
+                                }
+                              },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: const Color(0xFF0B1320),
@@ -543,51 +553,52 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
   }
 
   Widget _buildModernLockVisual() {
-    return SizedBox(
-      width: 140,
-      height: 140,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // 1. Dual Hairline Precision Spinner
-          if (_isChecking)
-            const SizedBox(
-              width: 130,
-              height: 130,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.0,
-                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF38BDF8)),
-                backgroundColor: Color(0xFF17263C),
-              ),
-            )
-          else
-            AnimatedBuilder(
-              animation: _glowAnimation,
-              builder: (context, child) {
-                final glow = _glowAnimation.value;
-                final color = _isSecure
-                    ? const Color(0xFF10B981)
-                    : const Color(0xFFF43F5E);
-                return Container(
-                  width: 130,
-                  height: 130,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: color.withValues(alpha: 0.3 + (glow * 0.4)),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: color.withValues(alpha: 0.2 * glow),
-                        blurRadius: 28,
-                        spreadRadius: 2,
+    return RepaintBoundary(
+      child: SizedBox(
+        width: 140,
+        height: 140,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // 1. Dual Hairline Precision Spinner
+            if (_isChecking)
+              const SizedBox(
+                width: 130,
+                height: 130,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.0,
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF38BDF8)),
+                  backgroundColor: Color(0xFF17263C),
+                ),
+              )
+            else
+              AnimatedBuilder(
+                animation: _glowAnimation,
+                builder: (context, child) {
+                  final glow = _glowAnimation.value;
+                  final color = _isSecure
+                      ? const Color(0xFF10B981)
+                      : const Color(0xFFF43F5E);
+                  return Container(
+                    width: 130,
+                    height: 130,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: color.withValues(alpha: 0.3 + (glow * 0.4)),
+                        width: 1.5,
                       ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.16 * glow),
+                          blurRadius: 12,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
 
           // 2. Glassmorphic Core Container
           Container(
@@ -710,8 +721,9 @@ class _SecurityCheckScreenState extends State<SecurityCheckScreen>
                 );
               },
             ),
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

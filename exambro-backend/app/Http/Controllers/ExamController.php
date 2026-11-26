@@ -35,7 +35,9 @@ class ExamController extends Controller
     public function index(Request $request)
     {
         $deptClassIds = $this->departmentClassIds();
-        $query = Exam::with(['classes', 'participants', 'creator'])->latest('start_at');
+        $query = Exam::with(['classes', 'creator'])
+            ->withExists(['sessions as has_active_session' => fn ($q) => $q->whereIn('status', ['ACTIVE', 'LOCKED'])])
+            ->latest('start_at');
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -570,23 +572,41 @@ class ExamController extends Controller
             });
         }
 
-        $participants = $participantsQuery->get()
-            ->map(function ($participant) use ($exam) {
-                $latestSession = \App\Models\ExamSession::where('exam_id', $exam->id)
-                    ->where('user_id', $participant->user_id)
-                    ->latest('id')
-                    ->first();
+        $participantsCollection = $participantsQuery->get();
+        $participantUserIds = $participantsCollection->pluck('user_id')->unique()->values();
 
-                $totalViolations = \App\Models\Violation::where('exam_id', $exam->id)
-                    ->where('user_id', $participant->user_id)
-                    ->count();
+        $latestSessionsByUser = collect();
+        $violationsByUser = collect();
 
-                $activeViolationQuery = \App\Models\Violation::where('exam_id', $exam->id)
-                    ->where('user_id', $participant->user_id);
+        if ($participantUserIds->isNotEmpty()) {
+            $latestSessionsByUser = \App\Models\ExamSession::where('exam_id', $exam->id)
+                ->whereIn('user_id', $participantUserIds)
+                ->orderByDesc('id')
+                ->get()
+                ->unique('user_id')
+                ->keyBy('user_id');
+
+            $violationsByUser = \App\Models\Violation::select(['user_id', 'created_at'])
+                ->where('exam_id', $exam->id)
+                ->whereIn('user_id', $participantUserIds)
+                ->get()
+                ->groupBy('user_id');
+        }
+
+        $participants = $participantsCollection
+            ->map(function ($participant) use ($latestSessionsByUser, $violationsByUser) {
+                $latestSession = $latestSessionsByUser->get($participant->user_id);
+                $userViolations = $violationsByUser->get($participant->user_id, collect());
+                $totalViolations = $userViolations->count();
+
                 if ($latestSession && $latestSession->unlocked_at) {
-                    $activeViolationQuery->where('created_at', '>=', $latestSession->unlocked_at);
+                    $unlockedAt = $latestSession->unlocked_at;
+                    $activeViolationCount = $userViolations->filter(
+                        fn ($v) => $v->created_at && $v->created_at->gte($unlockedAt)
+                    )->count();
+                } else {
+                    $activeViolationCount = $totalViolations;
                 }
-                $activeViolationCount = $activeViolationQuery->count();
 
                 $participant->session = $latestSession;
                 $participant->violation_count = $activeViolationCount;

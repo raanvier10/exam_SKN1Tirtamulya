@@ -23,6 +23,12 @@ class ApiService {
   ];
 
   static String? _cachedBaseUrl;
+  static String? _cachedToken;
+  static SharedPreferences? _prefs;
+  static final http.Client _client = http.Client();
+
+  static Future<SharedPreferences> get _preferences async =>
+      _prefs ??= await SharedPreferences.getInstance();
 
   static Future<String> getBaseUrl() async {
     if (_envBaseUrl.isNotEmpty) return _envBaseUrl;
@@ -56,7 +62,7 @@ class ApiService {
   }
 
   static Future<String> getOrCreateDeviceId() async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _preferences;
     final existing = prefs.getString('device_id');
     if (existing != null && existing.isNotEmpty) {
       return existing;
@@ -72,17 +78,21 @@ class ApiService {
   }
 
   static Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('api_token');
+    if (_cachedToken != null) return _cachedToken;
+    final prefs = await _preferences;
+    _cachedToken = prefs.getString('api_token');
+    return _cachedToken;
   }
 
   static Future<void> saveToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
+    _cachedToken = token;
+    final prefs = await _preferences;
     await prefs.setString('api_token', token);
   }
 
   static Future<void> removeToken() async {
-    final prefs = await SharedPreferences.getInstance();
+    _cachedToken = null;
+    final prefs = await _preferences;
     await prefs.remove('api_token');
     await prefs.remove('is_google_connected');
     await prefs.remove('is_pkl');
@@ -92,7 +102,7 @@ class ApiService {
     try {
       final headers = await getHeaders();
       await _requestWithFallback(
-        (base) => http.post(Uri.parse('$base/logout'), headers: headers),
+        (base) => _client.post(Uri.parse('$base/logout'), headers: headers),
       );
     } catch (_) {}
     await removeToken();
@@ -144,7 +154,7 @@ class ApiService {
     String password,
   ) async {
     final response = await _requestWithFallback(
-      (base) => http.post(
+      (base) => _client.post(
         Uri.parse('$base/login'),
         headers: {
           'Content-Type': 'application/json',
@@ -159,7 +169,7 @@ class ApiService {
   static Future<Map<String, dynamic>> getExamsToday() async {
     final headers = await getHeaders();
     final response = await _requestWithFallback(
-      (base) => http.get(
+      (base) => _client.get(
         Uri.parse('$base/student/exams/today'),
         headers: headers,
       ),
@@ -179,7 +189,7 @@ class ApiService {
     if (longitude != null) body['longitude'] = longitude;
 
     final response = await _requestWithFallback(
-      (base) => http.post(
+      (base) => _client.post(
         Uri.parse('$base/exams/$examId/start'),
         headers: headers,
         body: jsonEncode(body),
@@ -191,7 +201,7 @@ class ApiService {
   static Future<Map<String, dynamic>> finishExamSession(int examId) async {
     final headers = await getHeaders();
     final response = await _requestWithFallback(
-      (base) => http.post(
+      (base) => _client.post(
         Uri.parse('$base/exams/$examId/finish'),
         headers: headers,
       ),
@@ -202,7 +212,7 @@ class ApiService {
   static Future<Map<String, dynamic>> getMe() async {
     final headers = await getHeaders();
     final response = await _requestWithFallback(
-      (base) => http.get(Uri.parse('$base/me'), headers: headers),
+      (base) => _client.get(Uri.parse('$base/me'), headers: headers),
     );
     return _decodeResponse(response);
   }
@@ -216,7 +226,7 @@ class ApiService {
     if (email != null) payload['email'] = email;
 
     final response = await _requestWithFallback(
-      (base) => http.post(
+      (base) => _client.post(
         Uri.parse('$base/student/google-status'),
         headers: headers,
         body: jsonEncode(payload),
@@ -234,7 +244,7 @@ class ApiService {
     try {
       final headers = await getHeaders();
       final response = await _requestWithFallback(
-        (base) => http.post(
+        (base) => _client.post(
           Uri.parse('$base/violations'),
           headers: headers,
           body: jsonEncode({
@@ -249,5 +259,20 @@ class ApiService {
     } catch (_) {
       return {'success': false, 'message': 'Gagal mengirim laporan pelanggaran'};
     }
+  }
+
+  static Future<void> saveExamDraft(int examId, String jsonDraft) async {
+    final prefs = await _preferences;
+    await prefs.setString('exam_draft_$examId', jsonDraft);
+  }
+
+  static Future<String?> getExamDraft(int examId) async {
+    final prefs = await _preferences;
+    return prefs.getString('exam_draft_$examId');
+  }
+
+  static Future<void> clearExamDraft(int examId) async {
+    final prefs = await _preferences;
+    await prefs.remove('exam_draft_$examId');
   }
 }

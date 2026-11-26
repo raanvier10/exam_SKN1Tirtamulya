@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,7 +20,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<dynamic> _exams = [];
   bool _isLoading = true;
   bool _isGoogleConnected = false;
+  bool _isLaunchingExam = false;
   Timer? _timer;
+  final ValueNotifier<DateTime> _clockNotifier = ValueNotifier(DateTime.now());
 
   @override
   void initState() {
@@ -27,13 +30,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _checkGoogleStatus();
     _fetchExams();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted) setState(() {});
+      if (!mounted) return;
+      final prev = _clockNotifier.value;
+      final now = DateTime.now();
+      _clockNotifier.value = now;
+
+      // Hanya rebuild daftar kartu jika ada ujian yang tepat melewati batas waktu mulai/selesai
+      bool statusBoundaryCrossed = false;
+      for (final exam in _exams) {
+        final startAt = DateTime.tryParse(exam['start_at']?.toString() ?? '')?.toLocal();
+        final endAt = DateTime.tryParse(exam['end_at']?.toString() ?? '')?.toLocal();
+        if ((startAt != null && !prev.isAfter(startAt) && now.isAfter(startAt)) ||
+            (endAt != null && !prev.isAfter(endAt) && now.isAfter(endAt))) {
+          statusBoundaryCrossed = true;
+          break;
+        }
+      }
+      if (statusBoundaryCrossed) {
+        setState(() {});
+      }
     });
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _clockNotifier.dispose();
     super.dispose();
   }
 
@@ -520,6 +542,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildHeroHeader() {
+    final logoCachePx = (24 * MediaQuery.devicePixelRatioOf(context)).round();
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
@@ -533,45 +556,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
           bottomRight: Radius.circular(36),
         ),
       ),
-      child: CustomPaint(
-        painter: _DashboardBackgroundPatternPainter(),
-        child: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 26),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Top Bar
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(7),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.3),
-                              width: 1.5,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.15),
-                                blurRadius: 10,
-                                offset: const Offset(0, 3),
+      child: RepaintBoundary(
+        child: CustomPaint(
+          painter: _DashboardBackgroundPatternPainter(),
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 26),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Top Bar
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(7),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white.withValues(alpha: 0.3),
+                                width: 1.5,
                               ),
-                            ],
+                            ),
+                            child: Image.asset(
+                              'assets/images/logo.webp',
+                              width: 24,
+                              height: 24,
+                              cacheWidth: logoCachePx,
+                              cacheHeight: logoCachePx,
+                              fit: BoxFit.contain,
+                            ),
                           ),
-                          child: Image.asset(
-                            'assets/images/logo.webp',
-                            width: 24,
-                            height: 24,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
                         const SizedBox(width: 12),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -785,7 +804,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                   ),
                 ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -914,45 +934,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
         (now.year == endTime.year && now.month == endTime.month && now.day > endTime.day);
     bool isFinished = isCompletedByStudent || isPastExamDay || now.isAfter(endTime);
 
-    Duration diff = startTime.difference(now);
-    String countdown = "";
-    if (!isStarted && !isCompletedByStudent && !isLockedByViolation) {
-      final hours = diff.inHours.toString().padLeft(2, '0');
-      final minutes = (diff.inMinutes % 60).toString().padLeft(2, '0');
-      final seconds = (diff.inSeconds % 60).toString().padLeft(2, '0');
-      countdown = "$hours : $minutes : $seconds";
-    }
-
     final duration = int.tryParse(exam['duration']?.toString() ?? '60') ?? 60;
     final maxViolation = int.tryParse(exam['max_violation']?.toString() ?? '3') ?? 3;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isLockedByViolation
-              ? const Color(0xFFFECACA)
-              : (isStarted && !isFinished
-                  ? const Color(0xFF10B981).withValues(alpha: 0.45)
-                  : const Color(0xFFE2E8F0)),
-          width: isStarted && !isFinished ? 1.4 : 1.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.05),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
+    return RepaintBoundary(
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isLockedByViolation
+                ? const Color(0xFFFECACA)
+                : (isStarted && !isFinished
+                    ? const Color(0xFF10B981).withValues(alpha: 0.45)
+                    : const Color(0xFFE2E8F0)),
+            width: isStarted && !isFinished ? 1.4 : 1.0,
           ),
-          if (isStarted && !isFinished)
+          boxShadow: [
             BoxShadow(
-              color: const Color(0xFF10B981).withValues(alpha: 0.08),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: const Color(0xFF0F172A).withValues(alpha: 0.045),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
-        ],
-      ),
+          ],
+        ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1072,14 +1078,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                   const Spacer(),
-                  Text(
-                    countdown,
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFFB45309),
-                      letterSpacing: 0.5,
-                    ),
+                  ValueListenableBuilder<DateTime>(
+                    valueListenable: _clockNotifier,
+                    builder: (context, currentNow, _) {
+                      final liveDiff = startTime.difference(currentNow);
+                      final String liveCountdown;
+                      if (liveDiff.isNegative) {
+                        liveCountdown = "00 : 00 : 00";
+                      } else {
+                        final h = liveDiff.inHours.toString().padLeft(2, '0');
+                        final m = (liveDiff.inMinutes % 60).toString().padLeft(2, '0');
+                        final s = (liveDiff.inSeconds % 60).toString().padLeft(2, '0');
+                        liveCountdown = "$h : $m : $s";
+                      }
+                      return Text(
+                        liveCountdown,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFFB45309),
+                          letterSpacing: 0.5,
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -1186,20 +1207,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   ),
                                 )
                               : ElevatedButton(
-                                  onPressed: () async {
-                                    final result = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => SecurityCheckScreen(exam: exam),
-                                      ),
-                                    );
-                                    if (result == 'locked' && mounted) {
-                                      setState(() {
-                                        exam['student_status'] = 'locked';
-                                      });
-                                    }
-                                    _fetchExams();
-                                  },
+                                  onPressed: _isLaunchingExam
+                                      ? null
+                                      : () async {
+                                          setState(() => _isLaunchingExam = true);
+                                          try {
+                                            final result = await Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => SecurityCheckScreen(exam: exam),
+                                              ),
+                                            );
+                                            if (result == 'locked' && mounted) {
+                                              setState(() {
+                                                exam['student_status'] = 'locked';
+                                              });
+                                            }
+                                            _fetchExams();
+                                          } finally {
+                                            if (mounted) {
+                                              setState(() => _isLaunchingExam = false);
+                                            }
+                                          }
+                                        },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFF0A2540),
                                     foregroundColor: Colors.white,
@@ -1227,6 +1257,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -1452,47 +1483,26 @@ class _DashboardBackgroundPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final glowPaint1 = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          Colors.white.withValues(alpha: 0.10),
-          Colors.white.withValues(alpha: 0.0),
-        ],
-      ).createShader(
-        Rect.fromCircle(
-          center: Offset(size.width * 0.9, 20),
-          radius: 120,
-        ),
-      );
-    canvas.drawCircle(Offset(size.width * 0.9, 20), 120, glowPaint1);
+      ..color = Colors.white.withValues(alpha: 0.045);
+    canvas.drawCircle(Offset(size.width * 0.9, 20), 115, glowPaint1);
 
     final glowPaint2 = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          const Color(0xFF38BDF8).withValues(alpha: 0.12),
-          const Color(0xFF38BDF8).withValues(alpha: 0.0),
-        ],
-      ).createShader(
-        Rect.fromCircle(
-          center: Offset(size.width * 0.1, size.height * 0.8),
-          radius: 130,
-        ),
-      );
-    canvas.drawCircle(
-      Offset(size.width * 0.1, size.height * 0.8),
-      130,
-      glowPaint2,
-    );
+      ..color = const Color(0xFF38BDF8).withValues(alpha: 0.05);
+    canvas.drawCircle(Offset(size.width * 0.1, size.height * 0.8), 120, glowPaint2);
 
     final dotPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.065)
-      ..style = PaintingStyle.fill;
+      ..strokeWidth = 2.2
+      ..strokeCap = StrokeCap.round;
 
-    const double step = 20.0;
+    final points = <Offset>[];
+    const double step = 22.0;
     for (double x = 12; x < size.width; x += step) {
       for (double y = 12; y < size.height; y += step) {
-        canvas.drawCircle(Offset(x, y), 1.15, dotPaint);
+        points.add(Offset(x, y));
       }
     }
+    canvas.drawPoints(ui.PointMode.points, points, dotPaint);
   }
 
   @override

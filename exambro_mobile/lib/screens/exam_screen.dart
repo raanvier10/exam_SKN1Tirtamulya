@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,42 @@ class ExamScreen extends StatefulWidget {
     this.longitude,
   });
 
+  static const Duration startupGracePeriod = Duration(seconds: 5);
+  static const Duration startupTransientPauseAllowance = Duration(seconds: 3);
+
+  /// Evaluasi apakah pelanggaran non-kritis harus diabaikan selama masa stabilisasi awal ujian.
+  @visibleForTesting
+  static bool isWithinStartupGrace({
+    required String type,
+    required DateTime? entryTime,
+    required DateTime now,
+  }) {
+    if (type == 'SCREEN_OFF' || type == 'APP_RESTART_OR_DEVICE_OFF') {
+      return false;
+    }
+    if (entryTime == null) return false;
+    return now.difference(entryTime) < startupGracePeriod;
+  }
+
+  /// Evaluasi apakah jeda lifecycle saat transisi masuk ujian di HP RAM kecil merupakan transisi OS singkat.
+  @visibleForTesting
+  static bool shouldIgnoreResumeViolation({
+    required DateTime? entryTime,
+    required DateTime? awayStartTime,
+    required DateTime now,
+  }) {
+    if (entryTime == null) return false;
+    if (now.difference(entryTime) < startupGracePeriod) {
+      return true;
+    }
+    if (awayStartTime != null &&
+        awayStartTime.difference(entryTime) < startupGracePeriod &&
+        now.difference(awayStartTime) < startupTransientPauseAllowance) {
+      return true;
+    }
+    return false;
+  }
+
   @override
   State<ExamScreen> createState() => _ExamScreenState();
 }
@@ -34,9 +71,11 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
   int? _sessionId;
   String? _originalFormUrl;
   Timer? _examTimer;
+  final ValueNotifier<DateTime> _clockNotifier = ValueNotifier(DateTime.now());
   late DateTime _endTime;
   Future<void>? _startSessionFuture;
   Future<void>? _pendingViolationReport;
+  String? _cachedDraftJson;
 
   DateTime? _awayStartTime;
   DateTime? _entryTime;
@@ -49,9 +88,12 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
 
     if (!kIsWeb) {
-      // Listener deteksi Jendela Mengambang (Floating Window) & Split-Screen dari Native Android
+      // Listener deteksi Jendela Mengambang (Floating Window), Split-Screen, & Low Memory dari Native Android
       platform.setMethodCallHandler((call) async {
-        if (call.method == 'onScreenOff') {
+        if (call.method == 'onLowMemory') {
+          PaintingBinding.instance.imageCache.clear();
+          PaintingBinding.instance.imageCache.clearLiveImages();
+        } else if (call.method == 'onScreenOff') {
           _handleViolation(
             'SCREEN_OFF',
             'Layar HP dimatikan / dikunci saat ujian berlangsung',
@@ -81,19 +123,24 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
       _secureScreen();
     }
 
-    // 3. Setup end time & live countdown timer
+    // 3. Setup end time & live countdown timer (hanya update ValueNotifier agar WebView tidak ikut rebuild)
     _endTime = DateTime.parse(widget.exam['end_at']).toLocal();
     _examTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted) {
-        setState(() {});
-        if (DateTime.now().isAfter(_endTime) && !_isLocked && !_timeExpiredHandled) {
-          timer.cancel();
-          _handleTimeExpired();
-        }
+      if (!mounted) return;
+      final now = DateTime.now();
+      _clockNotifier.value = now;
+      if (now.isAfter(_endTime) && !_isLocked && !_timeExpiredHandled) {
+        timer.cancel();
+        _handleTimeExpired();
       }
     });
 
     if (!kIsWeb) {
+      final int examId = int.tryParse(widget.exam['id']?.toString() ?? '0') ?? 0;
+      ApiService.getExamDraft(examId).then((draft) {
+        _cachedDraftJson = draft;
+      }).catchError((_) {});
+
       _controller = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
         ..setUserAgent(
@@ -109,6 +156,15 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                 'UNAUTHORIZED_COPY',
                 'Mencoba menyalin (copy) teks soal ujian',
               );
+            }
+          },
+        )
+        ..addJavaScriptChannel(
+          'ExambroDraft',
+          onMessageReceived: (JavaScriptMessage message) {
+            if (examId > 0 && message.message.isNotEmpty) {
+              _cachedDraftJson = message.message;
+              ApiService.saveExamDraft(examId, message.message);
             }
           },
         )
@@ -140,6 +196,10 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
               }
             },
             onNavigationRequest: (NavigationRequest request) {
+              if (!request.isMainFrame) {
+                return NavigationDecision.prevent;
+              }
+
               final uri = Uri.tryParse(request.url);
               final scheme = uri?.scheme.toLowerCase() ?? '';
               final host = uri?.host.toLowerCase() ?? '';
@@ -196,10 +256,14 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                    path.startsWith('/intl') ||
                    path.startsWith('/about'));
 
-              final isDocsNonForm = host == 'docs.google.com' &&
-                  !(path.startsWith('/forms/d/') ||
-                      (path.startsWith('/forms/') &&
-                          (path.contains('/viewform') || path.contains('/formresponse'))));
+              final isAllowedFormPath = path.startsWith('/forms/d/') ||
+                  RegExp(r'^/forms/u/\d+/d/').hasMatch(path) ||
+                  (path.startsWith('/forms/') &&
+                      (path.contains('/viewform') ||
+                       path.contains('/formresponse') ||
+                       path.contains('/alreadyresponded') ||
+                       path.contains('/closedform')));
+              final isDocsNonForm = host == 'docs.google.com' && !isAllowedFormPath;
 
               if (blockedGoogleHosts.contains(host) || isSearch || isGoogleJunkPage || isDocsNonForm) {
                 _handleViolation(
@@ -236,6 +300,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                   host == 'forms.google.com' ||
                   host == 'docs.google.com' ||
                   host == 'accounts.google.com' ||
+                  host == 'accounts.google.co.id' ||
                   host == 'myaccount.google.com' ||
                   host == 'ogs.google.com' ||
                   host == 'apis.google.com' ||
@@ -283,8 +348,19 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _injectAntiCopyProtection() async {
-    const jsCode = """
+    final safeDraftLiteral = jsonEncode(_cachedDraftJson ?? '');
+    final jsCode = """
       (function() {
+        // 1. Lazy-load gambar soal di Google Form agar RAM 2GB tidak langsung penuh saat memuat banyak gambar
+        try {
+          document.querySelectorAll('img').forEach(function(img) {
+            if (!img.getAttribute('loading')) {
+              img.setAttribute('loading', 'lazy');
+              img.setAttribute('decoding', 'async');
+            }
+          });
+        } catch (_) {}
+
         if (!document.getElementById('exambro-lock-style')) {
           const style = document.createElement('style');
           style.id = 'exambro-lock-style';
@@ -340,6 +416,87 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
             );
             if (!isInput) {
               e.preventDefault();
+            }
+          }, true);
+
+          // 2. Pulihkan & backup isian teks visible (non-hidden) dengan debounce 2 detik anti-kill OS
+          // Kunci di-scope per pertanyaan/label agar aman di Google Form multi-halaman (Section)
+          const getFieldKey = function(el, idx) {
+            let label = '';
+            const labelledBy = el.getAttribute('aria-labelledby');
+            if (labelledBy) {
+              const firstId = labelledBy.trim().split(/\\s+/)[0];
+              const labelEl = firstId ? document.getElementById(firstId) : null;
+              if (labelEl && labelEl.innerText) {
+                label = labelEl.innerText.trim().slice(0, 80);
+              }
+            }
+            if (!label) {
+              label = el.getAttribute('aria-label') || el.name || ('idx_' + idx);
+            }
+            return window.location.pathname + '::' + label;
+          };
+
+          const getVisibleTextFields = function() {
+            return Array.from(document.querySelectorAll('textarea, input[type="text"], input[type="email"], input[type="number"]'))
+              .filter(function(el) {
+                return el.type !== 'hidden' && el.offsetParent !== null && !el.disabled && !el.readOnly;
+              });
+          };
+
+          const bodyText = document.body ? document.body.innerText.toLowerCase() : '';
+          const isRecordedPage = bodyText.includes('tanggapan anda telah direkam') ||
+              bodyText.includes('your response has been recorded') ||
+              bodyText.includes('jawaban anda telah direkam');
+
+          let draftStore = {};
+          const savedRaw = $safeDraftLiteral;
+          if (savedRaw) {
+            try {
+              const parsed = JSON.parse(savedRaw);
+              if (parsed && typeof parsed === 'object') {
+                draftStore = parsed;
+              }
+            } catch (_) {}
+          }
+
+          if (!isRecordedPage) {
+            getVisibleTextFields().forEach(function(el, idx) {
+              const key = getFieldKey(el, idx);
+              if (!el.value && typeof draftStore[key] === 'string' && draftStore[key].length > 0) {
+                el.value = draftStore[key];
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+              }
+            });
+          }
+
+          let draftTimer = null;
+          const scheduleDraftSave = function() {
+            if (draftTimer) clearTimeout(draftTimer);
+            draftTimer = setTimeout(function() {
+              try {
+                let changed = false;
+                getVisibleTextFields().forEach(function(el, idx) {
+                  const key = getFieldKey(el, idx);
+                  if (el.value && el.value.length > 0) {
+                    draftStore[key] = el.value;
+                    changed = true;
+                  } else if (key in draftStore) {
+                    delete draftStore[key];
+                    changed = true;
+                  }
+                });
+                if (changed && window.ExambroDraft) {
+                  window.ExambroDraft.postMessage(JSON.stringify(draftStore));
+                }
+              } catch (_) {}
+            }, 2000);
+          };
+
+          document.addEventListener('input', function(e) {
+            const t = e.target;
+            if (t && (t.tagName === 'TEXTAREA' || (t.tagName === 'INPUT' && t.type !== 'hidden'))) {
+              scheduleDraftSave();
             }
           }, true);
         }
@@ -494,14 +651,9 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  blurRadius: 36,
-                  offset: const Offset(0, 16),
-                ),
-                BoxShadow(
-                  color: const Color(0xFFEF4444).withValues(alpha: 0.2),
-                  blurRadius: 28,
-                  offset: const Offset(0, 4),
+                  color: Colors.black.withValues(alpha: 0.4),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
@@ -674,12 +826,21 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _examTimer?.cancel();
+    _clockNotifier.dispose();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    try {
-      platform.invokeMethod('flushCookies');
-      platform.invokeMethod('clearSecureScreen');
-    } catch (e) {
-      // Ignored
+    if (!kIsWeb) {
+      platform.setMethodCallHandler(null);
+      try {
+        _controller.clearCache();
+        _controller.loadRequest(Uri.parse('about:blank'));
+      } catch (_) {}
+      try {
+        platform.invokeMethod('flushCookies', true);
+        platform.invokeMethod('clearWebCache');
+        platform.invokeMethod('clearSecureScreen');
+      } catch (e) {
+        // Ignored
+      }
     }
     super.dispose();
   }
@@ -688,15 +849,33 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_isLocked || _isExiting) return;
+
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
-      _wasPaused = true;
-      _awayStartTime = DateTime.now();
+      // Catat waktu awal jeda hanya saat transisi pertama agar event `hidden` ketika resume
+      // tidak menimpa timestamp _awayStartTime.
+      if (!_wasPaused) {
+        _wasPaused = true;
+        _awayStartTime = DateTime.now();
+      }
     } else if (state == AppLifecycleState.resumed) {
       if (_wasPaused) {
+        final now = DateTime.now();
+        final awayStart = _awayStartTime;
         _wasPaused = false;
-        final secondsAway = _awayStartTime != null
-            ? DateTime.now().difference(_awayStartTime!).inSeconds
+        _awayStartTime = null;
+
+        if (ExamScreen.shouldIgnoreResumeViolation(
+          entryTime: _entryTime,
+          awayStartTime: awayStart,
+          now: now,
+        )) {
+          return;
+        }
+
+        final secondsAway = awayStart != null
+            ? now.difference(awayStart).inSeconds
             : 0;
         _handleViolation(
           'APP_SWITCH',
@@ -764,6 +943,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                     } catch (_) {}
                     try {
                       await ApiService.finishExamSession(examId);
+                      await ApiService.clearExamDraft(examId);
                     } catch (_) {}
                     if (!mounted) return;
                     _exitExam();
@@ -807,15 +987,16 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _handleViolation(String type, String desc, {bool reportToServer = true}) async {
-    if (_isLocked) return;
+    if (_isLocked || _isExiting) return;
 
     final now = DateTime.now();
-    // 1. Grace period saat pertama kali masuk (2 detik pertama)
-    // Cegah dialog sistem Android (Sematkan Aplikasi / Immersive Mode) dihitung pelanggaran
-    if (type != 'SCREEN_OFF' &&
-        type != 'APP_RESTART_OR_DEVICE_OFF' &&
-        _entryTime != null &&
-        now.difference(_entryTime!).inSeconds < 2) {
+    // 1. Grace period saat pertama kali masuk (5 detik pertama)
+    // Cegah dialog sistem Android (Sematkan Aplikasi / Immersive Mode) & startup WebView di RAM kecil dihitung pelanggaran
+    if (ExamScreen.isWithinStartupGrace(
+      type: type,
+      entryTime: _entryTime,
+      now: now,
+    )) {
       return;
     }
 
@@ -868,16 +1049,9 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.6),
-                  blurRadius: 36,
-                  offset: const Offset(0, 16),
-                ),
-                BoxShadow(
-                  color: isCritical
-                      ? const Color(0xFFEF4444).withValues(alpha: 0.2)
-                      : const Color(0xFFF59E0B).withValues(alpha: 0.15),
-                  blurRadius: 24,
-                  offset: const Offset(0, 4),
+                  color: Colors.black.withValues(alpha: 0.4),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
                 ),
               ],
             ),
@@ -1332,16 +1506,16 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
     if (confirm == true && mounted) {
       final int examId = int.tryParse(widget.exam['id']?.toString() ?? '0') ?? 0;
       try {
-        await platform.invokeMethod('flushCookies');
+        await platform.invokeMethod('flushCookies', true);
       } catch (_) {}
       await ApiService.finishExamSession(examId);
+      await ApiService.clearExamDraft(examId);
       if (!mounted) return;
       _exitExam();
     }
   }
 
-  String _formatRemainingTime() {
-    final now = DateTime.now();
+  String _formatRemainingTime(DateTime now) {
     if (now.isAfter(_endTime)) return "00:00:00";
     final diff = _endTime.difference(now);
     final hours = diff.inHours.toString().padLeft(2, '0');
@@ -1350,8 +1524,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
     return "$hours:$minutes:$seconds";
   }
 
-  String _formatCurrentClock() {
-    final now = DateTime.now();
+  String _formatCurrentClock(DateTime now) {
     final h = now.hour.toString().padLeft(2, '0');
     final m = now.minute.toString().padLeft(2, '0');
     return "$h:$m WIB";
@@ -1360,9 +1533,6 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final int maxViolations = int.tryParse(widget.exam['max_violation']?.toString() ?? '3') ?? 3;
-    final now = DateTime.now();
-    final remainingDiff = _endTime.difference(now);
-    final isLowTime = remainingDiff.inMinutes < 5 && !now.isAfter(_endTime);
 
     return PopScope(
       canPop: false,
@@ -1409,13 +1579,18 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                             alignment: Alignment.centerLeft,
                             child: Row(
                               children: [
-                                Text(
-                                  _formatCurrentClock(),
-                                  style: const TextStyle(
-                                    color: Color(0xFF64748B),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                ValueListenableBuilder<DateTime>(
+                                  valueListenable: _clockNotifier,
+                                  builder: (context, now, _) {
+                                    return Text(
+                                      _formatCurrentClock(now),
+                                      style: const TextStyle(
+                                        color: Color(0xFF64748B),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    );
+                                  },
                                 ),
                                 const SizedBox(width: 6),
                                 Container(
@@ -1444,37 +1619,44 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
 
                     const SizedBox(width: 6),
 
-                    // Center: Countdown Timer Box
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: isLowTime ? const Color(0xFFEF4444) : const Color(0xFF112238),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: isLowTime ? const Color(0xFFF87171) : const Color(0xFF233B5D),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.timer_outlined,
-                            size: 13,
-                            color: isLowTime ? Colors.white : const Color(0xFF38BDF8),
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            _formatRemainingTime(),
-                            style: TextStyle(
-                              color: isLowTime ? Colors.white : const Color(0xFFF1F5F9),
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.4,
+                    // Center: Countdown Timer Box (terisolasi dari rebuild WebView)
+                    ValueListenableBuilder<DateTime>(
+                      valueListenable: _clockNotifier,
+                      builder: (context, now, _) {
+                        final remainingDiff = _endTime.difference(now);
+                        final isLowTime = remainingDiff.inMinutes < 5 && !now.isAfter(_endTime);
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: isLowTime ? const Color(0xFFEF4444) : const Color(0xFF112238),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isLowTime ? const Color(0xFFF87171) : const Color(0xFF233B5D),
+                              width: 1,
                             ),
                           ),
-                        ],
-                      ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.timer_outlined,
+                                size: 13,
+                                color: isLowTime ? Colors.white : const Color(0xFF38BDF8),
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                _formatRemainingTime(now),
+                                style: TextStyle(
+                                  color: isLowTime ? Colors.white : const Color(0xFFF1F5F9),
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.4,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
 
                     const SizedBox(width: 6),

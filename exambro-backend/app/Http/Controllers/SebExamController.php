@@ -131,9 +131,9 @@ class SebExamController extends Controller
             ]);
         }
 
-        // 3. Validasi Target Kelas Siswa
-        if ($exam->classes()->exists()) {
-            $classIds = $exam->classes()->pluck('classes.id')->toArray();
+        // 3. Validasi Target Kelas Siswa (1x query pluck)
+        $classIds = $exam->classes()->pluck('classes.id')->all();
+        if (!empty($classIds)) {
             if (!$user->class_id || !in_array($user->class_id, $classIds)) {
                 return view('seb.error', [
                     'exam' => $exam,

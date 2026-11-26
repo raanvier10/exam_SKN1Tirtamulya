@@ -93,7 +93,7 @@ class _GoogleAuthScreenState extends State<GoogleAuthScreen> {
   Future<void> _handleSaveAndExit({bool autoDetected = false}) async {
     // 1. Paksa flush cookie ke penyimpanan disk permanen
     try {
-      await platform.invokeMethod('flushCookies');
+      await platform.invokeMethod('flushCookies', true);
     } catch (_) {}
 
     // 2. Simpan status di SharedPreferences lokal HP
