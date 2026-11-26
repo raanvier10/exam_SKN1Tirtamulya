@@ -8,8 +8,33 @@ use Illuminate\Support\Facades\Auth;
 
 class ExamController extends Controller
 {
+    /**
+     * Kembalikan array ID kelas jurusan jika user adalah PIC jurusan, atau null jika bukan PIC.
+     *
+     * @return array<int>|null
+     */
+    private function departmentClassIds(): ?array
+    {
+        return Auth::user()?->departmentClassIds();
+    }
+
+    private function canPicManageFullExam(Exam $exam, ?array $deptClassIds): bool
+    {
+        if ($deptClassIds === null) {
+            return true;
+        }
+
+        $examClassIds = $exam->classes()->pluck('classes.id')->map(fn ($id) => (int) $id)->all();
+        if (empty($examClassIds)) {
+            return false;
+        }
+
+        return empty(array_diff($examClassIds, $deptClassIds));
+    }
+
     public function index(Request $request)
     {
+        $deptClassIds = $this->departmentClassIds();
         $query = Exam::with(['classes', 'participants', 'creator'])->latest('start_at');
 
         if ($request->filled('search')) {
@@ -40,6 +65,14 @@ class ExamController extends Controller
                   ->orWhereHas('creator', function ($sq) {
                       $sq->where('role', 'admin');
                   });
+            });
+        }
+
+        // ISOLASI PIC JURUSAN:
+        // Hanya tampilkan jadwal ujian yang menargetkan minimal 1 kelas di jurusan PIC.
+        if ($deptClassIds !== null) {
+            $query->whereHas('classes', function ($q) use ($deptClassIds) {
+                $q->whereIn('classes.id', $deptClassIds);
             });
         }
 
@@ -77,10 +110,13 @@ class ExamController extends Controller
         // Group exams by title + google_form_url + creator (Ponytail: native Laravel collection grouping)
         $groupedExams = $exams->groupBy(function ($exam) {
             return trim(mb_strtolower($exam->title)) . '|' . trim($exam->google_form_url ?? '') . '|' . ($exam->created_by ?? 'school');
-        })->map(function ($group) {
+        })->map(function ($group) use ($deptClassIds) {
             $sortedSessions = $group->sortBy('start_at')->values();
             $primary = $sortedSessions->first();
             $allClasses = $sortedSessions->flatMap->classes->unique('id')->sortBy('name')->values();
+            if ($deptClassIds !== null) {
+                $allClasses = $allClasses->whereIn('id', $deptClassIds)->values();
+            }
             $hasOngoing = $sortedSessions->contains(fn($e) => $e->isOngoing());
             $allExpired = $sortedSessions->every(fn($e) => $e->isExpired());
             $hasActive = $sortedSessions->contains(fn($e) => $e->status === 'active' && (!$e->end_at || now()->lte($e->end_at)));
@@ -151,7 +187,9 @@ class ExamController extends Controller
             return 2;
         })->values();
 
-        $classes = \App\Models\StudentClass::orderBy('name')->get();
+        $classes = \App\Models\StudentClass::when($deptClassIds !== null, fn ($q) => $q->whereIn('id', $deptClassIds))
+            ->orderBy('name')
+            ->get();
 
         // 1. STRUKTUR KHUSUS UAS: DIUTAMAKAN KATEGORI KELAS
         $uasExams = $groupedExams->filter(fn($item) => $item->type === 'uas')->values();
@@ -390,12 +428,16 @@ class ExamController extends Controller
 
     public function create()
     {
-        $classes = \App\Models\StudentClass::orderBy('name')->get();
+        $deptClassIds = $this->departmentClassIds();
+        $classes = \App\Models\StudentClass::when($deptClassIds !== null, fn ($q) => $q->whereIn('id', $deptClassIds))
+            ->orderBy('name')
+            ->get();
         return view('admin.exams.create', compact('classes'));
     }
 
     public function store(Request $request)
     {
+        $deptClassIds = $this->departmentClassIds();
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'type' => 'nullable|in:uas,uts,pkl',
@@ -415,6 +457,15 @@ class ExamController extends Controller
             'schedules.*.classes.required' => 'Setiap jadwal wajib memilih minimal 1 kelas target.',
             'schedules.*.classes.min' => 'Setiap jadwal wajib memilih minimal 1 kelas target.',
         ]);
+
+        if ($deptClassIds !== null) {
+            foreach ($validated['schedules'] as $slot) {
+                $slotIds = array_map('intval', $slot['classes']);
+                if (!empty(array_diff($slotIds, $deptClassIds))) {
+                    return back()->withInput()->with('error', 'Akses ditolak. PIC jurusan hanya dapat membuat jadwal untuk kelas jurusannya sendiri.');
+                }
+            }
+        }
 
         if (Auth::user()->isTeacher()) {
             $examType = 'uts';
@@ -470,6 +521,8 @@ class ExamController extends Controller
 
     public function show(Exam $exam, Request $request)
     {
+        $deptClassIds = $this->departmentClassIds();
+
         if (Auth::user()->isTeacher()) {
             $isOwn = $exam->created_by === Auth::id();
             $isSchoolExam = $exam->created_by === null || ($exam->creator && $exam->creator->isAdmin());
@@ -479,6 +532,13 @@ class ExamController extends Controller
         }
 
         $exam->load('classes');
+
+        if ($deptClassIds !== null) {
+            if ($exam->classes->whereIn('id', $deptClassIds)->isEmpty()) {
+                return redirect()->route('admin.exams.index')->with('error', 'Akses ditolak. Jadwal ujian ini bukan untuk jurusan ' . Auth::user()->departmentCode() . '.');
+            }
+            $exam->setRelation('classes', $exam->classes->whereIn('id', $deptClassIds)->values());
+        }
 
         // Jika waktu ujian sudah berakhir, otomatis ubah siswa yang masih 'working' atau 'locked' menjadi 'finished'
         if ($exam->end_at && now()->gt($exam->end_at)) {
@@ -494,10 +554,16 @@ class ExamController extends Controller
         // Dukungan filter ruang kelas spesifik (misal saat dipantau dari daftar per ruang kelas UAS)
         $selectedClass = null;
         if ($request->filled('class_id') && is_numeric($request->class_id)) {
+            if ($deptClassIds !== null && !in_array((int) $request->class_id, $deptClassIds, true)) {
+                return redirect()->route('admin.exams.index')->with('error', 'Akses ditolak. Ruang kelas tersebut bukan bagian dari jurusan ' . Auth::user()->departmentCode() . '.');
+            }
             $selectedClass = \App\Models\StudentClass::find($request->class_id);
         }
 
         $participantsQuery = $exam->participants()->with(['user.class']);
+        if ($deptClassIds !== null) {
+            $participantsQuery->whereHas('user', fn ($q) => $q->whereIn('class_id', $deptClassIds));
+        }
         if ($selectedClass) {
             $participantsQuery->whereHas('user', function ($q) use ($selectedClass) {
                 $q->where('class_id', $selectedClass->id);
@@ -556,6 +622,9 @@ class ExamController extends Controller
 
         $violationsQuery = \App\Models\Violation::where('exam_id', $exam->id)
             ->with(['user.class', 'session']);
+        if ($deptClassIds !== null) {
+            $violationsQuery->whereHas('user', fn ($q) => $q->whereIn('class_id', $deptClassIds));
+        }
         if ($selectedClass) {
             $violationsQuery->whereHas('user', function ($q) use ($selectedClass) {
                 $q->where('class_id', $selectedClass->id);
@@ -577,20 +646,28 @@ class ExamController extends Controller
         return view('admin.exams.show', compact('exam', 'participants', 'violations', 'stats', 'selectedClass'));
     }
 
-    public function unlockCenter(Request $request)
+    private function unlockBaseQuery(Request $request)
     {
         $search = trim((string) $request->input('search', ''));
         $isTeacher = Auth::user()->isTeacher();
+        $deptClassIds = $this->departmentClassIds();
 
-        $baseQuery = \App\Models\ExamSession::with(['user.class', 'exam'])
+        return \App\Models\ExamSession::with(['user.class', 'exam'])
             ->withCount('violations')
             ->when($isTeacher, fn ($q) => $q->whereHas('exam', fn ($e) => $e->where('created_by', Auth::id())))
+            ->when($deptClassIds !== null, fn ($q) => $q->whereHas('user', fn ($u) => $u->whereIn('class_id', $deptClassIds)))
             ->when($search !== '', function ($q) use ($search) {
                 $q->whereHas('user', function ($u) use ($search) {
                     $u->where('name', 'like', "%{$search}%")
                       ->orWhere('username', 'like', "%{$search}%");
                 });
             });
+    }
+
+    public function unlockCenter(Request $request)
+    {
+        $search = trim((string) $request->input('search', ''));
+        $baseQuery = $this->unlockBaseQuery($request);
 
         $lockedSessions = (clone $baseQuery)
             ->where('status', 'LOCKED')
@@ -603,30 +680,176 @@ class ExamController extends Controller
             ->limit(100)
             ->get();
 
-        return view('admin.unlock.index', compact('lockedSessions', 'unlockArchive', 'search'));
+        $webEmergencyEnabled = Auth::user()->isAdmin() ? \App\Models\AppSetting::isWebEmergencyEnabled() : false;
+        $webEmergencyPin = ($webEmergencyEnabled && Auth::user()->isAdmin()) ? \App\Models\AppSetting::webEmergencyPin() : null;
+
+        return view('admin.unlock.index', compact(
+            'lockedSessions',
+            'unlockArchive',
+            'search',
+            'webEmergencyEnabled',
+            'webEmergencyPin'
+        ));
+    }
+
+    public function toggleWebEmergency()
+    {
+        $enabled = !\App\Models\AppSetting::isWebEmergencyEnabled();
+        \App\Models\AppSetting::setValue('web_exam_enabled', $enabled ? '1' : '0');
+
+        if ($enabled) {
+            $pin = \App\Models\AppSetting::webEmergencyPin();
+            return back()->with('success', "Mode Web Ujian Darurat DIAKTIFKAN. PIN Pengawas saat ini: {$pin}");
+        }
+
+        return back()->with('success', 'Mode Web Ujian Darurat telah DINONAKTIFKAN.');
+    }
+
+    public function rotateWebEmergencyPin()
+    {
+        $pin = \App\Models\AppSetting::rotateWebEmergencyPin();
+        return back()->with('success', "PIN Pengawas Web Darurat diperbarui menjadi: {$pin}");
+    }
+
+    public function exportUnlockExcel(Request $request)
+    {
+        $sessions = $this->unlockBaseQuery($request)
+            ->where(function ($q) {
+                $q->where('status', 'LOCKED')
+                  ->orWhereNotNull('unlocked_at')
+                  ->orHas('violations');
+            })
+            ->orderByDesc('updated_at')
+            ->get();
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $usedTitles = ['keseluruhan' => true];
+
+        $safeText = static function ($value): string {
+            $str = (string) ($value ?? '-');
+            if ($str !== '' && in_array($str[0], ['=', '+', '-', '@', "\t", "\r"], true)) {
+                return "'" . $str;
+            }
+            return $str;
+        };
+
+        $populateSheet = static function (\PhpOffice\PhpSpreadsheet\Worksheet\Worksheet $sheet, $items) use ($safeText): void {
+            $headers = [
+                'No',
+                'NIS / Username',
+                'Nama Siswa',
+                'Kelas',
+                'Ujian',
+                'Status Sesi',
+                'Jumlah Pelanggaran',
+                'Waktu Terkunci / Update',
+                'Waktu Buka Kunci',
+                'Mode Akses',
+            ];
+
+            $sheet->fromArray($headers, null, 'A1');
+            $sheet->getStyle('A1:J1')->getFont()->setBold(true);
+            $sheet->getStyle('A1:J1')->getFill()
+                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()->setARGB('FFE8EEF9');
+
+            $rowNum = 2;
+            foreach ($items as $idx => $s) {
+                $statusLabel = match ($s->status) {
+                    'LOCKED' => 'Terkunci',
+                    'COMPLETED', 'FINISHED' => 'Selesai',
+                    default => $s->unlocked_at ? 'Aktif (Pernah Dibuka)' : 'Aktif',
+                };
+                $accessMode = str_starts_with((string) ($s->device_id ?? ''), 'WEB_DARURAT') ? 'Web Darurat' : 'APK / SEB';
+
+                $sheet->setCellValue('A' . $rowNum, $idx + 1);
+                $sheet->setCellValueExplicit('B' . $rowNum, $safeText($s->user?->username ?? '-'), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->setCellValueExplicit('C' . $rowNum, $safeText($s->user?->name ?? '-'), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->setCellValueExplicit('D' . $rowNum, $safeText($s->user?->class?->name ?? '-'), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->setCellValueExplicit('E' . $rowNum, $safeText($s->exam?->title ?? '-'), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->setCellValueExplicit('F' . $rowNum, $statusLabel, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->setCellValue('G' . $rowNum, (int) ($s->violations_count ?? 0));
+                $sheet->setCellValueExplicit('H' . $rowNum, $s->updated_at ? $s->updated_at->format('Y-m-d H:i') : '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->setCellValueExplicit('I' . $rowNum, $s->unlocked_at ? $s->unlocked_at->format('Y-m-d H:i') : '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $sheet->setCellValueExplicit('J' . $rowNum, $accessMode, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+                $rowNum++;
+            }
+
+            foreach (range('A', 'J') as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+        };
+
+        // Sheet 1: Keseluruhan
+        $summarySheet = $spreadsheet->getActiveSheet();
+        $summarySheet->setTitle('Keseluruhan');
+        $populateSheet($summarySheet, $sessions->values());
+
+        // Sheet 2..N: Dipisah per kelas (urut natural: X -> XI -> XII)
+        $groupedByClass = $sessions->groupBy(fn ($s) => trim((string) ($s->user?->class?->name ?? '')) ?: 'Tanpa Kelas')->all();
+        uksort($groupedByClass, 'strnatcasecmp');
+
+        foreach ($groupedByClass as $className => $classSessions) {
+            $cleanTitle = trim((string) preg_replace('/[:\\\\\\/\\?\\*\\[\\]]/', '-', $className));
+            $baseTitle = mb_substr($cleanTitle !== '' ? $cleanTitle : 'Kelas', 0, 31);
+            $sheetTitle = $baseTitle;
+            $suffix = 2;
+            while (isset($usedTitles[mb_strtolower($sheetTitle)])) {
+                $tag = " ({$suffix})";
+                $sheetTitle = mb_substr($baseTitle, 0, 31 - mb_strlen($tag)) . $tag;
+                $suffix++;
+            }
+            $usedTitles[mb_strtolower($sheetTitle)] = true;
+
+            $classSheet = new \PhpOffice\PhpSpreadsheet\Worksheet\Worksheet($spreadsheet, $sheetTitle);
+            $spreadsheet->addSheet($classSheet);
+            $populateSheet($classSheet, $classSessions->values());
+        }
+
+        $spreadsheet->setActiveSheetIndex(0);
+
+        $deptSuffix = Auth::user()->isDepartmentPic() ? '_' . strtolower(Auth::user()->departmentCode()) : '';
+        $filename = 'rekap_buka_kunci_pelanggaran' . $deptSuffix . '_' . date('Ymd_His') . '.xlsx';
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Cache-Control' => 'max-age=0',
+        ]);
     }
 
     public function unlockStudent(Exam $exam, \App\Models\User $user)
     {
-        // Untuk UAS (dibuat kurikulum/admin), buka kunci HANYA bisa dilakukan oleh Kurikulum/Admin.
+        // Untuk UAS (dibuat kurikulum/admin), buka kunci HANYA bisa dilakukan oleh Kurikulum/Admin (termasuk PIC jurusan).
         // Guru hanya bisa buka kunci pada ujian PTS yang dibuatnya sendiri.
         if (Auth::user()->isTeacher() && $exam->created_by !== Auth::id()) {
             return back()->with('error', 'Akses ditolak. Buka kunci untuk ujian sekolah (UAS) hanya dapat dilakukan langsung oleh Kurikulum / Administrator.');
         }
 
-        // Update participant status back to working
-        \App\Models\ExamParticipant::where('exam_id', $exam->id)
+        $deptClassIds = $this->departmentClassIds();
+        if ($deptClassIds !== null && !in_array((int) $user->class_id, $deptClassIds, true)) {
+            return back()->with('error', 'Akses ditolak. Siswa tersebut bukan dari jurusan ' . Auth::user()->departmentCode() . '.');
+        }
+
+        // Update kondisional agar aman jika ada 2 proktor/tab membuka kunci bersamaan
+        $participantUnlocked = \App\Models\ExamParticipant::where('exam_id', $exam->id)
             ->where('user_id', $user->id)
+            ->where('status', 'locked')
             ->update(['status' => 'working']);
 
-        // Update active/locked sessions back to ACTIVE and record unlock timestamp
-        \App\Models\ExamSession::where('exam_id', $exam->id)
+        $sessionUnlocked = \App\Models\ExamSession::where('exam_id', $exam->id)
             ->where('user_id', $user->id)
-            ->whereIn('status', ['LOCKED', 'ACTIVE'])
+            ->where('status', 'LOCKED')
             ->update([
                 'status' => 'ACTIVE',
                 'unlocked_at' => \Carbon\Carbon::now(),
             ]);
+
+        if ($participantUnlocked === 0 && $sessionUnlocked === 0) {
+            return back()->with('success', "Kunci ujian siswa {$user->name} sudah dalam kondisi terbuka sebelumnya.");
+        }
 
         // Catatan riwayat pelanggaran TIDAK dihapus agar tetap tersimpan untuk export / rekap
 
@@ -635,9 +858,14 @@ class ExamController extends Controller
 
     public function resetStudentSession(Exam $exam, \App\Models\User $user)
     {
-        // Untuk UAS, reset sesi HANYA bisa dilakukan oleh Kurikulum/Admin.
+        // Untuk UAS, reset sesi HANYA bisa dilakukan oleh Kurikulum/Admin (termasuk PIC jurusan).
         if (Auth::user()->isTeacher() && $exam->created_by !== Auth::id()) {
             return back()->with('error', 'Akses ditolak. Reset sesi ujian sekolah (UAS) hanya dapat dilakukan langsung oleh Kurikulum / Administrator.');
+        }
+
+        $deptClassIds = $this->departmentClassIds();
+        if ($deptClassIds !== null && !in_array((int) $user->class_id, $deptClassIds, true)) {
+            return back()->with('error', 'Akses ditolak. Siswa tersebut bukan dari jurusan ' . Auth::user()->departmentCode() . '.');
         }
 
         // Reset participant status
@@ -667,7 +895,14 @@ class ExamController extends Controller
             return redirect()->route('admin.exams.index')->with('error', 'Anda hanya dapat mengubah jadwal ujian yang Anda buat sendiri.');
         }
 
-        $classes = \App\Models\StudentClass::orderBy('name')->get();
+        $deptClassIds = $this->departmentClassIds();
+        if (!$this->canPicManageFullExam($exam, $deptClassIds)) {
+            return redirect()->route('admin.exams.index')->with('error', 'Jadwal ujian lintas jurusan hanya dapat diubah oleh Admin Kurikulum.');
+        }
+
+        $classes = \App\Models\StudentClass::when($deptClassIds !== null, fn ($q) => $q->whereIn('id', $deptClassIds))
+            ->orderBy('name')
+            ->get();
         $selectedClasses = $exam->classes->pluck('id')->toArray();
         return view('admin.exams.edit', compact('exam', 'classes', 'selectedClasses'));
     }
@@ -676,6 +911,11 @@ class ExamController extends Controller
     {
         if (Auth::user()->isTeacher() && $exam->created_by !== Auth::id()) {
             return redirect()->route('admin.exams.index')->with('error', 'Anda hanya dapat mengubah jadwal ujian yang Anda buat sendiri.');
+        }
+
+        $deptClassIds = $this->departmentClassIds();
+        if (!$this->canPicManageFullExam($exam, $deptClassIds)) {
+            return redirect()->route('admin.exams.index')->with('error', 'Jadwal ujian lintas jurusan hanya dapat diubah oleh Admin Kurikulum.');
         }
 
         $validated = $request->validate([
@@ -693,6 +933,10 @@ class ExamController extends Controller
             'classes.required' => 'Pilih minimal 1 kelas target.',
             'classes.min' => 'Pilih minimal 1 kelas target.',
         ]);
+
+        if ($deptClassIds !== null && !empty(array_diff(array_map('intval', $request->classes), $deptClassIds))) {
+            return back()->withInput()->with('error', 'Akses ditolak. PIC jurusan hanya dapat memilih kelas jurusannya sendiri.');
+        }
 
         if (Auth::user()->isTeacher()) {
             $validated['type'] = 'uts';
@@ -741,7 +985,13 @@ class ExamController extends Controller
             }
         }
 
+        $deptClassIds = $this->departmentClassIds();
+        if ($deptClassIds !== null && $exam->classes()->whereIn('classes.id', $deptClassIds)->doesntExist()) {
+            return redirect()->route('admin.exams.index')->with('error', 'Akses ditolak. Jadwal ujian ini bukan untuk jurusan ' . Auth::user()->departmentCode() . '.');
+        }
+
         $violations = \App\Models\Violation::where('exam_id', $exam->id)
+            ->when($deptClassIds !== null, fn ($q) => $q->whereHas('user', fn ($u) => $u->whereIn('class_id', $deptClassIds)))
             ->with(['user.class', 'session'])
             ->latest('id')
             ->get();
@@ -781,6 +1031,8 @@ class ExamController extends Controller
                 $typeLabel = match (strtoupper($v->type ?? '')) {
                     'SCREEN_OFF' => 'Layar Dimatikan (Screen Off)',
                     'APP_RESTART_OR_DEVICE_OFF', 'DEVICE_OFF', 'REBOOT' => 'HP Dimatikan / Dimulai Ulang (Restart / Off)',
+                    'WEB_TAB_SWITCH' => 'Pindah Tab / Jendela Browser (Web Darurat)',
+                    'WEB_FULLSCREEN_EXIT' => 'Keluar Layar Penuh (Web Darurat)',
                     'APP_SWITCH', 'SWITCH', 'APP' => 'Keluar Aplikasi (App Switch)',
                     'FLOATING_WINDOW' => 'Jendela Mengambang (Floating Window)',
                     'SPLIT_SCREEN', 'SPLIT', 'MULTI_WINDOW' => 'Layar Belah (Split Screen)',
@@ -813,6 +1065,10 @@ class ExamController extends Controller
             return back()->with('error', 'Anda hanya dapat mengubah link form ujian yang Anda buat sendiri.');
         }
 
+        if (!$this->canPicManageFullExam($exam, $this->departmentClassIds())) {
+            return back()->with('error', 'Jadwal ujian lintas jurusan hanya dapat diubah oleh Admin Kurikulum.');
+        }
+
         $request->validate([
             'google_form_url' => 'required|url:http,https|max:2048',
         ], [
@@ -831,6 +1087,10 @@ class ExamController extends Controller
     {
         if (Auth::user()->isTeacher() && $exam->created_by !== Auth::id()) {
             return redirect()->route('admin.exams.index')->with('error', 'Anda hanya dapat menghapus jadwal ujian yang Anda buat sendiri.');
+        }
+
+        if (!$this->canPicManageFullExam($exam, $this->departmentClassIds())) {
+            return redirect()->route('admin.exams.index')->with('error', 'Jadwal ujian lintas jurusan hanya dapat dihapus oleh Admin Kurikulum.');
         }
 
         if ($exam->isOngoing()) {
@@ -855,11 +1115,15 @@ class ExamController extends Controller
             $query->where('created_by', Auth::id());
         }
 
+        $deptClassIds = $this->departmentClassIds();
         $exams = $query->get();
         $deletableIds = [];
         $ongoingCount = 0;
 
         foreach ($exams as $exam) {
+            if (!$this->canPicManageFullExam($exam, $deptClassIds)) {
+                continue;
+            }
             if ($exam->isOngoing()) {
                 $ongoingCount++;
             } else {
@@ -868,7 +1132,7 @@ class ExamController extends Controller
         }
 
         if (empty($deletableIds)) {
-            return redirect()->route('admin.exams.index')->with('error', 'Semua jadwal ujian yang dipilih sedang berlangsung dan tidak dapat dihapus.');
+            return redirect()->route('admin.exams.index')->with('error', 'Tidak ada jadwal ujian yang dapat dihapus (sedang berlangsung atau milik lintas jurusan).');
         }
 
         Exam::whereIn('id', $deletableIds)->delete();
@@ -884,110 +1148,269 @@ class ExamController extends Controller
 
     public function import(\Illuminate\Http\Request $request)
     {
-        $request->validate([
-            'file' => 'required|file|mimes:csv,txt,xlsx|max:10240',
-        ]);
-        $rows = \App\Helpers\SimpleSpreadsheetReader::read($request->file('file'));
-        $count = 0;
-        $skipped = 0;
+        if ($request->boolean('confirm_import')) {
+            $readyRows = \App\Helpers\ImportPreview::pullPayload((string) $request->input('import_token', ''));
+            if ($readyRows === null) {
+                return redirect()->route('admin.exams.index')->with('error', 'Sesi pratinjau import sudah kedaluwarsa. Silakan unggah ulang file.');
+            }
+            if (empty($readyRows)) {
+                return redirect()->route('admin.exams.index')->with('error', 'Tidak ada jadwal ujian valid untuk disimpan.');
+            }
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($rows, &$count, &$skipped) {
-            foreach ($rows as $row) {
-                $rawUrl = trim((string)($row['url_google_form'] ?? ''));
-                $parsedScheme = strtolower((string) parse_url($rawUrl, PHP_URL_SCHEME));
-                $isValidUrl = filter_var($rawUrl, FILTER_VALIDATE_URL) !== false && in_array($parsedScheme, ['http', 'https'], true);
+            @set_time_limit(300);
+            $count = 0;
 
-                if (!empty($row['judul_ujian']) && $isValidUrl) {
-                    $start_at = !empty($row['waktu_mulai']) ? \Carbon\Carbon::parse($row['waktu_mulai']) : now();
-                    $duration = max(1, (int)($row['durasi_menit'] ?? 60));
+            try {
+                \Illuminate\Support\Facades\DB::transaction(function () use ($readyRows, &$count) {
+                    $now = now();
+                    $creatorId = Auth::id();
+                    $studentsByClass = \App\Models\User::where('role', 'siswa')
+                        ->where('status', 'active')
+                        ->select('id', 'class_id')
+                        ->get()
+                        ->groupBy('class_id');
+                    $allStudentIds = $studentsByClass->flatten(1)->pluck('id')->all();
 
-                    // ponytail: dedup by composite key — skip if exact same exam already exists
-                    $exists = \App\Models\Exam::where('title', $row['judul_ujian'])
-                        ->where('google_form_url', $rawUrl)
-                        ->where('start_at', $start_at)
-                        ->exists();
-
-                    if ($exists) {
-                        $skipped++;
-                        continue;
-                    }
-
-                    $examType = Auth::user()->isTeacher() ? 'uts' : (
-                        !empty($row['tipe']) && in_array(strtolower($row['tipe']), ['uas', 'uts', 'pkl']) ? strtolower($row['tipe']) : (
-                            preg_match('/\b(uts|pts|tengah)/i', $row['judul_ujian']) ? 'uts' : 'uas'
-                        )
-                    );
-
-                    $rawStatus = strtolower(trim((string)($row['status'] ?? 'active')));
-                    $status = in_array($rawStatus, ['active', 'inactive'], true) ? $rawStatus : 'active';
-
-                    $exam = \App\Models\Exam::create([
-                        'title' => trim((string)$row['judul_ujian']),
-                        'type' => $examType,
-                        'description' => $row['deskripsi'] ?? null,
-                        'google_form_url' => $rawUrl,
-                        'start_at' => $start_at,
-                        'end_at' => $start_at->copy()->addMinutes($duration),
-                        'duration' => $duration,
-                        'max_violation' => max(1, (int)($row['maksimal_pelanggaran'] ?? 3)),
-                        'status' => $status,
-                        'created_by' => Auth::id(),
-                    ]);
-
-                    // Cek apakah ada target_kelas / kelas di kolom import
-                    $targetClassNames = !empty($row['target_kelas']) ? $row['target_kelas'] : (!empty($row['kelas']) ? $row['kelas'] : null);
-                    
-                    if ($targetClassNames) {
-                        $classNamesArray = array_filter(array_map('trim', explode(',', $targetClassNames)));
-                        $classIds = [];
-                        foreach ($classNamesArray as $cName) {
-                            $classModel = \App\Models\StudentClass::firstOrCreate(['name' => $cName]);
-                            $classIds[] = $classModel->id;
+                    $participantBuffer = [];
+                    $flushParticipants = function () use (&$participantBuffer) {
+                        if (empty($participantBuffer)) {
+                            return;
                         }
-                        
-                        if (!empty($classIds)) {
-                            $exam->classes()->sync($classIds);
-                            $students = \App\Models\User::where('role', 'siswa')
-                                ->where('status', 'active')
-                                ->whereIn('class_id', $classIds)
-                                ->orderBy('class_id')
-                                ->orderBy('name')
-                                ->get();
-                        } else {
-                            $students = \App\Models\User::where('role', 'siswa')
-                                ->where('status', 'active')
-                                ->orderBy('class_id')
-                                ->orderBy('name')
-                                ->get();
+                        foreach (array_chunk($participantBuffer, 500) as $chunk) {
+                            \App\Models\ExamParticipant::insert($chunk);
                         }
-                    } else {
-                        $students = \App\Models\User::where('role', 'siswa')
-                            ->where('status', 'active')
-                            ->orderBy('class_id')
-                            ->orderBy('name')
-                            ->get();
-                    }
+                        $participantBuffer = [];
+                    };
 
-                    // Register peserta ujian
-                    foreach ($students as $student) {
-                        \App\Models\ExamParticipant::firstOrCreate([
-                            'exam_id' => $exam->id,
-                            'user_id' => $student->id,
-                        ], [
-                            'status' => 'registered'
+                    foreach ($readyRows as $item) {
+                        $startAt = \Carbon\Carbon::parse($item['start_at']);
+                        $exam = \App\Models\Exam::create([
+                            'title' => $item['title'],
+                            'type' => $item['type'],
+                            'description' => $item['description'],
+                            'google_form_url' => $item['google_form_url'],
+                            'start_at' => $startAt,
+                            'end_at' => $startAt->copy()->addMinutes($item['duration']),
+                            'duration' => $item['duration'],
+                            'max_violation' => $item['max_violation'],
+                            'status' => $item['status'],
+                            'created_by' => $creatorId,
                         ]);
+
+                        $studentIds = [];
+                        if (!empty($item['class_ids'])) {
+                            $exam->classes()->sync($item['class_ids']);
+                            foreach ($item['class_ids'] as $cid) {
+                                foreach ($studentsByClass->get($cid, []) as $stu) {
+                                    $studentIds[] = $stu->id;
+                                }
+                            }
+                        } else {
+                            $studentIds = $allStudentIds;
+                        }
+
+                        foreach (array_unique($studentIds) as $sid) {
+                            $participantBuffer[] = [
+                                'exam_id' => $exam->id,
+                                'user_id' => $sid,
+                                'status' => 'registered',
+                                'created_at' => $now,
+                                'updated_at' => $now,
+                            ];
+                        }
+
+                        if (count($participantBuffer) >= 500) {
+                            $flushParticipants();
+                        }
+
+                        $count++;
                     }
 
-                    $count++;
-                }
+                    $flushParticipants();
+                });
+            } catch (\Throwable $e) {
+                return redirect()->route('admin.exams.index')->with('error', 'Terjadi kesalahan saat mengimpor jadwal ujian: ' . $e->getMessage());
+            }
+
+            return redirect()->route('admin.exams.index')->with('success', "Berhasil mengimpor {$count} jadwal ujian baru.");
+        }
+
+        $request->validate(
+            ['file' => 'required|file|mimes:csv,txt,xlsx|max:15360'],
+            [
+                'file.required' => 'Pilih file terlebih dahulu sebelum mengklik upload.',
+                'file.mimes' => 'Format file harus berupa CSV (.csv) atau Excel (.xlsx).',
+                'file.max' => 'Ukuran file maksimal adalah 15 MB.',
+            ]
+        );
+
+        @set_time_limit(300);
+
+        try {
+            $rows = \App\Helpers\SimpleSpreadsheetReader::read($request->file('file'));
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal membaca file import: ' . $e->getMessage());
+        }
+
+        if (empty($rows)) {
+            return back()->with('error', 'File kosong atau tidak memiliki baris data yang terbaca.');
+        }
+
+        $now = now();
+        $isTeacher = Auth::user()->isTeacher();
+        $deptClassIds = $this->departmentClassIds();
+        $classesByName = \App\Models\StudentClass::all()->keyBy(fn ($c) => strtolower(trim($c->name)));
+
+        $existingKeys = [];
+        \App\Models\Exam::select('title', 'google_form_url', 'start_at')->chunk(500, function ($exams) use (&$existingKeys) {
+            foreach ($exams as $ex) {
+                $key = strtolower(trim($ex->title)) . '|' . trim($ex->google_form_url) . '|' . \Carbon\Carbon::parse($ex->start_at)->format('Y-m-d H:i:s');
+                $existingKeys[$key] = true;
             }
         });
 
-        $msg = "Berhasil mengimpor {$count} jadwal ujian baru.";
-        if ($skipped > 0) {
-            $msg .= " {$skipped} data sudah ada sebelumnya (dilewati).";
+        $previewRows = [];
+        $readyPayload = [];
+        $seenKeys = [];
+
+        foreach ($rows as $idx => $row) {
+            $excelRow = $idx + 2;
+            $title = trim((string) ($row['judul_ujian'] ?? ''));
+            $rawUrl = trim((string) ($row['url_google_form'] ?? ''));
+            $rawStartAt = trim((string) ($row['waktu_mulai'] ?? ''));
+            $targetClassNames = trim((string) (!empty($row['target_kelas']) ? $row['target_kelas'] : (!empty($row['kelas']) ? $row['kelas'] : '')));
+            $duration = max(1, (int) ($row['durasi_menit'] ?? 60));
+
+            $cells = [
+                'title' => $title ?: '-',
+                'schedule' => ($rawStartAt ?: 'Sekarang') . " ({$duration}m)",
+                'classes' => $targetClassNames ?: 'Semua Kelas',
+            ];
+
+            $parsedScheme = strtolower((string) parse_url($rawUrl, PHP_URL_SCHEME));
+            $isValidUrl = filter_var($rawUrl, FILTER_VALIDATE_URL) !== false && in_array($parsedScheme, ['http', 'https'], true);
+
+            if ($title === '' || mb_strlen($title) > 255 || !$isValidUrl) {
+                $note = $title === ''
+                    ? 'Judul ujian wajib diisi. (akan dilewati)'
+                    : (mb_strlen($title) > 255
+                        ? 'Judul ujian melebihi 255 karakter. (akan dilewati)'
+                        : 'URL Google Form tidak valid (wajib http/https). (akan dilewati)');
+                $previewRows[] = [
+                    'excel_row' => $excelRow,
+                    'cells' => $cells,
+                    'status' => 'error',
+                    'note' => $note,
+                ];
+                continue;
+            }
+
+            if ($rawStartAt !== '') {
+                $startAt = \App\Helpers\SimpleSpreadsheetReader::parseDateTime($rawStartAt);
+                if (!$startAt) {
+                    $previewRows[] = [
+                        'excel_row' => $excelRow,
+                        'cells' => $cells,
+                        'status' => 'error',
+                        'note' => "Format waktu mulai '{$rawStartAt}' tidak valid. Gunakan format YYYY-MM-DD HH:MM. (akan dilewati)",
+                    ];
+                    continue;
+                }
+            } else {
+                $startAt = $now->copy();
+            }
+
+            $cells['schedule'] = $startAt->format('d M Y, H:i') . " ({$duration}m)";
+            $dedupKey = strtolower($title) . '|' . $rawUrl . '|' . $startAt->format('Y-m-d H:i:s');
+
+            if (isset($existingKeys[$dedupKey]) || isset($seenKeys[$dedupKey])) {
+                $previewRows[] = [
+                    'excel_row' => $excelRow,
+                    'cells' => $cells,
+                    'status' => 'duplicate',
+                    'note' => 'Jadwal ujian dengan judul, link, dan waktu mulai yang sama sudah ada. (akan dilewati)',
+                ];
+                continue;
+            }
+            $seenKeys[$dedupKey] = true;
+
+            $classIds = [];
+            if ($targetClassNames !== '') {
+                $missingClasses = [];
+                $forbiddenClasses = [];
+                foreach (array_filter(array_map('trim', explode(',', $targetClassNames))) as $cName) {
+                    $cls = $classesByName->get(strtolower($cName));
+                    if (!$cls) {
+                        $missingClasses[] = $cName;
+                    } elseif ($deptClassIds !== null && !in_array((int) $cls->id, $deptClassIds, true)) {
+                        $forbiddenClasses[] = $cName;
+                    } else {
+                        $classIds[] = $cls->id;
+                    }
+                }
+                if (!empty($missingClasses) || !empty($forbiddenClasses)) {
+                    $note = !empty($missingClasses)
+                        ? "Kelas '" . implode(', ', $missingClasses) . "' tidak ditemukan dalam master kelas. (akan dilewati)"
+                        : "Kelas '" . implode(', ', $forbiddenClasses) . "' bukan bagian dari jurusan " . Auth::user()->departmentCode() . ". (akan dilewati)";
+                    $previewRows[] = [
+                        'excel_row' => $excelRow,
+                        'cells' => $cells,
+                        'status' => 'error',
+                        'note' => $note,
+                    ];
+                    continue;
+                }
+                $classIds = array_values(array_unique($classIds));
+            } elseif ($deptClassIds !== null) {
+                $classIds = $deptClassIds;
+                $cells['classes'] = 'Semua Kelas ' . Auth::user()->departmentCode();
+                if (empty($classIds)) {
+                    $previewRows[] = [
+                        'excel_row' => $excelRow,
+                        'cells' => $cells,
+                        'status' => 'error',
+                        'note' => 'Belum ada master kelas untuk jurusan ' . Auth::user()->departmentCode() . '. (akan dilewati)',
+                    ];
+                    continue;
+                }
+            }
+
+            $examType = $isTeacher ? 'uts' : (
+                !empty($row['tipe']) && in_array(strtolower(trim((string) $row['tipe'])), ['uas', 'uts', 'pkl'], true)
+                    ? strtolower(trim((string) $row['tipe']))
+                    : (preg_match('/\b(uts|pts|tengah)/i', $title) ? 'uts' : 'uas')
+            );
+
+            $rawStatus = strtolower(trim((string) ($row['status'] ?? 'active')));
+            $status = in_array($rawStatus, ['inactive', 'nonaktif', 'draft', '0', 'disabled'], true) ? 'inactive' : 'active';
+
+            $readyPayload[] = [
+                'title' => $title,
+                'type' => $examType,
+                'description' => $row['deskripsi'] ?? null,
+                'google_form_url' => $rawUrl,
+                'start_at' => $startAt->format('Y-m-d H:i:s'),
+                'duration' => $duration,
+                'max_violation' => max(1, (int) ($row['maksimal_pelanggaran'] ?? 3)),
+                'status' => $status,
+                'class_ids' => $classIds,
+            ];
+
+            $previewRows[] = [
+                'excel_row' => $excelRow,
+                'cells' => $cells,
+                'status' => 'ready',
+                'note' => 'Siap dijadwalkan (' . strtoupper($examType) . ').',
+            ];
         }
 
-        return back()->with('success', $msg);
+        return \App\Helpers\ImportPreview::storeAndRender([
+            'entityLabel' => 'Jadwal Ujian',
+            'unitLabel' => 'jadwal ujian',
+            'backRoute' => route('admin.exams.index'),
+            'actionRoute' => route('admin.exams.import'),
+            'columns' => ['title' => 'Judul Ujian', 'schedule' => 'Waktu & Durasi', 'classes' => 'Target Kelas'],
+            'fileName' => $request->file('file')->getClientOriginalName(),
+        ], $previewRows, $readyPayload);
     }
 }

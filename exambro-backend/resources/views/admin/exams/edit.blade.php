@@ -119,7 +119,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                         </svg>
                     </div>
-                    <input type="url" name="google_form_url" value="{{ old('google_form_url', $exam->google_form_url) }}" required class="w-full bg-slate-50/50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-900 font-mono placeholder-slate-400 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 transition-all">
+                    <input type="url" name="google_form_url" value="{{ old('google_form_url', $exam->google_form_url) }}" required class="w-full bg-slate-50/50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-900 tabular-nums placeholder-slate-400 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 transition-all">
                 </div>
 
                 @php
@@ -137,7 +137,7 @@
                             <span>Akses Siswa iOS</span>
                             <span class="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-purple-200/70 text-purple-800 whitespace-nowrap">iPhone</span>
                         </div>
-                        <div class="text-purple-700 text-xs font-mono truncate select-all">
+                        <div class="text-purple-700 text-xs tabular-nums truncate select-all">
                             {{ $sebSchemeUrl }}
                         </div>
                     </div>
@@ -687,11 +687,11 @@
         <div class="text-xs font-bold text-slate-800">{{ $exam->title }}</div>
         <p class="text-[11px] text-slate-500 mt-1 mb-2">Arahkan kamera iPhone siswa langsung ke kode QR di atas untuk membuka aplikasi Safe Exam Browser.</p>
         <div class="text-[11px] text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2.5 py-1 rounded-lg mb-3">
-            Host: <strong class="font-mono">{{ $serverHost }}</strong> (iPhone & Laptop wajib di Wi-Fi / Hotspot yang sama).
+            Host: <strong class="tabular-nums">{{ $serverHost }}</strong> (iPhone & Laptop wajib di Wi-Fi / Hotspot yang sama).
         </div>
 
         <div class="flex items-center gap-2 bg-purple-50/70 p-2 rounded-xl border border-purple-200 text-left">
-            <span class="text-[11px] font-mono text-purple-900 truncate select-all flex-1 pl-1">{{ $sebSchemeUrl }}</span>
+            <span class="text-[11px] tabular-nums text-purple-900 truncate select-all flex-1 pl-1">{{ $sebSchemeUrl }}</span>
             <button type="button" onclick="navigator.clipboard.writeText('{{ $sebSchemeUrl }}'); alert('Link SEB berhasil disalin!');" class="px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold shrink-0 transition-colors shadow-2xs">
                 Salin Link
             </button>

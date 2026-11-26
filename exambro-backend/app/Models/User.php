@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'username', 'email', 'password', 'role', 'class_id', 'status', 'is_pkl', 'google_connected', 'google_email'])]
+#[Fillable(['name', 'username', 'email', 'password', 'role', 'department', 'class_id', 'status', 'is_pkl', 'google_connected', 'google_email'])]
 #[Hidden(['password', 'remember_token', 'api_token'])]
 class User extends Authenticatable
 {
@@ -45,6 +45,40 @@ class User extends Authenticatable
     public function isTeacher(): bool
     {
         return $this->role === 'guru';
+    }
+
+    public function departmentCode(): ?string
+    {
+        $dept = strtoupper(trim((string) ($this->department ?? '')));
+        return $dept !== '' ? $dept : null;
+    }
+
+    public function isDepartmentPic(): bool
+    {
+        return $this->isAdmin() && $this->departmentCode() !== null;
+    }
+
+    /**
+     * Kembalikan daftar class_id milik jurusan PIC ini, atau null jika Super Admin (akses semua jurusan).
+     *
+     * @return array<int>|null
+     */
+    public function departmentClassIds(): ?array
+    {
+        $dept = $this->departmentCode();
+        if (!$this->isAdmin() || $dept === null) {
+            return null;
+        }
+
+        $pattern = '/(^|[^A-Z])' . preg_quote($dept, '/') . '([^A-Z]|$)/i';
+
+        return StudentClass::query()
+            ->get(['id', 'name'])
+            ->filter(fn (StudentClass $cls) => preg_match($pattern, (string) $cls->name) === 1)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
     }
 
     public function createdExams()

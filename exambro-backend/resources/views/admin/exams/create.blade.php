@@ -191,7 +191,7 @@
                                     <i data-lucide="link" class="w-4 h-4"></i>
                                 </div>
                                 <input type="url" name="google_form_url" id="input_google_form_url" value="{{ old('google_form_url') }}" required
-                                       class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-900 font-mono placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all"
+                                       class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-900 tabular-nums placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all"
                                        placeholder="https://docs.google.com/forms/d/e/.../viewform">
                             </div>
                             <div id="error_google_form_url" class="hidden text-xs text-rose-500 font-semibold mt-1.5 flex items-center gap-1">
@@ -413,7 +413,7 @@
                             <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
                                 <div class="text-[11px] font-semibold text-slate-500">Judul &amp; Tautan Soal</div>
                                 <div id="review_title" class="font-bold text-slate-900 text-sm truncate">—</div>
-                                <div class="text-[11px] text-slate-500 truncate font-mono" id="review_url">—</div>
+                                <div class="text-[11px] text-slate-500 truncate tabular-nums" id="review_url">—</div>
                             </div>
 
                             <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
@@ -1092,7 +1092,7 @@
                 <tr class="hover:bg-[#F5F8FF] transition-colors">
                     <td class="py-3 px-4 font-semibold text-[#142C5C] whitespace-nowrap">Sesi ${i + 1}</td>
                     <td class="py-3 px-4 text-slate-800 whitespace-nowrap">${dateString}</td>
-                    <td class="py-3 px-4 font-mono text-xs text-[#2457E8] font-semibold whitespace-nowrap">${timeString}</td>
+                    <td class="py-3 px-4 tabular-nums text-xs text-[#2457E8] font-semibold whitespace-nowrap">${timeString}</td>
                     <td class="py-3 px-4 text-slate-600 whitespace-nowrap">${effectiveDur} Menit</td>
                     <td class="py-3 px-4 text-slate-700">${classLabel}</td>
                 </tr>

@@ -3,19 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Ujian: {{ $exam->title }} (Safe Exam Browser)</title>
+    <title>Ujian: {{ $exam->title }} ({{ !empty($isWebEmergency) ? 'Web Darurat' : 'Safe Exam Browser' }})</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #4F46E5;
-            --primary-hover: #4338CA;
+            --primary: #2457E8;
+            --primary-hover: #1D4ED8;
             --rose: #EF4444;
             --rose-dark: #DC2626;
-            --slate-900: #0F172A;
-            --slate-800: #1E293B;
-            --slate-700: #334155;
+            --slate-900: #0D2149;
+            --slate-800: #142C5C;
+            --slate-700: #1E3A70;
             --slate-600: #475569;
             --slate-500: #64748B;
-            --slate-400: #94A3B8;
+            --slate-400: #CBD5E1;
             --slate-200: #E2E8F0;
             --sat: env(safe-area-inset-top, 0px);
             --sab: env(safe-area-inset-bottom, 0px);
@@ -26,7 +29,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
             -webkit-touch-callout: none !important;
             -webkit-user-select: none !important;
             user-select: none !important;
@@ -162,10 +165,11 @@
             color: #F8FAFC;
             padding: 4px 10px;
             border-radius: 8px;
-            font-family: 'JetBrains Mono', -apple-system, monospace;
-            font-size: 12.5px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-variant-numeric: tabular-nums;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -300,9 +304,9 @@
         <!-- Tier 1: Identity & Finish Button -->
         <div class="tier-identity">
             <div class="identity-left">
-                <span class="exam-badge">
+                <span class="exam-badge" style="{{ !empty($isWebEmergency) ? 'background: rgba(245, 158, 11, 0.25); border-color: rgba(251, 191, 36, 0.45); color: #FDE68A;' : '' }}">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                    SEB KIOSK
+                    {{ !empty($isWebEmergency) ? 'WEB DARURAT' : 'SEB KIOSK' }}
                 </span>
                 <div class="exam-meta">
                     <div class="exam-title-text">{{ $exam->title }}</div>
@@ -310,7 +314,7 @@
                 </div>
             </div>
 
-            <form action="{{ route('seb.exam.finish', $exam) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin sudah selesai mengerjakan dan ingin mengirim ujian?');">
+            <form action="{{ !empty($isWebEmergency) ? route('web-exam.finish', $exam) : route('seb.exam.finish', $exam) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin sudah selesai mengerjakan dan ingin mengirim ujian?');">
                 @csrf
                 <button type="submit" class="btn-finish">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -332,14 +336,21 @@
                     <span>Muat Ulang</span>
                 </button>
 
+                @if(empty($isWebEmergency))
                 <a href="{{ $exam->google_form_url }}" class="btn-tool" title="Buka Google Form Langsung jika layar menampilkan Page Expired">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                     <span>Buka Penuh</span>
                 </a>
+                @else
+                <span class="btn-tool" id="webViolationCounter" style="cursor:default; border-color: rgba(251, 191, 36, 0.45); color: #FDE68A;">
+                    Pelanggaran: <span id="webViolationText">{{ $activeViolationCount ?? 0 }} / {{ $exam->max_violation }}</span>
+                </span>
+                @endif
             </div>
         </div>
     </header>
 
+    @if(empty($isWebEmergency))
     <!-- Dismissible notice banner for iOS Cookie "Page Expired" issue -->
     <div id="iosNoticeBanner" class="ios-notice-banner">
         <div class="ios-notice-text">
@@ -351,6 +362,7 @@
             <button type="button" onclick="document.getElementById('iosNoticeBanner').style.display='none'" class="ios-notice-close" title="Tutup pemberitahuan">&times;</button>
         </div>
     </div>
+    @endif
 
     <!-- Google Form Content (Locked inside strictly bounded iframe container) -->
     <div class="frame-container">
@@ -411,6 +423,121 @@
         }
     });
 </script>
+
+@if(!empty($isWebEmergency))
+<div id="webExamOverlay" style="position:fixed;inset:0;z-index:999;background:rgba(13,33,73,0.92);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:24px;">
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:20px;max-width:420px;width:100%;padding:28px;text-align:center;color:#0F172A;box-shadow:0 24px 60px rgba(13,33,73,0.35);">
+        <div style="display:inline-block;padding:4px 10px;border-radius:8px;background:#DCE9FF;color:#142C5C;font-size:11px;font-weight:700;margin-bottom:12px;">
+            WEB DARURAT &bull; EXASATRYA
+        </div>
+        <h3 id="webOverlayTitle" style="font-size:19px;font-weight:800;color:#142C5C;margin-bottom:8px;">Mode Ujian Web Darurat</h3>
+        <p id="webOverlayMessage" style="font-size:13px;color:#475569;line-height:1.55;margin-bottom:22px;">
+            Dilarang berpindah tab, membuka aplikasi lain, atau keluar dari layar penuh. Pelanggaran dicatat otomatis dan akan mengunci ujian Anda.
+        </p>
+        <button type="button" id="webOverlayBtn" onclick="enterWebExamMode()" style="width:100%;padding:12px 18px;border-radius:12px;background:#2457E8;color:#FFFFFF;font-size:14px;font-weight:700;border:none;cursor:pointer;">
+            Masuk Layar Ujian
+        </button>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const violationUrl = @json(route('web-exam.violation', $exam));
+        const portalUrl = @json(route('web-exam.index'));
+        const csrfToken = @json(csrf_token());
+        const overlay = document.getElementById('webExamOverlay');
+        const overlayTitle = document.getElementById('webOverlayTitle');
+        const overlayMsg = document.getElementById('webOverlayMessage');
+        const overlayBtn = document.getElementById('webOverlayBtn');
+        const counterText = document.getElementById('webViolationText');
+
+        let started = false;
+        let isLocked = false;
+        let isSubmittingFinish = false;
+        let lastViolationAt = 0;
+        let fullscreenActive = false;
+
+        const finishForm = document.querySelector('form[action*="finish"]');
+        if (finishForm) {
+            finishForm.addEventListener('submit', () => { isSubmittingFinish = true; });
+        }
+
+        window.enterWebExamMode = function () {
+            if (isLocked) {
+                window.location.href = portalUrl;
+                return;
+            }
+            started = true;
+            overlay.style.display = 'none';
+            const el = document.documentElement;
+            if (el.requestFullscreen) {
+                el.requestFullscreen().then(() => { fullscreenActive = true; }).catch(() => {});
+            }
+        };
+
+        function sendViolation(type) {
+            if (!started || isLocked || isSubmittingFinish) return;
+            const now = Date.now();
+            if (now - lastViolationAt < 2000) return;
+            lastViolationAt = now;
+
+            fetch(violationUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({ type })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (counterText && typeof data.violations !== 'undefined') {
+                    counterText.textContent = data.violations + ' / ' + data.max_violation;
+                }
+                overlay.style.display = 'flex';
+                if (data.locked) {
+                    isLocked = true;
+                    overlayTitle.textContent = 'Ujian Terkunci!';
+                    overlayTitle.style.color = '#DC2626';
+                    overlayMsg.textContent = 'Pelanggaran Anda mencapai batas maksimal. Lapor ke Pengawas Ruang / PIC Jurusan untuk membuka kunci.';
+                    overlayBtn.textContent = 'Kembali ke Daftar Ujian';
+                    overlayBtn.style.background = '#DC2626';
+                } else {
+                    overlayTitle.textContent = 'Peringatan Pelanggaran (' + data.violations + '/' + data.max_violation + ')';
+                    overlayTitle.style.color = '#B45309';
+                    overlayMsg.textContent = 'Terdeteksi meninggalkan layar ujian. Klik tombol di bawah untuk melanjutkan; jika mencapai batas, ujian akan dikunci otomatis.';
+                    overlayBtn.textContent = 'Lanjutkan Ujian';
+                    overlayBtn.style.background = '#2457E8';
+                }
+            })
+            .catch(() => {});
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                sendViolation('WEB_TAB_SWITCH');
+            }
+        });
+
+        window.addEventListener('blur', () => {
+            setTimeout(() => {
+                if (document.activeElement && document.activeElement.id === 'examFrame') return;
+                if (!document.hasFocus()) {
+                    sendViolation('WEB_TAB_SWITCH');
+                }
+            }, 150);
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            if (fullscreenActive && !document.fullscreenElement) {
+                fullscreenActive = false;
+                sendViolation('WEB_FULLSCREEN_EXIT');
+            }
+        });
+    })();
+</script>
+@endif
 
 </body>
 </html>

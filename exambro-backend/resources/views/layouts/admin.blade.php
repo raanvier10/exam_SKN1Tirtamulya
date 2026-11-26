@@ -15,8 +15,20 @@
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 14px;
+            line-height: 1.55;
             background-color: #F5F8FF;
             color: #0F172A;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            letter-spacing: -0.02em;
+        }
+
+        code, pre {
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+            font-variant-numeric: tabular-nums;
         }
 
         dialog[open] {
@@ -193,7 +205,7 @@
                     <div class="overflow-hidden">
                         <div class="text-xs font-semibold text-white truncate">{{ auth()->user()->name }}</div>
                         <div class="text-[10px] font-medium text-blue-200">
-                            {{ auth()->user()->isAdmin() ? 'Administrator' : 'Guru Pengampu' }}
+                            {{ auth()->user()->isDepartmentPic() ? 'PIC ' . auth()->user()->departmentCode() : (auth()->user()->isAdmin() ? 'Administrator' : 'Guru Pengampu') }}
                         </div>
                     </div>
                 </div>
@@ -225,22 +237,64 @@
             </div>
         </header>
 
+        <!-- Floating Top Toast Notifications (Zero Layout Shift) -->
+        @if(session('success') || session('error'))
+            <div id="adminToastStack" class="fixed top-3.5 right-4 sm:right-6 z-50 w-[calc(100%-2rem)] max-w-md space-y-2.5 pointer-events-none">
+                @if(session('success'))
+                    <div role="status" class="admin-toast pointer-events-auto bg-white/95 backdrop-blur-md border border-emerald-200/90 rounded-2xl p-3.5 pl-4 shadow-[0_12px_32px_-8px_rgba(13,33,73,0.18)] flex items-start gap-3 transition-all duration-300">
+                        <div class="w-8 h-8 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-600 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0 pt-0.5">
+                            <div class="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Berhasil</div>
+                            <p class="text-xs sm:text-sm font-medium text-slate-800 leading-snug mt-0.5">{{ session('success') }}</p>
+                        </div>
+                        <button type="button" onclick="dismissAdminToast(this.closest('.admin-toast'))" class="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer shrink-0" aria-label="Tutup notifikasi">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div role="alert" class="admin-toast pointer-events-auto bg-white/95 backdrop-blur-md border border-rose-200/90 rounded-2xl p-3.5 pl-4 shadow-[0_12px_32px_-8px_rgba(13,33,73,0.18)] flex items-start gap-3 transition-all duration-300">
+                        <div class="w-8 h-8 rounded-xl bg-rose-50 border border-rose-200/80 text-rose-600 flex items-center justify-center shrink-0">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86l-7.5 13A1 1 0 003.65 18.5h16.7a1 1 0 00.86-1.5l-7.5-13a1 1 0 00-1.72 0z" />
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0 pt-0.5">
+                            <div class="text-[11px] font-bold uppercase tracking-wider text-rose-700">Perhatian</div>
+                            <p class="text-xs sm:text-sm font-medium text-slate-800 leading-snug mt-0.5">{{ session('error') }}</p>
+                        </div>
+                        <button type="button" onclick="dismissAdminToast(this.closest('.admin-toast'))" class="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer shrink-0" aria-label="Tutup notifikasi">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                @endif
+            </div>
+            <script>
+                function dismissAdminToast(el) {
+                    if (!el) return;
+                    el.style.opacity = '0';
+                    el.style.transform = 'translateY(-8px)';
+                    setTimeout(() => el.remove(), 250);
+                }
+                document.addEventListener('DOMContentLoaded', () => {
+                    document.querySelectorAll('.admin-toast').forEach((toast, idx) => {
+                        setTimeout(() => dismissAdminToast(toast), 5000 + idx * 600);
+                    });
+                });
+            </script>
+        @endif
+
         <!-- Content Area -->
         <div class="p-4 sm:p-6 lg:p-8 flex-1 w-full">
-            @if(session('success'))
-                <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-sm flex items-center gap-3 shadow-2xs">
-                    <div class="w-2 h-2 rounded-full bg-emerald-500 ring-4 ring-emerald-100 shrink-0"></div>
-                    <span class="font-medium">{{ session('success') }}</span>
-                </div>
-            @endif
-
-            @if(session('error'))
-                <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-sm flex items-center gap-3 shadow-2xs">
-                    <div class="w-2 h-2 rounded-full bg-rose-500 ring-4 ring-rose-100 shrink-0"></div>
-                    <span class="font-medium">{{ session('error') }}</span>
-                </div>
-            @endif
-
             @if($errors->any())
                 <div class="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-sm shadow-2xs">
                     <div class="flex items-center gap-2 mb-1.5 font-bold text-rose-950">

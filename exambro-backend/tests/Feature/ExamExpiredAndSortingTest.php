@@ -98,8 +98,8 @@ class ExamExpiredAndSortingTest extends TestCase
 
         $this->assertEquals('finished', $p1->fresh()->status);
         $this->assertEquals('finished', $p2->fresh()->status);
-        $this->assertEquals('FINISHED', $s1->fresh()->status);
-        $this->assertEquals('FINISHED', $s2->fresh()->status);
+        $this->assertEquals('COMPLETED', $s1->fresh()->status);
+        $this->assertEquals('COMPLETED', $s2->fresh()->status);
     }
 
     public function test_students_index_orders_by_class_name_and_alphabetical_student_name(): void

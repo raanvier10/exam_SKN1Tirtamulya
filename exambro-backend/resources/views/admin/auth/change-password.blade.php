@@ -18,36 +18,27 @@
 <div class="max-w-2xl mx-auto">
     <!-- Header -->
     <div class="mb-6 sm:mb-8">
-        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">{{ auth()->user()->isAdmin() ? 'Ganti Password Admin' : 'Ganti Password Akun' }}</h2>
-        <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ auth()->user()->isAdmin() ? 'Perbarui kata sandi akun administrator untuk menjaga keamanan sistem.' : 'Perbarui kata sandi akun guru Anda untuk menjaga keamanan akses.' }}</p>
+        <h2 class="text-xl sm:text-2xl font-bold text-[#142C5C] tracking-tight">{{ auth()->user()->isAdmin() ? 'Ganti Password Admin' : 'Ganti Password Akun' }}</h2>
+        <p class="text-xs sm:text-sm text-slate-500 mt-1">{{ auth()->user()->isAdmin() ? 'Perbarui kata sandi akun pengelola untuk menjaga keamanan sistem.' : 'Perbarui kata sandi akun guru Anda untuk menjaga keamanan akses.' }}</p>
     </div>
 
     <!-- Account Card -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-6 mb-6">
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-2xs p-5 sm:p-6 mb-6">
         <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-lg shrink-0">
+            <div class="w-12 h-12 rounded-xl bg-[#DCE9FF] border border-[#2457E8]/20 flex items-center justify-center text-[#142C5C] font-bold text-lg shrink-0">
                 {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
             </div>
             <div class="min-w-0">
-                <h3 class="text-base font-semibold text-slate-900 leading-snug truncate">{{ auth()->user()->name }}</h3>
+                <h3 class="text-base font-bold text-slate-900 leading-snug truncate">{{ auth()->user()->name }}</h3>
                 <div class="flex items-center gap-2 mt-0.5 flex-wrap">
-                    <span class="text-xs font-mono text-slate-500 font-medium">{{ auth()->user()->username }}</span>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold {{ auth()->user()->isAdmin() ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/60' : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' }}">
-                        {{ auth()->user()->isAdmin() ? 'Administrator' : 'Guru Pengampu' }}
+                    <span class="text-xs text-slate-500 font-medium tabular-nums">{{ auth()->user()->username }}</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold {{ auth()->user()->isAdmin() ? 'bg-[#DCE9FF] text-[#142C5C]' : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' }}">
+                        {{ auth()->user()->isDepartmentPic() ? 'PIC ' . auth()->user()->departmentCode() : (auth()->user()->isAdmin() ? 'Administrator' : 'Guru Pengampu') }}
                     </span>
                 </div>
             </div>
         </div>
     </div>
-
-    @if(session('success'))
-        <div class="mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-medium flex items-center gap-2.5">
-            <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-            <span>{{ session('success') }}</span>
-        </div>
-    @endif
 
     <!-- Form -->
     <form action="{{ route('admin.change-password.update') }}" method="POST" class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 sm:p-8 space-y-6">

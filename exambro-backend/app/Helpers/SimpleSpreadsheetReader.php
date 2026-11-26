@@ -90,65 +90,90 @@ class SimpleSpreadsheetReader
     {
         $rows = [];
         $zip = new ZipArchive();
-        if ($zip->open($path) === true) {
-            $sharedStrings = [];
-            $sharedStringsXml = $zip->getFromName('xl/sharedStrings.xml');
-            if ($sharedStringsXml && stripos($sharedStringsXml, '<!DOCTYPE') === false && stripos($sharedStringsXml, '<!ENTITY') === false) {
-                $xml = @simplexml_load_string($sharedStringsXml, 'SimpleXMLElement', LIBXML_NONET | LIBXML_NOCDATA);
-                if ($xml && isset($xml->si)) {
-                    foreach ($xml->si as $si) {
-                        if (isset($si->t)) {
-                            $sharedStrings[] = (string)$si->t;
-                        } elseif (isset($si->r)) {
-                            $text = '';
-                            foreach ($si->r as $r) {
-                                $text .= (string)$r->t;
-                            }
-                            $sharedStrings[] = $text;
-                        } else {
-                            $sharedStrings[] = '';
+        if ($zip->open($path) !== true) {
+            throw new \RuntimeException('File Excel (.xlsx) tidak valid atau rusak. Pastikan format benar-benar .xlsx atau .csv.');
+        }
+
+        $sharedStrings = [];
+        $sharedStringsXml = $zip->getFromName('xl/sharedStrings.xml');
+        if ($sharedStringsXml && stripos($sharedStringsXml, '<!DOCTYPE') === false && stripos($sharedStringsXml, '<!ENTITY') === false) {
+            $xml = @simplexml_load_string($sharedStringsXml, 'SimpleXMLElement', LIBXML_NONET | LIBXML_NOCDATA);
+            if ($xml && isset($xml->si)) {
+                foreach ($xml->si as $si) {
+                    if (isset($si->t)) {
+                        $sharedStrings[] = (string)$si->t;
+                    } elseif (isset($si->r)) {
+                        $text = '';
+                        foreach ($si->r as $r) {
+                            $text .= (string)$r->t;
                         }
+                        $sharedStrings[] = $text;
+                    } else {
+                        $sharedStrings[] = '';
                     }
                 }
             }
+        }
 
-            $sheetXml = $zip->getFromName('xl/worksheets/sheet1.xml');
-            if ($sheetXml && stripos($sheetXml, '<!DOCTYPE') === false && stripos($sheetXml, '<!ENTITY') === false) {
-                $xml = @simplexml_load_string($sheetXml, 'SimpleXMLElement', LIBXML_NONET | LIBXML_NOCDATA);
-                if ($xml && isset($xml->sheetData->row)) {
-                    foreach ($xml->sheetData->row as $rowNode) {
-                        $row = [];
-                        $currentCol = 0;
-                        foreach ($rowNode->c as $cell) {
-                            $ref = (string)$cell['r'];
-                            preg_match('/([A-Z]+)(\d+)/', $ref, $matches);
-                            $colIndex = self::colIndexToNumber($matches[1] ?? 'A');
-                            
-                            while ($currentCol < $colIndex) {
-                                $row[] = '';
-                                $currentCol++;
-                            }
+        $sheetXml = $zip->getFromName('xl/worksheets/sheet1.xml');
+        if ($sheetXml === false) {
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $entryName = $zip->getNameIndex($i);
+                if (is_string($entryName) && preg_match('#^xl/worksheets/sheet\d*\.xml$#i', $entryName)) {
+                    $sheetXml = $zip->getFromIndex($i);
+                    break;
+                }
+            }
+        }
 
-                            $type = (string)$cell['t'];
-                            $val = (string)$cell->v;
+        if ($sheetXml && stripos($sheetXml, '<!DOCTYPE') === false && stripos($sheetXml, '<!ENTITY') === false) {
+            $xml = @simplexml_load_string($sheetXml, 'SimpleXMLElement', LIBXML_NONET | LIBXML_NOCDATA);
+            if ($xml && isset($xml->sheetData->row)) {
+                foreach ($xml->sheetData->row as $rowNode) {
+                    $row = [];
+                    $currentCol = 0;
+                    foreach ($rowNode->c as $cell) {
+                        $ref = (string)$cell['r'];
+                        if ($ref !== '' && preg_match('/([A-Z]+)(\d+)/', $ref, $matches)) {
+                            $colIndex = self::colIndexToNumber($matches[1]);
+                        } else {
+                            $colIndex = $currentCol;
+                        }
 
-                            if ($type === 's' && isset($sharedStrings[(int)$val])) {
-                                $cellVal = $sharedStrings[(int)$val];
-                            } elseif ($type === 'inlineStr' && isset($cell->is->t)) {
-                                $cellVal = (string)$cell->is->t;
-                            } else {
-                                $cellVal = $val;
-                            }
-
-                            $row[] = $cellVal;
+                        while ($currentCol < $colIndex) {
+                            $row[] = '';
                             $currentCol++;
                         }
-                        $rows[] = $row;
+
+                        $type = (string)$cell['t'];
+                        $val = (string)$cell->v;
+
+                        if ($type === 's' && isset($sharedStrings[(int)$val])) {
+                            $cellVal = $sharedStrings[(int)$val];
+                        } elseif ($type === 'inlineStr') {
+                            if (isset($cell->is->t)) {
+                                $cellVal = (string)$cell->is->t;
+                            } elseif (isset($cell->is->r)) {
+                                $text = '';
+                                foreach ($cell->is->r as $r) {
+                                    $text .= (string)$r->t;
+                                }
+                                $cellVal = $text;
+                            } else {
+                                $cellVal = '';
+                            }
+                        } else {
+                            $cellVal = $val;
+                        }
+
+                        $row[] = $cellVal;
+                        $currentCol++;
                     }
+                    $rows[] = $row;
                 }
             }
-            $zip->close();
         }
+        $zip->close();
         return $rows;
     }
 
@@ -160,5 +185,39 @@ class SimpleSpreadsheetReader
             $num = $num * 26 + (ord($col[$i]) - 64);
         }
         return $num - 1;
+    }
+
+    /**
+     * Parse spreadsheet date/time string or Excel serial number safely.
+     */
+    public static function parseDateTime(mixed $value): ?\Carbon\Carbon
+    {
+        $raw = trim((string) ($value ?? ''));
+        if ($raw === '') {
+            return null;
+        }
+
+        if (is_numeric($raw)) {
+            $serial = (float) $raw;
+            if ($serial > 25569 && $serial < 100000) {
+                // Compute in UTC to avoid pre-1970 historical LMT offsets (e.g. Asia/Jakarta +07:07:12 in 1899)
+                return \Carbon\Carbon::create(1899, 12, 30, 0, 0, 0, 'UTC')
+                    ->addSeconds((int) round($serial * 86400))
+                    ->shiftTimezone(config('app.timezone'));
+            }
+        }
+
+        foreach (['Y-m-d H:i:s', 'Y-m-d H:i', 'd/m/Y H:i:s', 'd/m/Y H:i', 'd-m-Y H:i:s', 'd-m-Y H:i', 'Y-m-d', 'd/m/Y', 'd-m-Y'] as $fmt) {
+            try {
+                return \Carbon\Carbon::createFromFormat($fmt, $raw, config('app.timezone'));
+            } catch (\Throwable) {
+            }
+        }
+
+        try {
+            return \Carbon\Carbon::parse($raw, config('app.timezone'));
+        } catch (\Throwable) {
+            return null;
+        }
     }
 }

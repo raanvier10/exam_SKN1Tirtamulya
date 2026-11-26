@@ -24,7 +24,7 @@
             </div>
             <div>
                 <label class="block text-sm font-semibold text-slate-800 mb-2">Username / NIP</label>
-                <input type="text" name="username" value="{{ old('username') }}" required class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 shadow-2xs transition-all font-mono" placeholder="Contoh: 19850720... atau guru_ipa">
+                <input type="text" name="username" value="{{ old('username') }}" required class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 shadow-2xs transition-all tabular-nums" placeholder="Contoh: 19850720... atau guru_ipa">
                 @error('username') <span class="text-rose-500 text-xs mt-1 block">{{ $message }}</span> @enderror
             </div>
         </div>

@@ -151,7 +151,12 @@ class SebExamController extends Controller
             'status' => 'registered',
         ]);
 
-        if ($participant->status === 'locked') {
+        $latestSession = ExamSession::where('exam_id', $exam->id)
+            ->where('user_id', $user->id)
+            ->latest('id')
+            ->first();
+
+        if ($participant->status === 'locked' || ($latestSession && $latestSession->status === 'LOCKED')) {
             return view('seb.error', [
                 'exam' => $exam,
                 'title' => 'Ujian Terkunci',
@@ -288,17 +293,29 @@ class SebExamController extends Controller
     {
         $user = Auth::user();
         if ($user) {
-            $session = ExamSession::where('exam_id', $exam->id)
+            $latestSession = ExamSession::where('exam_id', $exam->id)
                 ->where('user_id', $user->id)
-                ->where('status', 'ACTIVE')
+                ->latest('id')
+                ->first();
+            $participant = ExamParticipant::where('exam_id', $exam->id)
+                ->where('user_id', $user->id)
                 ->first();
 
-            if ($session) {
-                $session->update(['status' => 'COMPLETED']);
+            if (($participant && $participant->status === 'locked') || ($latestSession && $latestSession->status === 'LOCKED')) {
+                return view('seb.error', [
+                    'exam' => $exam,
+                    'title' => 'Ujian Terkunci',
+                    'message' => 'Ujian Anda sedang dikunci dan tidak dapat diselesaikan sebelum dibuka oleh pengawas ruang.',
+                ]);
+            }
+
+            if ($latestSession && $latestSession->status === 'ACTIVE') {
+                $latestSession->update(['status' => 'COMPLETED']);
             }
 
             ExamParticipant::where('exam_id', $exam->id)
                 ->where('user_id', $user->id)
+                ->where('status', '!=', 'locked')
                 ->update([
                     'status' => 'finished',
                     'finished_at' => Carbon::now(),

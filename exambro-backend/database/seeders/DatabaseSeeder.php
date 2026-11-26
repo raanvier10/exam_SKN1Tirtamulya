@@ -54,6 +54,9 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        // PIC Jurusan (akses Admin terbatas per jurusan pada Jadwal Ujian & Buka Kunci)
+        $this->call(DepartmentPicSeeder::class);
+
         // Siswa User
         $user = \App\Models\User::updateOrCreate(
             ['username' => 'dimas123'],

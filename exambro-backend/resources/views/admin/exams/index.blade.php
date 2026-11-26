@@ -144,7 +144,7 @@
                                 </span>
                             </div>
                             <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-                                <span id="preview-file-size" class="font-medium font-mono text-slate-600">0 KB</span>
+                                <span id="preview-file-size" class="font-medium tabular-nums text-slate-600">0 KB</span>
                                 <span>•</span>
                                 <span id="preview-file-type" class="uppercase font-semibold text-emerald-700">EXCEL/CSV</span>
                             </div>
@@ -162,8 +162,14 @@
         </div>
 
         <div class="flex justify-end gap-2.5 pt-2">
-            <button type="button" onclick="importModal.close()" class="px-5 py-2.5 text-sm font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl transition-colors shadow-2xs">Batal</button>
-            <button type="submit" class="px-5 py-2.5 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm shadow-indigo-500/20 transition-colors">Upload Data</button>
+            <button type="button" onclick="importModal.close()" class="px-4 py-2.5 text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer">Batal</button>
+            <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold bg-[#2457E8] hover:bg-blue-700 text-white rounded-xl shadow-xs transition cursor-pointer">
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span>Periksa &amp; Tampilkan Pratinjau</span>
+            </button>
         </div>
     </form>
 </dialog>
@@ -476,7 +482,7 @@
                         </td>
                         <td class="px-5 py-4 align-middle whitespace-nowrap">
                             <div class="font-semibold text-slate-800 text-xs sm:text-sm">{{ \Carbon\Carbon::parse($primary->start_at)->format('d M Y') }}</div>
-                            <div class="font-mono text-xs text-slate-500 mt-0.5">{{ \Carbon\Carbon::parse($primary->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($primary->end_at)->format('H:i') }} WIB</div>
+                            <div class="tabular-nums text-xs text-slate-500 mt-0.5">{{ \Carbon\Carbon::parse($primary->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($primary->end_at)->format('H:i') }} WIB</div>
                         </td>
                         <td class="px-5 py-4 align-middle whitespace-nowrap">
                             <div class="font-semibold text-slate-800 text-xs sm:text-sm">{{ $primary->duration }} Mnt <span class="font-normal text-slate-500">({{ round($primary->duration / 35, 1) }} JP)</span></div>
@@ -632,7 +638,7 @@
                                 </td>
                                 <td class="px-4 py-3.5 align-middle whitespace-nowrap">
                                     <div class="font-semibold text-slate-800 text-xs">{{ \Carbon\Carbon::parse($primary->start_at)->format('d M Y') }}</div>
-                                    <div class="font-mono text-[11px] text-slate-500 mt-0.5">{{ \Carbon\Carbon::parse($primary->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($primary->end_at)->format('H:i') }} WIB</div>
+                                    <div class="tabular-nums text-[11px] text-slate-500 mt-0.5">{{ \Carbon\Carbon::parse($primary->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($primary->end_at)->format('H:i') }} WIB</div>
                                 </td>
                                 <td class="px-4 py-3.5 align-middle whitespace-nowrap">
                                     <div class="font-semibold text-slate-800 text-xs">{{ $primary->duration }} Mnt <span class="font-normal text-slate-500">({{ round($primary->duration / 35, 1) }} JP)</span></div>
@@ -1157,7 +1163,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                             </svg>
                                             <span class="font-medium text-slate-700">{{ \Carbon\Carbon::parse($primary->start_at)->format('d M Y') }}</span>
-                                            <span class="font-mono text-slate-500">({{ \Carbon\Carbon::parse($primary->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($primary->end_at)->format('H:i') }} WIB)</span>
+                                            <span class="tabular-nums text-slate-500">({{ \Carbon\Carbon::parse($primary->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($primary->end_at)->format('H:i') }} WIB)</span>
                                         </div>
                                     </div>
                                 </div>

@@ -56,16 +56,6 @@
         </div>
     </div>
 
-    <!-- Alert / Toast -->
-    @if(session('success'))
-        <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-3 shadow-xs">
-            <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span class="text-sm font-medium">{{ session('success') }}</span>
-        </div>
-    @endif
-
     <!-- Quick Stat Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs col-span-2 lg:col-span-1 flex items-center justify-between lg:block">
@@ -174,7 +164,7 @@
                         <tr class="hover:bg-[#F5F8FF] transition-colors">
                             <td class="py-3.5 px-6 font-semibold text-slate-700 whitespace-nowrap">Google Form URL</td>
                             <td class="py-3.5 px-6 max-w-md">
-                                <a href="{{ $exam->google_form_url }}" target="_blank" class="text-[#2457E8] text-xs hover:underline font-mono truncate block" title="{{ $exam->google_form_url }}">
+                                <a href="{{ $exam->google_form_url }}" target="_blank" class="text-[#2457E8] text-xs hover:underline tabular-nums truncate block" title="{{ $exam->google_form_url }}">
                                     {{ $exam->google_form_url }}
                                 </a>
                             </td>
@@ -191,7 +181,7 @@
                         <tr class="hover:bg-[#F5F8FF] transition-colors">
                             <td class="py-3.5 px-6 font-semibold text-slate-700 whitespace-nowrap">Akses Siswa iOS (SEB)</td>
                             <td class="py-3.5 px-6 max-w-md">
-                                <div class="text-slate-600 text-xs font-mono truncate select-all">{{ $sebSchemeUrl }}</div>
+                                <div class="text-slate-600 text-xs tabular-nums truncate select-all">{{ $sebSchemeUrl }}</div>
                             </td>
                             <td class="py-3.5 px-6 text-right whitespace-nowrap space-x-1.5">
                                 <button type="button" onclick="openSebQrModal()" class="inline-flex items-center px-3 py-1.5 bg-white hover:bg-[#2457E8] text-slate-700 hover:text-white border border-slate-200 hover:border-[#2457E8] rounded-lg text-xs font-semibold shadow-2xs transition cursor-pointer">
@@ -304,7 +294,12 @@
                             <td class="py-4 px-6 text-xs text-slate-400 font-medium whitespace-nowrap">{{ $index + 1 }}</td>
                             <td class="py-4 px-6 min-w-[200px]">
                                 <div class="font-bold text-slate-900 student-name">{{ $user->name ?? 'Siswa' }}</div>
-                                <div class="text-xs text-slate-500 font-mono student-nis mt-0.5">NIS: {{ $user->username ?? '-' }}</div>
+                                <div class="text-xs text-slate-500 tabular-nums student-nis mt-0.5 flex items-center gap-1.5 flex-wrap">
+                                    <span>NIS: {{ $user->username ?? '-' }}</span>
+                                    @if(str_starts_with((string) ($p->session->device_id ?? ''), 'WEB_DARURAT'))
+                                        <span class="font-sans px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">WEB DARURAT</span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="py-4 px-6 whitespace-nowrap text-xs font-medium text-slate-700">
                                 {{ $user->class->name ?? '-' }}
@@ -382,7 +377,7 @@
                                         </form>
                                     </div>
                                 @elseif($isExpired)
-                                    <span class="text-xs text-slate-400 font-mono">-</span>
+                                    <span class="text-xs text-slate-400 tabular-nums">-</span>
                                 @else
                                     @if($isLocked)
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200" title="Buka kunci ujian UAS ditangani langsung oleh Kurikulum">
@@ -392,7 +387,7 @@
                                             Buka Kunci: Kurikulum
                                         </span>
                                     @else
-                                        <span class="text-xs text-slate-400 font-mono">-</span>
+                                        <span class="text-xs text-slate-400 tabular-nums">-</span>
                                     @endif
                                 @endif
                             </td>
@@ -425,7 +420,7 @@
                             </div>
                             <div class="min-w-0">
                                 <div class="font-semibold text-slate-900 text-xs sm:text-sm truncate student-name">{{ $user->name ?? 'Siswa' }}</div>
-                                <div class="text-[10px] sm:text-[11px] text-slate-400 font-mono student-nis">NIS: {{ $user->username ?? '-' }}</div>
+                                <div class="text-[10px] sm:text-[11px] text-slate-400 tabular-nums student-nis">NIS: {{ $user->username ?? '-' }}</div>
                             </div>
                         </div>
                         <span class="text-[10px] sm:text-[11px] font-medium text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md shrink-0">
@@ -487,7 +482,7 @@
                         @if($p->started_at)
                         <div class="col-span-2 pt-1.5 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-500">
                             <span>Mulai Ujian:</span>
-                            <span class="font-mono text-slate-700 font-medium">{{ \Carbon\Carbon::parse($p->started_at)->format('H:i:s') }} WIB</span>
+                            <span class="tabular-nums text-slate-700 font-medium">{{ \Carbon\Carbon::parse($p->started_at)->format('H:i:s') }} WIB</span>
                         </div>
                         @endif
                     </div>
@@ -585,7 +580,7 @@
                     <tbody class="divide-y divide-slate-100 text-xs">
                         @foreach($violations as $v)
                             <tr class="hover:bg-slate-50/70 transition-colors">
-                                <td class="py-3.5 px-4 font-mono text-slate-500">
+                                <td class="py-3.5 px-4 tabular-nums text-slate-500">
                                     {{ \Carbon\Carbon::parse($v->created_at)->format('H:i:s') }} WIB
                                     <div class="text-[10px] text-slate-400">{{ \Carbon\Carbon::parse($v->created_at)->format('d M Y') }}</div>
                                 </td>
@@ -604,6 +599,14 @@
                                     @elseif(str_contains($vType, 'RESTART') || str_contains($vType, 'DEVICE_OFF') || str_contains($vType, 'REBOOT'))
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-rose-50 text-rose-700 ring-1 ring-rose-500/20">
                                             HP Dimatikan / Restart
+                                        </span>
+                                    @elseif(str_contains($vType, 'WEB_TAB_SWITCH'))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-500/20">
+                                            Pindah Tab Browser (Web Darurat)
+                                        </span>
+                                    @elseif(str_contains($vType, 'WEB_FULLSCREEN_EXIT'))
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-500/20">
+                                            Keluar Layar Penuh (Web Darurat)
                                         </span>
                                     @elseif(str_contains($vType, 'SWITCH') || str_contains($vType, 'APP'))
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-50 text-amber-700 ring-1 ring-amber-500/20">
@@ -639,7 +642,7 @@
                                         </span>
                                     @endif
                                 </td>
-                                <td class="py-3.5 px-4 text-slate-600 font-mono text-[11px]">
+                                <td class="py-3.5 px-4 text-slate-600 tabular-nums text-[11px]">
                                     {{ $v->description ?: 'Terdeteksi meninggalkan layar ujian' }}
                                 </td>
                             </tr>
@@ -657,7 +660,7 @@
                                 <span class="font-bold text-slate-900 text-xs truncate">{{ $v->user->name ?? 'User #' . $v->user_id }}</span>
                                 <span class="text-[10px] text-slate-500 bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded shrink-0">{{ $v->user->class->name ?? '-' }}</span>
                             </div>
-                            <span class="font-mono text-[10px] text-slate-400 shrink-0">{{ \Carbon\Carbon::parse($v->created_at)->format('H:i:s') }} WIB</span>
+                            <span class="tabular-nums text-[10px] text-slate-400 shrink-0">{{ \Carbon\Carbon::parse($v->created_at)->format('H:i:s') }} WIB</span>
                         </div>
                         <div class="flex items-start gap-2 pt-0.5">
                             @php $vTypeMob = strtoupper($v->type ?? ''); @endphp
@@ -702,7 +705,7 @@
                                     {{ $v->type }}
                                 </span>
                             @endif
-                            <p class="text-[11px] text-slate-600 leading-snug font-mono">{{ $v->description ?: 'Terdeteksi meninggalkan layar ujian' }}</p>
+                            <p class="text-[11px] text-slate-600 leading-snug tabular-nums">{{ $v->description ?: 'Terdeteksi meninggalkan layar ujian' }}</p>
                         </div>
                     </div>
                 @endforeach
@@ -978,7 +981,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 value="{{ $exam->google_form_url }}" 
                 placeholder="https://docs.google.com/forms/d/e/.../viewform"
                 required
-                class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs tabular-nums text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
             >
             <p class="text-[11px] text-slate-400">Pastikan link dapat dibuka tanpa izin edit (hanya responden).</p>
         </div>
@@ -1013,11 +1016,11 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="text-xs font-bold text-slate-800">{{ $exam->title }}</div>
         <p class="text-[11px] text-slate-500 mt-1 mb-2">Arahkan kamera iPhone siswa langsung ke kode QR di atas untuk membuka aplikasi Safe Exam Browser.</p>
         <div class="text-[11px] text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2.5 py-1 rounded-lg mb-3">
-            Host: <strong class="font-mono">{{ $serverHost }}</strong> (iPhone & Laptop wajib di Wi-Fi / Hotspot yang sama).
+            Host: <strong class="tabular-nums">{{ $serverHost }}</strong> (iPhone & Laptop wajib di Wi-Fi / Hotspot yang sama).
         </div>
 
         <div class="flex items-center gap-2 bg-purple-50/70 p-2 rounded-xl border border-purple-200 text-left">
-            <span class="text-[11px] font-mono text-purple-900 truncate select-all flex-1 pl-1">{{ $sebSchemeUrl }}</span>
+            <span class="text-[11px] tabular-nums text-purple-900 truncate select-all flex-1 pl-1">{{ $sebSchemeUrl }}</span>
             <button type="button" data-copy-url="{{ $sebSchemeUrl }}" onclick="navigator.clipboard.writeText(this.dataset.copyUrl); alert('Link SEB berhasil disalin!');" class="px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold shrink-0 transition-colors shadow-2xs">
                 Salin Link
             </button>

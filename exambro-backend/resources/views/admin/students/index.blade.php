@@ -74,7 +74,7 @@
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 shrink-0">✓ Siap Diupload</span>
                             </div>
                             <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-                                <span id="preview-students-size" class="font-medium font-mono text-slate-600">0 KB</span>
+                                <span id="preview-students-size" class="font-medium tabular-nums text-slate-600">0 KB</span>
                                 <span>•</span>
                                 <span id="preview-students-type" class="uppercase font-semibold text-emerald-700">CSV</span>
                             </div>
@@ -90,8 +90,14 @@
         </div>
 
         <div class="flex justify-end gap-2.5 pt-2">
-            <button type="button" onclick="importModal.close()" class="px-5 py-2.5 text-sm font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl transition-colors shadow-xs">Batal</button>
-            <button type="submit" class="px-5 py-2.5 text-sm font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm shadow-indigo-500/20 transition-colors">Upload Data</button>
+            <button type="button" onclick="importModal.close()" class="px-4 py-2.5 text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer">Batal</button>
+            <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold bg-[#2457E8] hover:bg-blue-700 text-white rounded-xl shadow-xs transition cursor-pointer">
+                <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span>Periksa &amp; Tampilkan Pratinjau</span>
+            </button>
         </div>
     </form>
 </dialog>
@@ -121,7 +127,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1.5">NIS / Username</label>
-                    <input type="text" name="username" value="{{ old('_form') === 'create' ? old('username') : '' }}" required autocomplete="off" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 font-mono" placeholder="Contoh: 12345678">
+                    <input type="text" name="username" value="{{ old('_form') === 'create' ? old('username') : '' }}" required autocomplete="off" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 tabular-nums" placeholder="Contoh: 12345678">
                     @if(old('_form') === 'create') @error('username') <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span> @enderror @endif
                 </div>
             </div>
@@ -289,7 +295,7 @@
                         <input type="checkbox" class="bulk-checkbox rounded text-[#2457E8] focus:ring-[#2457E8]/20 border-slate-300 w-4 h-4 cursor-pointer" value="{{ $s->id }}">
                     </td>
                     <td class="px-6 py-4 text-slate-900 font-bold">{{ $s->name }}</td>
-                    <td class="px-6 py-4 font-mono text-slate-700 font-medium text-xs">{{ $s->username }}</td>
+                    <td class="px-6 py-4 tabular-nums text-slate-700 font-medium text-xs">{{ $s->username }}</td>
                     <td class="px-6 py-4 text-slate-700 font-medium">
                         {{ $s->class ? $s->class->name : '-' }}
                     </td>

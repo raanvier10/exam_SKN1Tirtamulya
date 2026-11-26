@@ -14,7 +14,7 @@
 
     <div class="relative z-10 max-w-2xl">
         <div class="text-xs font-bold text-amber-300">
-            Selamat Bertugas, {{ auth()->user()->isAdmin() ? 'Administrator' : 'Guru Pengampu' }}
+            Selamat Bertugas, {{ auth()->user()->isDepartmentPic() ? 'PIC Jurusan ' . auth()->user()->departmentCode() : (auth()->user()->isAdmin() ? 'Administrator' : 'Guru Pengampu') }}
         </div>
         <h3 class="text-2xl sm:text-3xl font-extrabold tracking-tight mt-1">
             {{ auth()->user()->name }}
@@ -42,6 +42,14 @@
 
 <!-- Stat Cards -->
 @if(auth()->user()->isAdmin())
+    @php
+        $dashDeptClassIds = auth()->user()->departmentClassIds();
+        $dashTotalSiswa = \App\Models\User::where('role', 'siswa')
+            ->when($dashDeptClassIds !== null, fn ($q) => $q->whereIn('class_id', $dashDeptClassIds))
+            ->count();
+        $dashTotalKelas = $dashDeptClassIds !== null ? count($dashDeptClassIds) : \App\Models\StudentClass::count();
+        $dashTotalUjian = \App\Models\Exam::when($dashDeptClassIds !== null, fn ($q) => $q->whereHas('classes', fn ($cq) => $cq->whereIn('classes.id', $dashDeptClassIds)))->count();
+    @endphp
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         <!-- Total Siswa -->
         <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-2xs hover:border-[#2457E8]/40 transition">
@@ -49,7 +57,7 @@
                 <div>
                     <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Siswa</div>
                     <div class="mt-2 flex items-baseline gap-1.5">
-                        <span class="text-2xl sm:text-3xl font-extrabold text-[#142C5C] tracking-tight">{{ \App\Models\User::where('role', 'siswa')->count() }}</span>
+                        <span class="text-2xl sm:text-3xl font-extrabold text-[#142C5C] tracking-tight">{{ $dashTotalSiswa }}</span>
                         <span class="text-xs text-slate-500 font-medium">Siswa</span>
                     </div>
                 </div>
@@ -71,7 +79,7 @@
                 <div>
                     <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Kelas</div>
                     <div class="mt-2 flex items-baseline gap-1.5">
-                        <span class="text-2xl sm:text-3xl font-extrabold text-[#142C5C] tracking-tight">{{ \App\Models\StudentClass::count() }}</span>
+                        <span class="text-2xl sm:text-3xl font-extrabold text-[#142C5C] tracking-tight">{{ $dashTotalKelas }}</span>
                         <span class="text-xs text-slate-500 font-medium">Kelas</span>
                     </div>
                 </div>
@@ -116,7 +124,7 @@
                 <div>
                     <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Jadwal Ujian</div>
                     <div class="mt-2 flex items-baseline gap-1.5">
-                        <span class="text-2xl sm:text-3xl font-extrabold text-[#142C5C] tracking-tight">{{ \App\Models\Exam::count() }}</span>
+                        <span class="text-2xl sm:text-3xl font-extrabold text-[#142C5C] tracking-tight">{{ $dashTotalUjian }}</span>
                         <span class="text-xs text-slate-500 font-medium">Jadwal</span>
                     </div>
                 </div>

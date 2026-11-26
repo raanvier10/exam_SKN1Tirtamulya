@@ -30,7 +30,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1.5">NIS / Username</label>
-                    <input type="text" name="username" value="{{ old('username') }}" required autocomplete="off" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all font-mono" placeholder="Contoh: 12345678 (Gunakan NIS)">
+                    <input type="text" name="username" value="{{ old('username') }}" required autocomplete="off" class="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all tabular-nums" placeholder="Contoh: 12345678 (Gunakan NIS)">
                     @error('username') <span class="text-rose-600 text-xs mt-1 block">{{ $message }}</span> @enderror
                 </div>
             </div>

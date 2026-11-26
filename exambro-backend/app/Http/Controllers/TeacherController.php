@@ -130,54 +130,208 @@ class TeacherController extends Controller
 
     public function import(Request $request)
     {
-        $request->validate(['file' => 'required|file|mimes:csv,txt,xlsx|max:10240']);
-        $rows = \App\Helpers\SimpleSpreadsheetReader::read($request->file('file'));
-        $count = 0;
-
-        \Illuminate\Support\Facades\DB::transaction(function () use ($rows, &$count) {
-            foreach ($rows as $row) {
-                $name = $row['nama_lengkap'] ?? $row['nama'] ?? $row['name'] ?? null;
-                $username = trim((string)($row['nip_username'] ?? $row['nip'] ?? $row['username'] ?? ''));
-
-                if (!empty($username) && !empty($name)) {
-                    $existingUser = User::where('username', $username)->first();
-                    if ($existingUser && $existingUser->role !== 'guru') {
-                        continue;
-                    }
-
-                    $status = $existingUser?->status ?? 'active';
-                    if (isset($row['status'])) {
-                        $statusVal = strtolower(trim((string)$row['status']));
-                        $status = in_array($statusVal, ['inactive', 'nonaktif', '0', 'disabled']) ? 'inactive' : 'active';
-                    }
-
-                    $updateData = [
-                        'name' => $name,
-                        'role' => 'guru',
-                        'status' => $status,
-                    ];
-
-                    $emailInput = trim((string)($row['email'] ?? ''));
-                    if (!empty($emailInput)) {
-                        $updateData['email'] = $emailInput;
-                    }
-
-                    $passInput = $row['password'] ?? $row['kata_sandi'] ?? null;
-                    if (!empty($passInput)) {
-                        $updateData['password'] = Hash::make((string)$passInput);
-                    } elseif (!$existingUser) {
-                        $updateData['password'] = Hash::make($username);
-                    }
-
-                    User::updateOrCreate(
-                        ['username' => $username],
-                        $updateData
-                    );
-                    $count++;
-                }
+        if ($request->boolean('confirm_import')) {
+            $readyRows = \App\Helpers\ImportPreview::pullPayload((string) $request->input('import_token', ''));
+            if ($readyRows === null) {
+                return redirect()->route('admin.teachers.index')->with('error', 'Sesi pratinjau import sudah kedaluwarsa. Silakan unggah ulang file.');
             }
-        });
+            if (empty($readyRows)) {
+                return redirect()->route('admin.teachers.index')->with('error', 'Tidak ada data guru valid untuk disimpan.');
+            }
 
-        return back()->with('success', "Berhasil memproses & menyinkronkan {$count} data guru.");
+            @set_time_limit(300);
+            $count = 0;
+
+            try {
+                \Illuminate\Support\Facades\DB::transaction(function () use ($readyRows, &$count) {
+                    $now = now();
+                    $usernames = array_column($readyRows, 'username');
+                    $existingUsers = collect();
+                    foreach (array_chunk(array_unique($usernames), 500) as $uChunk) {
+                        foreach (User::whereIn('username', $uChunk)->get() as $u) {
+                            $existingUsers->put($u->username, $u);
+                        }
+                    }
+
+                    $existingEmails = User::whereNotNull('email')->pluck('id', 'email')->all();
+                    $hashCache = [];
+                    $hashPassword = function (string $plain) use (&$hashCache): string {
+                        return $hashCache[$plain] ??= Hash::make($plain);
+                    };
+
+                    $insertBuffer = [];
+                    $flushInserts = function () use (&$insertBuffer) {
+                        if (empty($insertBuffer)) {
+                            return;
+                        }
+                        foreach (array_chunk($insertBuffer, 500) as $chunk) {
+                            User::insert($chunk);
+                        }
+                        $insertBuffer = [];
+                    };
+
+                    foreach ($readyRows as $item) {
+                        $existingUser = $existingUsers->get($item['username']);
+                        $email = $item['email'];
+                        if ($email !== null && isset($existingEmails[$email]) && (!$existingUser || $existingEmails[$email] !== $existingUser->id)) {
+                            $email = null;
+                        }
+
+                        if ($existingUser) {
+                            if ($existingUser->role !== 'guru') {
+                                continue;
+                            }
+                            $updateData = ['name' => $item['name'], 'status' => $item['status']];
+                            if ($email !== null) {
+                                $updateData['email'] = $email;
+                                $existingEmails[$email] = $existingUser->id;
+                            }
+                            if ($item['password'] !== null) {
+                                $updateData['password'] = $hashPassword($item['password']);
+                            }
+                            $existingUser->update($updateData);
+                        } else {
+                            if ($email !== null) {
+                                $existingEmails[$email] = true;
+                            }
+                            $insertBuffer[] = [
+                                'name' => $item['name'],
+                                'username' => $item['username'],
+                                'email' => $email,
+                                'password' => $hashPassword($item['password'] ?? $item['username']),
+                                'role' => 'guru',
+                                'status' => $item['status'],
+                                'created_at' => $now,
+                                'updated_at' => $now,
+                            ];
+                            if (count($insertBuffer) >= 500) {
+                                $flushInserts();
+                            }
+                        }
+                        $count++;
+                    }
+
+                    $flushInserts();
+                });
+            } catch (\Throwable $e) {
+                return redirect()->route('admin.teachers.index')->with('error', 'Terjadi kesalahan database saat mengimpor guru: ' . $e->getMessage());
+            }
+
+            return redirect()->route('admin.teachers.index')->with('success', "Berhasil memproses & menyinkronkan {$count} data guru.");
+        }
+
+        $request->validate(
+            ['file' => 'required|file|mimes:csv,txt,xlsx|max:15360'],
+            [
+                'file.required' => 'Pilih file terlebih dahulu sebelum mengklik upload.',
+                'file.mimes' => 'Format file harus berupa CSV (.csv) atau Excel (.xlsx).',
+                'file.max' => 'Ukuran file maksimal adalah 15 MB.',
+            ]
+        );
+
+        @set_time_limit(300);
+
+        try {
+            $rows = \App\Helpers\SimpleSpreadsheetReader::read($request->file('file'));
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal membaca isi file: ' . $e->getMessage());
+        }
+
+        if (empty($rows)) {
+            return back()->with('error', 'File kosong atau tidak memiliki baris data yang terbaca.');
+        }
+
+        $usernames = [];
+        foreach ($rows as $r) {
+            $u = trim((string) ($r['nip_username'] ?? $r['nip'] ?? $r['username'] ?? ''));
+            if ($u !== '') {
+                $usernames[] = $u;
+            }
+        }
+
+        $existingUsers = collect();
+        foreach (array_chunk(array_unique($usernames), 500) as $uChunk) {
+            foreach (User::whereIn('username', $uChunk)->get() as $u) {
+                $existingUsers->put($u->username, $u);
+            }
+        }
+        $existingEmails = User::whereNotNull('email')->pluck('id', 'email')->all();
+
+        $previewRows = [];
+        $readyPayload = [];
+        $seenUsernames = [];
+
+        foreach ($rows as $idx => $row) {
+            $excelRow = $idx + 2;
+            $name = trim((string) ($row['nama_lengkap'] ?? $row['nama'] ?? $row['name'] ?? ''));
+            $username = trim((string) ($row['nip_username'] ?? $row['nip'] ?? $row['username'] ?? ''));
+            $emailInput = trim((string) ($row['email'] ?? ''));
+
+            $cells = [
+                'nip' => $username ?: '-',
+                'name' => $name ?: '-',
+                'email' => $emailInput ?: '-',
+            ];
+
+            if ($username === '' || $name === '') {
+                $previewRows[] = ['excel_row' => $excelRow, 'cells' => $cells, 'status' => 'error', 'note' => 'Nama lengkap dan NIP/Username wajib diisi. (akan dilewati)'];
+                continue;
+            }
+
+            if (isset($seenUsernames[$username])) {
+                $previewRows[] = ['excel_row' => $excelRow, 'cells' => $cells, 'status' => 'duplicate', 'note' => "NIP/Username '{$username}' duplikat di dalam file. (akan dilewati)"];
+                continue;
+            }
+            $seenUsernames[$username] = true;
+
+            $existingUser = $existingUsers->get($username);
+            if ($existingUser && $existingUser->role !== 'guru') {
+                $previewRows[] = ['excel_row' => $excelRow, 'cells' => $cells, 'status' => 'error', 'note' => "Username '{$username}' sudah dipakai akun Admin/Siswa. (akan dilewati)"];
+                continue;
+            }
+
+            $validEmail = ($emailInput !== '' && filter_var($emailInput, FILTER_VALIDATE_EMAIL)) ? strtolower($emailInput) : null;
+            $emailNote = '';
+            if ($emailInput !== '' && $validEmail === null) {
+                $emailNote = ' (format email tidak valid, dikosongkan)';
+            } elseif ($validEmail !== null && isset($existingEmails[$validEmail]) && (!$existingUser || $existingEmails[$validEmail] !== $existingUser->id)) {
+                $validEmail = null;
+                $emailNote = ' (email sudah dipakai akun lain, dikosongkan)';
+            } elseif ($validEmail !== null) {
+                $existingEmails[$validEmail] = $existingUser?->id ?? true;
+            }
+
+            $status = $existingUser?->status ?? 'active';
+            if (isset($row['status'])) {
+                $statusVal = strtolower(trim((string) $row['status']));
+                $status = in_array($statusVal, ['inactive', 'nonaktif', '0', 'disabled']) ? 'inactive' : 'active';
+            }
+
+            $passInput = $row['password'] ?? $row['kata_sandi'] ?? null;
+
+            $readyPayload[] = [
+                'name' => $name,
+                'username' => $username,
+                'email' => $validEmail,
+                'status' => $status,
+                'password' => !empty($passInput) ? (string) $passInput : null,
+            ];
+
+            $previewRows[] = [
+                'excel_row' => $excelRow,
+                'cells' => $cells,
+                'status' => 'ready',
+                'note' => ($existingUser ? 'Data guru sudah ada, akan diperbarui.' : 'Siap ditambahkan sebagai guru baru.') . $emailNote,
+            ];
+        }
+
+        return \App\Helpers\ImportPreview::storeAndRender([
+            'entityLabel' => 'Guru',
+            'unitLabel' => 'guru',
+            'backRoute' => route('admin.teachers.index'),
+            'actionRoute' => route('admin.teachers.import'),
+            'columns' => ['nip' => 'NIP / Username', 'name' => 'Nama Guru', 'email' => 'Email'],
+            'fileName' => $request->file('file')->getClientOriginalName(),
+        ], $previewRows, $readyPayload);
     }
 }

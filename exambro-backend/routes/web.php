@@ -8,6 +8,7 @@ use App\Http\Controllers\TeacherController;
 use App\Http\Controllers\ExamController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\SebExamController;
+use App\Http\Controllers\WebExamController;
 
 Route::get('/', function () {
     return redirect()->route('student.portal');
@@ -63,6 +64,16 @@ Route::prefix('seb')->name('seb.')->group(function () {
     Route::get('/exam/{exam}/config', [SebExamController::class, 'downloadConfig'])->name('exam.config');
 });
 
+// Mode Web Ujian Darurat (untuk siswa yang gagal pakai APK, terkunci PIN Pengawas)
+Route::prefix('darurat')->name('web-exam.')->group(function () {
+    Route::get('/', [WebExamController::class, 'index'])->name('index');
+    Route::post('/login', [WebExamController::class, 'login'])->middleware('throttle:10,1')->name('login');
+    Route::post('/logout', [WebExamController::class, 'logout'])->name('logout');
+    Route::get('/exam/{exam}', [WebExamController::class, 'showExam'])->name('exam');
+    Route::post('/exam/{exam}/violation', [WebExamController::class, 'recordViolation'])->middleware('throttle:30,1')->name('violation');
+    Route::post('/exam/{exam}/finish', [WebExamController::class, 'finish'])->name('finish');
+});
+
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
     Route::get('/captcha', [AdminAuthController::class, 'captcha'])->name('captcha');
@@ -72,6 +83,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware(['auth', 'role:admin,guru'])->group(function () {
         Route::get('/dashboard', function () {
             $now = \Carbon\Carbon::now();
+            $deptClassIds = auth()->user()->departmentClassIds();
             $examQuery = \App\Models\Exam::where('status', 'active')
                 ->where('start_at', '<=', $now)
                 ->where(function ($query) use ($now) {
@@ -89,16 +101,31 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 });
             }
 
+            if ($deptClassIds !== null) {
+                $examQuery->whereHas('classes', function ($q) use ($deptClassIds) {
+                    $q->whereIn('classes.id', $deptClassIds);
+                });
+            }
+
+            $scopeParticipant = function ($q) use ($deptClassIds) {
+                if ($deptClassIds !== null) {
+                    $q->whereHas('user', fn ($u) => $u->whereIn('class_id', $deptClassIds));
+                }
+            };
+
             $ongoingExams = $examQuery->withCount([
-                'participants',
-                'participants as working_count' => function ($q) {
+                'participants' => $scopeParticipant,
+                'participants as working_count' => function ($q) use ($scopeParticipant) {
                     $q->where('status', 'working');
+                    $scopeParticipant($q);
                 },
-                'participants as locked_count' => function ($q) {
+                'participants as locked_count' => function ($q) use ($scopeParticipant) {
                     $q->where('status', 'locked');
+                    $scopeParticipant($q);
                 },
-                'participants as finished_count' => function ($q) {
+                'participants as finished_count' => function ($q) use ($scopeParticipant) {
                     $q->where('status', 'finished');
+                    $scopeParticipant($q);
                 }
             ])
             ->get();
@@ -112,6 +139,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 $csv = "nama_kelas,deskripsi\nXII IPA 1,Kelas IPA Angkatan 2023\n";
                 return response($csv)->header('Content-Type', 'text/csv')->header('Content-Disposition', 'attachment; filename="template_kelas.csv"');
             })->name('classes.template');
+            Route::get('/classes/import', fn () => redirect()->route('admin.classes.index'));
             Route::post('/classes/import', [StudentClassController::class, 'import'])->name('classes.import');
             Route::resource('classes', StudentClassController::class);
             
@@ -119,6 +147,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 $csv = "nama_lengkap,nis_username,password,nama_kelas,status,is_pkl\nBudi Santoso,12345678,password123,XII RPL 1,active,0\nSiti Rahma,12345679,password123,XII RPL 2,active,1\n";
                 return response($csv)->header('Content-Type', 'text/csv')->header('Content-Disposition', 'attachment; filename="template_siswa.csv"');
             })->name('students.template');
+            Route::get('/students/import', fn () => redirect()->route('admin.students.index'));
             Route::post('/students/import', [StudentController::class, 'import'])->name('students.import');
             Route::post('/students/{student}/toggle-pkl', [StudentController::class, 'togglePkl'])->name('students.toggle-pkl');
             Route::post('/students/bulk-delete', [StudentController::class, 'destroyBulk'])->name('students.bulk-delete');
@@ -128,8 +157,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 $csv = "nama_lengkap,nip_username,email,password,status\nBudi Setiawan,198501012025,budi@sekolah.id,password123,active\nSiti Aminah,198703152026,,password123,active\n";
                 return response($csv)->header('Content-Type', 'text/csv')->header('Content-Disposition', 'attachment; filename="template_guru.csv"');
             })->name('teachers.template');
+            Route::get('/teachers/import', fn () => redirect()->route('admin.teachers.index'));
             Route::post('/teachers/import', [TeacherController::class, 'import'])->name('teachers.import');
             Route::resource('teachers', TeacherController::class);
+
+            Route::post('/unlock/web-emergency/toggle', [ExamController::class, 'toggleWebEmergency'])->name('unlock.web-emergency.toggle');
+            Route::post('/unlock/web-emergency/rotate-pin', [ExamController::class, 'rotateWebEmergencyPin'])->name('unlock.web-emergency.rotate-pin');
         });
         
         // Akses Bersama: Admin (Kurikulum) & Guru (Pengawas UAS / Pembuat PTS)
@@ -137,12 +170,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
             $csv = "judul_ujian,target_kelas,deskripsi,url_google_form,waktu_mulai,durasi_menit,maksimal_pelanggaran,status\nUjian Matematika,\"XI TJKT 1, XI TJKT 2\",Tutup buku,https://forms.gle/...,2026-08-18 09:00,90,3,active\n";
             return response($csv)->header('Content-Type', 'text/csv')->header('Content-Disposition', 'attachment; filename="template_ujian.csv"');
         })->name('exams.template');
+        Route::get('/exams/import', fn () => redirect()->route('admin.exams.index'));
         Route::post('/exams/import', [ExamController::class, 'import'])->name('exams.import');
         Route::get('/exams/{exam}/export-violations', [ExamController::class, 'exportViolations'])->name('exams.export-violations');
         Route::patch('/exams/{exam}/quick-form-url', [ExamController::class, 'quickUpdateGoogleForm'])->name('exams.quick-form-url');
         Route::post('/exams/{exam}/students/{user}/unlock', [ExamController::class, 'unlockStudent'])->name('exams.students.unlock');
         Route::post('/exams/{exam}/students/{user}/reset', [ExamController::class, 'resetStudentSession'])->name('exams.students.reset');
         Route::get('/unlock', [ExamController::class, 'unlockCenter'])->name('unlock.index');
+        Route::get('/unlock/export', [ExamController::class, 'exportUnlockExcel'])->name('unlock.export');
         Route::post('/exams/bulk-delete', [ExamController::class, 'destroyBulk'])->name('exams.bulk-delete');
         Route::resource('exams', ExamController::class);
 

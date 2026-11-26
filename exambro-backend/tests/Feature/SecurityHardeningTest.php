@@ -199,10 +199,12 @@ class SecurityHardeningTest extends TestCase
             'status' => 'inactive',
         ]);
 
-        $resp = $this->post(route('admin.login.post'), [
-            'username' => 'inactive_guru',
-            'password' => 'password123',
-        ]);
+        $resp = $this->withSession(['admin_login_captcha' => 'ABCDE'])
+            ->post(route('admin.login.post'), [
+                'username' => 'inactive_guru',
+                'password' => 'password123',
+                'captcha' => 'ABCDE',
+            ]);
 
         $resp->assertSessionHasErrors('username');
         $this->assertGuest();

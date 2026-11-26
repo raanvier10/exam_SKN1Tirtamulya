@@ -351,10 +351,27 @@ class ApiExamController extends Controller
             ], 403);
         }
 
-        $session = ExamSession::where('exam_id', $exam->id)
+        $latestSession = ExamSession::where('exam_id', $exam->id)
             ->where('user_id', $user->id)
-            ->where('status', 'ACTIVE')
+            ->latest('id')
             ->first();
+
+        $participant = $exam->participants()->where('user_id', $user->id)->first();
+        if (($participant && $participant->status === 'locked') || ($latestSession && $latestSession->status === 'LOCKED')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ujian sedang dikunci dan tidak dapat diselesaikan sebelum dibuka oleh pengawas.',
+                'locked' => true,
+            ], 403);
+        }
+
+        $session = ($latestSession && $latestSession->status === 'ACTIVE') ? $latestSession : null;
+        if (!$session && (!$participant || $participant->status !== 'working')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada sesi ujian aktif yang dapat diselesaikan.',
+            ], 400);
+        }
 
         if ($session) {
             $session->update(['status' => 'COMPLETED']);
