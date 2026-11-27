@@ -4,11 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ujian: {{ $exam->title }} - Akses Safe Exam Browser</title>
+    <link rel="icon" type="image/webp" href="{{ asset('images/logo.webp') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #4F46E5;
-            --primary-hover: #4338CA;
-            --primary-light: #EEF2FF;
+            --primary: #142C5C;
+            --primary-hover: #0D2149;
+            --primary-light: #F1F5F9;
             --slate-900: #0F172A;
             --slate-700: #334155;
             --slate-500: #64748B;
@@ -19,36 +23,37 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
         }
         body {
-            background: linear-gradient(145deg, #0F172A 0%, #1E1B4B 50%, #0F172A 100%);
-            min-height: 100vh;
+            background: #F8FAFC;
+            min-height: 100dvh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 24px 16px;
-            color: #fff;
+            color: var(--slate-900);
+            -webkit-font-smoothing: antialiased;
         }
         .card {
-            background: rgba(255, 255, 255, 0.98);
+            background: #FFFFFF;
             color: var(--slate-900);
-            border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
             max-width: 480px;
             width: 100%;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            animation: fadeIn 0.4s ease-out;
+            border: 1px solid var(--slate-200);
+            animation: fadeIn 0.3s ease-out;
         }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(16px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .header {
-            background: linear-gradient(135deg, #4F46E5, #6366F1);
+            background: #142C5C;
             color: white;
-            padding: 32px 24px 28px;
+            padding: 28px 24px 24px;
             text-align: center;
             position: relative;
         }
@@ -84,12 +89,12 @@
         .notice-box {
             background: #FEF3C7;
             border: 1px solid #FDE68A;
-            border-radius: 14px;
+            border-radius: 8px;
             padding: 14px 16px;
             font-size: 13px;
             color: #92400E;
             line-height: 1.5;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             display: flex;
             gap: 12px;
             align-items: flex-start;
@@ -102,19 +107,17 @@
             width: 100%;
             background: var(--primary);
             color: white;
-            padding: 16px 20px;
-            border-radius: 16px;
+            padding: 14px 20px;
+            border-radius: 8px;
             text-decoration: none;
             font-weight: 700;
-            font-size: 15px;
-            box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.4);
-            transition: all 0.2s;
+            font-size: 14.5px;
+            transition: background 0.15s;
             border: none;
             cursor: pointer;
         }
         .btn-launch:hover {
             background: var(--primary-hover);
-            transform: translateY(-1px);
         }
         .qr-section {
             margin-top: 24px;
@@ -227,7 +230,7 @@
             </div>
             <div class="step-item">
                 <div class="step-num">2</div>
-                <div>Klik tombol ungu <strong>"Buka di Safe Exam Browser"</strong> di atas atau scan QR code di bawah.</div>
+                <div>Klik tombol <strong>"Buka di Safe Exam Browser"</strong> di atas atau scan QR code di bawah.</div>
             </div>
             <div class="step-item">
                 <div class="step-num">3</div>

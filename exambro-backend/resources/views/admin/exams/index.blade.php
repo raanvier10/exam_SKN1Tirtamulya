@@ -76,13 +76,13 @@
     <div id="headerExamActionButtons"
          style="{{ $hideActionButtons ? 'display: none !important;' : '' }}"
          class="{{ $hideActionButtons ? '!hidden ' : '' }}flex items-center gap-2.5 shrink-0">
-        <button type="button" onclick="importModal.showModal()" class="inline-flex items-center justify-center gap-[6px] px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-[8px] text-xs sm:text-sm font-semibold hover:bg-slate-50 hover:border-[#2457E8] hover:text-[#2457E8] shadow-2xs transition active:scale-[0.98] whitespace-nowrap cursor-pointer">
+        <button type="button" onclick="importModal.showModal()" class="inline-flex items-center justify-center gap-[6px] px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-[8px] text-xs sm:text-sm font-semibold hover:bg-slate-50 hover:border-[#142C5C] hover:text-[#142C5C] shadow-2xs transition active:scale-[0.98] whitespace-nowrap cursor-pointer">
             <svg class="w-[15px] h-[15px] text-slate-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
             </svg>
             <span>Import Excel</span>
         </button>
-        <a id="btnTambahUjian" href="{{ route('admin.exams.create') }}?type={{ $isUts ? 'uts' : 'uas' }}" class="inline-flex items-center justify-center gap-[6px] px-4 py-2.5 bg-[#2457E8] hover:bg-blue-700 text-white rounded-[8px] text-xs sm:text-sm font-bold shadow-xs transition active:scale-[0.98] whitespace-nowrap">
+        <a id="btnTambahUjian" href="{{ route('admin.exams.create') }}?type={{ $isUts ? 'uts' : 'uas' }}" class="inline-flex items-center justify-center gap-[6px] px-4 py-2.5 bg-[#142C5C] hover:bg-[#142C5C] text-white rounded-[8px] text-xs sm:text-sm font-bold shadow-xs transition active:scale-[0.98] whitespace-nowrap">
             <svg class="w-[15px] h-[15px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
@@ -92,7 +92,7 @@
 </div>
 
 <!-- Modal Import Excel -->
-<dialog id="importModal" class="backdrop:bg-slate-900/40 backdrop:backdrop-blur-xs p-0 rounded-2xl border border-slate-200 shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto m-auto">
+<dialog id="importModal" class="backdrop:bg-slate-900/40 backdrop:backdrop-blur-xs p-0 rounded-[16px] border border-slate-200 shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto m-auto">
     <div class="px-5 py-4 border-b border-slate-100 bg-white">
         <h3 class="text-lg font-bold text-slate-900">Import Jadwal Ujian</h3>
         <p class="text-sm text-slate-500 mt-0.5">Pastikan format kolom sesuai dengan template resmi.</p>
@@ -100,14 +100,14 @@
     
     <form action="{{ route('admin.exams.import') }}" method="POST" enctype="multipart/form-data" class="p-5 bg-white space-y-4">
         @csrf
-        <div class="flex items-start gap-3 p-4 bg-indigo-50/40 border border-indigo-100 rounded-xl">
-            <div class="p-2 bg-white shadow-2xs border border-indigo-100 text-indigo-600 rounded-lg shrink-0">
+        <div class="flex items-start gap-3 p-4 bg-slate-50/80 border border-slate-200 rounded-[8px]">
+            <div class="p-2 bg-white shadow-2xs border border-slate-200 text-[#142C5C] rounded-lg shrink-0">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
             </div>
             <div>
                 <h4 class="text-sm font-semibold text-slate-900">Format Wajib Sesuai!</h4>
                 <p class="text-xs text-slate-500 mt-0.5 mb-2">Kolom <code>target_kelas</code> bisa diisi nama kelas atau kosongkan untuk Semua Kelas. Data yang sudah ada otomatis dilewati.</p>
-                <a href="{{ route('admin.exams.template') }}" class="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 hover:underline">
+                <a href="{{ route('admin.exams.template') }}" class="inline-flex items-center gap-1 text-xs font-semibold text-[#142C5C] hover:text-[#142C5C] hover:underline">
                     Download Template CSV &rarr;
                 </a>
             </div>
@@ -115,13 +115,13 @@
 
         <div>
             <label class="block text-sm font-medium text-slate-700 mb-2">Upload File Excel/CSV</label>
-            <div id="dropzone-empty" class="mt-1 flex justify-center rounded-2xl border-2 border-dashed border-slate-200 px-6 py-7 hover:border-indigo-400 hover:bg-indigo-50/20 transition-all cursor-pointer group" onclick="document.getElementById('file-upload-exams').click()">
+            <div id="dropzone-empty" class="mt-1 flex justify-center rounded-2xl border-2 border-dashed border-slate-200 px-6 py-7 hover:border-[#142C5C]/50 hover:bg-slate-50/70 transition-all cursor-pointer group" onclick="document.getElementById('file-upload-exams').click()">
                 <div class="text-center">
-                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                    <div class="w-12 h-12 rounded-2xl bg-slate-100 text-[#142C5C] flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                     </div>
                     <div class="flex text-sm leading-6 text-slate-600 justify-center">
-                        <span class="font-bold text-indigo-600 hover:text-indigo-500">Pilih file</span>
+                        <span class="font-bold text-[#142C5C] hover:text-[#142C5C]">Pilih file</span>
                         <p class="pl-1">atau tarik file ke sini</p>
                     </div>
                     <p class="text-xs text-slate-400 mt-1">CSV, XLS, XLSX up to 10MB</p>
@@ -131,7 +131,7 @@
             <div id="dropzone-file-preview" class="hidden mt-1 p-4 rounded-2xl border-2 border-emerald-500/40 bg-emerald-50/40 transition-all">
                 <div class="flex items-center justify-between gap-3">
                     <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-11 h-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0">
+                        <div class="w-11 h-11 rounded-[8px] bg-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0">
                             <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm1.5 14h-7v-2h7v2zm0-4h-7v-2h7v2zm-2-5V3.5L18.5 7H13.5z"/>
                             </svg>
@@ -150,7 +150,7 @@
                             </div>
                         </div>
                     </div>
-                    <button type="button" onclick="removeSelectedFile()" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors shrink-0" title="Ganti file">
+                    <button type="button" onclick="removeSelectedFile()" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-[8px] transition-colors shrink-0" title="Ganti file">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -162,8 +162,8 @@
         </div>
 
         <div class="flex justify-end gap-2.5 pt-2">
-            <button type="button" onclick="importModal.close()" class="px-4 py-2.5 text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer">Batal</button>
-            <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold bg-[#2457E8] hover:bg-blue-700 text-white rounded-xl shadow-xs transition cursor-pointer">
+            <button type="button" onclick="importModal.close()" class="px-4 py-2.5 text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-[8px] transition-colors cursor-pointer">Batal</button>
+            <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-bold bg-[#142C5C] hover:bg-[#142C5C] text-white rounded-[8px] shadow-xs transition cursor-pointer">
                 <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -178,7 +178,7 @@
 <!-- Stats UAS -->
 <div id="statsUasBar" class="{{ $isUts ? 'hidden' : '' }} grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[18px] mb-[22px]">
     <div class="stat-card bg-white flex items-center gap-3.5">
-        <div class="w-10 h-10 rounded-[8px] bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center shrink-0 font-bold shadow-2xs">
+        <div class="w-10 h-10 rounded-[8px] bg-slate-100 text-[#142C5C] border border-slate-200 flex items-center justify-center shrink-0 font-bold shadow-2xs">
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
             </svg>
@@ -274,7 +274,7 @@
 <!-- Bulk Delete Floating Bar -->
 <div id="bulkBar" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white rounded-2xl shadow-2xl px-5 py-3 flex items-center gap-4 transition-all">
     <span class="text-sm font-semibold"><span id="bulkCount">0</span> sesi dipilih</span>
-    <button type="button" id="bulkDeleteBtn" class="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-sm font-semibold shadow-sm transition-all active:scale-[0.98] cursor-pointer">
+    <button type="button" id="bulkDeleteBtn" class="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-[8px] text-sm font-semibold shadow-sm transition-all active:scale-[0.98] cursor-pointer">
         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
         </svg>
@@ -294,7 +294,7 @@
 <div id="uasContainer" class="{{ $isUts ? 'hidden' : '' }}">
     <!-- View Switcher & Toolbar UAS -->
     <div class="card">
-        <div class="card-header bg-[#0D2149] border-[#142C5C] text-white rounded-t-[12px] flex-col items-start gap-0.5">
+        <div class="card-header bg-[#142C5C] border-[#0D2149] text-white rounded-t-[12px] flex-col items-start gap-0.5">
             <h3 class="card-title text-white">Parameter Filter &amp; Tampilan Ujian UAS</h3>
             <p class="text-xs text-blue-200">Cari mata pelajaran, pilih ruang kelas, atau saring berdasarkan status ujian.</p>
         </div>
@@ -328,7 +328,7 @@
                     type="text"
                     id="searchUasInput"
                     placeholder="Cari ruang kelas atau ujian..."
-                    class="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2457E8]/15 focus:border-[#2457E8] transition-all"
+                    class="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-[8px] text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#142C5C]/10 focus:border-[#142C5C] transition-all"
                 >
             </div>
 
@@ -337,7 +337,7 @@
                 <button type="button"
                         id="uasStatusFilterBtn"
                         onclick="toggleUasStatusFilterMenu()"
-                        class="appearance-none min-w-[130px] pl-3 pr-7 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200/80 text-xs font-semibold transition-all shadow-2xs cursor-pointer select-none relative text-left"
+                        class="appearance-none min-w-[130px] pl-3 pr-7 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-[8px] border border-slate-200/80 text-xs font-semibold transition-all shadow-2xs cursor-pointer select-none relative text-left"
                         aria-expanded="false"
                         title="Filter Status">
                     <span id="uasStatusFilterLabel">Semua Status</span>
@@ -349,32 +349,32 @@
                 </button>
                 <input type="hidden" id="filterUasStatus" value="">
 
-                <div id="uasStatusFilterMenu" class="dropdown-flyout dropdown-flyout-left dropdown-flyout-closed absolute left-0 sm:left-auto sm:right-0 mt-2 w-48 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 p-1.5 space-y-0.5">
-                    <button type="button" onclick="setUasStatusFilter('', 'Semua Status')" class="uas-status-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                <div id="uasStatusFilterMenu" class="dropdown-flyout dropdown-flyout-left dropdown-flyout-closed absolute left-0 sm:left-auto sm:right-0 mt-2 w-48 bg-white rounded-[12px] border border-slate-200 shadow-xl z-50 p-1.5 space-y-0.5">
+                    <button type="button" onclick="setUasStatusFilter('', 'Semua Status')" class="uas-status-opt w-full flex items-center justify-between px-3 py-2 rounded-[8px] text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-slate-400"></span>
                             <span>Semua Status</span>
                         </div>
                     </button>
-                    <button type="button" onclick="setUasStatusFilter('ongoing', 'Sedang Berlangsung')" class="uas-status-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-amber-700 hover:bg-amber-50 transition-colors">
+                    <button type="button" onclick="setUasStatusFilter('ongoing', 'Sedang Berlangsung')" class="uas-status-opt w-full flex items-center justify-between px-3 py-2 rounded-[8px] text-xs font-semibold text-amber-700 hover:bg-amber-50 transition-colors">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
                             <span>Sedang Berlangsung</span>
                         </div>
                     </button>
-                    <button type="button" onclick="setUasStatusFilter('active', 'Aktif')" class="uas-status-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors">
+                    <button type="button" onclick="setUasStatusFilter('active', 'Aktif')" class="uas-status-opt w-full flex items-center justify-between px-3 py-2 rounded-[8px] text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             <span>Aktif</span>
                         </div>
                     </button>
-                    <button type="button" onclick="setUasStatusFilter('finished', 'Selesai')" class="uas-status-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+                    <button type="button" onclick="setUasStatusFilter('finished', 'Selesai')" class="uas-status-opt w-full flex items-center justify-between px-3 py-2 rounded-[8px] text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-slate-400"></span>
                             <span>Selesai</span>
                         </div>
                     </button>
-                    <button type="button" onclick="setUasStatusFilter('inactive', 'Nonaktif')" class="uas-status-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-rose-700 hover:bg-rose-50 transition-colors">
+                    <button type="button" onclick="setUasStatusFilter('inactive', 'Nonaktif')" class="uas-status-opt w-full flex items-center justify-between px-3 py-2 rounded-[8px] text-xs font-semibold text-rose-700 hover:bg-rose-50 transition-colors">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-rose-500"></span>
                             <span>Nonaktif</span>
@@ -388,7 +388,7 @@
                 <button type="button"
                         id="uasGradeFilterBtn"
                         onclick="toggleUasGradeFilterMenu()"
-                        class="appearance-none min-w-[130px] pl-3 pr-7 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200/80 text-xs font-semibold transition-all shadow-2xs cursor-pointer select-none relative text-left"
+                        class="appearance-none min-w-[130px] pl-3 pr-7 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-[8px] border border-slate-200/80 text-xs font-semibold transition-all shadow-2xs cursor-pointer select-none relative text-left"
                         aria-expanded="false"
                         title="Filter Kelas">
                     <span id="uasGradeFilterLabel">Semua Kelas</span>
@@ -400,26 +400,26 @@
                 </button>
                 <input type="hidden" id="filterUasGrade" value="">
 
-                <div id="uasGradeFilterMenu" class="dropdown-flyout dropdown-flyout-left dropdown-flyout-closed absolute right-0 mt-2 w-44 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 p-1.5 space-y-0.5">
-                    <button type="button" onclick="setUasGradeFilter('', 'Semua Kelas')" class="uas-grade-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                <div id="uasGradeFilterMenu" class="dropdown-flyout dropdown-flyout-left dropdown-flyout-closed absolute right-0 mt-2 w-44 bg-white rounded-[12px] border border-slate-200 shadow-xl z-50 p-1.5 space-y-0.5">
+                    <button type="button" onclick="setUasGradeFilter('', 'Semua Kelas')" class="uas-grade-opt w-full flex items-center justify-between px-3 py-2 rounded-[8px] text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-slate-400"></span>
                             <span>Semua Kelas</span>
                         </div>
                     </button>
-                    <button type="button" onclick="setUasGradeFilter('X', 'Kelas X')" class="uas-grade-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-rose-700 hover:bg-rose-50 transition-colors">
+                    <button type="button" onclick="setUasGradeFilter('X', 'Kelas X')" class="uas-grade-opt w-full flex items-center justify-between px-3 py-2 rounded-[8px] text-xs font-bold text-rose-700 hover:bg-rose-50 transition-colors">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-rose-500"></span>
                             <span>Kelas X</span>
                         </div>
                     </button>
-                    <button type="button" onclick="setUasGradeFilter('XI', 'Kelas XI')" class="uas-grade-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-sky-700 hover:bg-sky-50 transition-colors">
+                    <button type="button" onclick="setUasGradeFilter('XI', 'Kelas XI')" class="uas-grade-opt w-full flex items-center justify-between px-3 py-2 rounded-[8px] text-xs font-bold text-sky-700 hover:bg-sky-50 transition-colors">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-sky-500"></span>
                             <span>Kelas XI</span>
                         </div>
                     </button>
-                    <button type="button" onclick="setUasGradeFilter('XII', 'Kelas XII')" class="uas-grade-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-emerald-700 hover:bg-emerald-50 transition-colors">
+                    <button type="button" onclick="setUasGradeFilter('XII', 'Kelas XII')" class="uas-grade-opt w-full flex items-center justify-between px-3 py-2 rounded-[8px] text-xs font-bold text-emerald-700 hover:bg-emerald-50 transition-colors">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                             <span>Kelas XII</span>
@@ -433,7 +433,7 @@
 
     <!-- SUB-VIEW 1: DAFTAR UJIAN UAS -->
     <div id="uasViewExamsList" class="card overflow-hidden">
-        <div class="card-header bg-[#0D2149] border-[#142C5C] text-white">
+        <div class="card-header bg-[#142C5C] border-[#0D2149] text-white">
             <h3 class="card-title text-white">Daftar Jadwal Ujian UAS ({{ $uasExams->count() }})</h3>
         </div>
         @if($uasExams->count() > 0)
@@ -461,7 +461,7 @@
                         $classList = $item->classes->pluck('name')->implode(', ');
                         $gradesList = implode(',', $item->detected_grades ?? []);
                     @endphp
-                    <tr class="uas-master-exam-row hover:bg-[#F5F8FF] transition-colors"
+                    <tr class="uas-master-exam-row hover:bg-slate-50/80 transition-colors"
                         data-exam-title="{{ strtolower($item->title) }}"
                         data-exam-classes="{{ strtolower($classList ?: 'semua kelas') }}"
                         data-exam-status="{{ $status }}"
@@ -471,7 +471,7 @@
                                 @if($isOngoing)
                                     <input type="checkbox" disabled class="rounded text-slate-300 border-slate-200 w-4 h-4 cursor-not-allowed opacity-40">
                                 @else
-                                    <input type="checkbox" class="bulk-checkbox rounded text-[#2457E8] focus:ring-[#2457E8]/20 border-slate-300 w-4 h-4 cursor-pointer" value="{{ $primary->id }}">
+                                    <input type="checkbox" class="bulk-checkbox rounded text-[#142C5C] focus:ring-[#142C5C]/10 border-slate-300 w-4 h-4 cursor-pointer" value="{{ $primary->id }}">
                                 @endif
                             @endif
                         </td>
@@ -515,7 +515,7 @@
                         <td class="align-middle text-right whitespace-nowrap">
                             <div class="inline-flex items-center justify-end gap-2">
                                 <a href="{{ route('admin.exams.show', $primary->id) }}"
-                                   class="inline-flex items-center gap-[6px] px-3.5 py-1.5 bg-[#2457E8] hover:bg-blue-700 text-white rounded-[8px] text-xs font-semibold shadow-2xs transition">
+                                   class="inline-flex items-center gap-[6px] px-3.5 py-1.5 bg-[#142C5C] hover:bg-[#142C5C] text-white rounded-[8px] text-xs font-semibold shadow-2xs transition">
                                     Pantau Siswa
                                 </a>
                                 @if($canManage)
@@ -561,18 +561,18 @@
                 } else {
                     $badgeText = substr($cg->grade, 0, 3) ?: 'KL';
                 }
-                $badgeStyle = 'bg-[#F5F8FF] text-[#142C5C] border border-blue-200/80';
+                $badgeStyle = 'bg-slate-50 text-[#142C5C] border border-slate-200/80';
             @endphp
-            <div class="uas-class-card bg-white rounded-2xl border border-slate-200 shadow-2xs hover:border-slate-300 transition-all overflow-hidden"
+            <div class="uas-class-card card hover:border-slate-300 transition-all overflow-hidden"
                  data-class-id="{{ $cg->id }}"
                  data-class-name="{{ strtolower($cg->name) }}"
                  data-grade="{{ $cg->grade }}">
 
                 <!-- Accordion Header: Ruang Kelas -->
-                <div class="p-3.5 sm:p-4 flex items-center justify-between gap-3 cursor-pointer select-none hover:bg-[#F5F8FF]/60 transition-colors"
+                <div class="p-3.5 sm:p-4 flex items-center justify-between gap-3 cursor-pointer select-none hover:bg-slate-50/70 transition-colors"
                      onclick="toggleUasClassAccordion('{{ $cg->id }}')">
                     <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-8 h-8 rounded-xl {{ $badgeStyle }} flex items-center justify-center font-bold text-xs shrink-0">
+                        <div class="w-8 h-8 rounded-[8px] {{ $badgeStyle }} flex items-center justify-center font-bold text-xs shrink-0">
                             {{ $badgeText }}
                         </div>
                         <div class="min-w-0">
@@ -625,7 +625,7 @@
                                 $isOngoing = $item->is_ongoing ?? $primary->isOngoing();
                                 $status = $isOngoing ? 'ongoing' : ($isExpired ? 'finished' : ($item->has_active ? 'active' : 'inactive'));
                             @endphp
-                            <tr class="uas-exam-row hover:bg-[#F5F8FF] transition-colors"
+                            <tr class="uas-exam-row hover:bg-slate-50/80 transition-colors"
                                 data-exam-title="{{ strtolower($item->title) }}"
                                 data-exam-status="{{ $status }}">
                                 <td class="align-middle">
@@ -633,7 +633,7 @@
                                         @if($isOngoing)
                                             <input type="checkbox" disabled class="rounded text-slate-300 border-slate-200 w-4 h-4 cursor-not-allowed opacity-40">
                                         @else
-                                            <input type="checkbox" class="bulk-checkbox rounded text-[#2457E8] focus:ring-[#2457E8]/20 border-slate-300 w-4 h-4 cursor-pointer" value="{{ $primary->id }}">
+                                            <input type="checkbox" class="bulk-checkbox rounded text-[#142C5C] focus:ring-[#142C5C]/10 border-slate-300 w-4 h-4 cursor-pointer" value="{{ $primary->id }}">
                                         @endif
                                     @endif
                                 </td>
@@ -673,7 +673,7 @@
                                 </td>
                                 <td class="align-middle text-right whitespace-nowrap">
                                     <div class="inline-flex items-center justify-end gap-2">
-                                        <a href="{{ route('admin.exams.show', array_merge([$primary->id], ($cg->class ? ['class_id' => $cg->id] : []))) }}" class="inline-flex items-center px-3 py-1.5 bg-[#2457E8] hover:bg-blue-700 text-white rounded-[8px] text-xs font-semibold shadow-2xs transition">
+                                        <a href="{{ route('admin.exams.show', array_merge([$primary->id], ($cg->class ? ['class_id' => $cg->id] : []))) }}" class="inline-flex items-center px-3 py-1.5 bg-[#142C5C] hover:bg-[#142C5C] text-white rounded-[8px] text-xs font-semibold shadow-2xs transition">
                                             Pantau Siswa
                                         </a>
                                         @if($canManage)
@@ -714,7 +714,7 @@
 <div id="utsContainer" class="{{ !$isUts ? 'hidden' : '' }}">
     <!-- Bar Kontrol UTS -->
     <div class="card">
-        <div class="card-header bg-[#0D2149] border-[#142C5C] text-white rounded-t-[12px] flex-col items-start gap-0.5">
+        <div class="card-header bg-[#142C5C] border-[#0D2149] text-white rounded-t-[12px] flex-col items-start gap-0.5">
             <h3 class="card-title text-white">Parameter Filter Ujian UTS</h3>
             <p class="text-xs text-blue-200">Cari guru pengampu, mata pelajaran, pilih kelas, atau saring status ujian.</p>
         </div>
@@ -730,7 +730,7 @@
                 type="text"
                 id="searchUtsInput"
                 placeholder="Cari guru pengampu, mapel, atau kelas..."
-                class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2457E8]/15 focus:border-[#2457E8] transition-all"
+                class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-[8px] text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#142C5C]/10 focus:border-[#142C5C] transition-all"
             >
         </div>
 
@@ -740,7 +740,7 @@
                 <button type="button" 
                         id="utsStatusFilterBtn"
                         onclick="toggleUtsStatusFilterMenu()"
-                        class="appearance-none min-w-[130px] pl-3 pr-8 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200/80 text-xs font-semibold transition-all shadow-2xs cursor-pointer select-none relative text-left"
+                        class="appearance-none min-w-[130px] pl-3 pr-8 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-[8px] border border-slate-200/80 text-xs font-semibold transition-all shadow-2xs cursor-pointer select-none relative text-left"
                         aria-expanded="false"
                         title="Filter Status">
                     <span id="utsStatusFilterLabel">Semua Status</span>
@@ -752,32 +752,32 @@
                 </button>
                 <input type="hidden" id="filterUtsStatus" value="">
 
-                <div id="utsStatusFilterMenu" class="dropdown-flyout dropdown-flyout-left dropdown-flyout-closed absolute left-0 mt-2 w-48 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 p-1.5 space-y-0.5">
-                    <button type="button" onclick="setUtsStatusFilter('', 'Semua Status')" class="uts-status-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                <div id="utsStatusFilterMenu" class="dropdown-flyout dropdown-flyout-left dropdown-flyout-closed absolute left-0 mt-2 w-48 bg-white rounded-[12px] border border-slate-200 shadow-xl z-50 p-1.5 space-y-0.5">
+                    <button type="button" onclick="setUtsStatusFilter('', 'Semua Status')" class="uts-status-opt w-full flex items-center justify-between px-3 py-2 rounded-[8px] text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-slate-400"></span>
                             <span>Semua Status</span>
                         </div>
                     </button>
-                    <button type="button" onclick="setUtsStatusFilter('ongoing', 'Sedang Berlangsung')" class="uts-status-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors">
+                    <button type="button" onclick="setUtsStatusFilter('ongoing', 'Sedang Berlangsung')" class="uts-status-opt w-full flex items-center justify-between px-3 py-2 rounded-[8px] text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                             <span>Sedang Berlangsung</span>
                         </div>
                     </button>
-                    <button type="button" onclick="setUtsStatusFilter('active', 'Aktif')" class="uts-status-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-blue-700 hover:bg-blue-50 transition-colors">
+                    <button type="button" onclick="setUtsStatusFilter('active', 'Aktif')" class="uts-status-opt w-full flex items-center justify-between px-3 py-2 rounded-[8px] text-xs font-semibold text-[#142C5C] hover:bg-slate-50 transition-colors">
                         <div class="flex items-center gap-2">
-                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                            <span class="w-2 h-2 rounded-full bg-slate-500"></span>
                             <span>Aktif</span>
                         </div>
                     </button>
-                    <button type="button" onclick="setUtsStatusFilter('finished', 'Selesai')" class="uts-status-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
+                    <button type="button" onclick="setUtsStatusFilter('finished', 'Selesai')" class="uts-status-opt w-full flex items-center justify-between px-3 py-2 rounded-[8px] text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-slate-400"></span>
                             <span>Selesai</span>
                         </div>
                     </button>
-                    <button type="button" onclick="setUtsStatusFilter('inactive', 'Nonaktif')" class="uts-status-opt w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-rose-700 hover:bg-rose-50 transition-colors">
+                    <button type="button" onclick="setUtsStatusFilter('inactive', 'Nonaktif')" class="uts-status-opt w-full flex items-center justify-between px-3 py-2 rounded-[8px] text-xs font-semibold text-rose-700 hover:bg-rose-50 transition-colors">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-rose-500"></span>
                             <span>Nonaktif</span>
@@ -791,7 +791,7 @@
                 <button type="button" 
                         id="utsClassFilterBtn"
                         onclick="toggleUtsClassFilterMenu()" 
-                        class="appearance-none min-w-[130px] pl-3 pr-8 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200/80 text-xs font-semibold transition-all shadow-2xs cursor-pointer select-none relative text-left"
+                        class="appearance-none min-w-[130px] pl-3 pr-8 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-[8px] border border-slate-200/80 text-xs font-semibold transition-all shadow-2xs cursor-pointer select-none relative text-left"
                         aria-expanded="false"
                         title="Pilih Kelas">
                     <span id="utsClassFilterLabel">Pilih Kelas</span>
@@ -802,10 +802,10 @@
                     </span>
                 </button>
 
-                <div id="utsClassFilterMenu" class="dropdown-flyout dropdown-flyout-closed absolute right-0 mt-2 w-64 sm:w-72 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 p-2.5 space-y-1.5 max-h-[75vh] overflow-y-auto">
+                <div id="utsClassFilterMenu" class="dropdown-flyout dropdown-flyout-closed absolute right-0 mt-2 w-64 sm:w-72 bg-white rounded-[12px] border border-slate-200 shadow-xl z-50 p-2.5 space-y-1.5 max-h-[75vh] overflow-y-auto">
                     <button type="button" 
                             onclick="setUtsClassFilter('', '', 'Semua Kelas')" 
-                            class="uts-class-opt-btn w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all text-slate-700 hover:bg-slate-50 border border-transparent hover:border-slate-200/80 cursor-pointer">
+                            class="uts-class-opt-btn w-full flex items-center justify-between px-3 py-2 rounded-[8px] text-xs font-bold transition-all text-slate-700 hover:bg-slate-50 border border-transparent hover:border-slate-200/80 cursor-pointer">
                         <div class="flex items-center gap-2">
                             <span class="w-2 h-2 rounded-full bg-slate-400"></span>
                             <span>Semua Kelas</span>
@@ -816,7 +816,7 @@
                     <div class="border-t border-slate-100 my-1"></div>
 
                     <!-- Accordion Tingkat Kelas X -->
-                    <div class="uts-grade-accordion rounded-xl border border-slate-200/80 overflow-hidden">
+                    <div class="uts-grade-accordion rounded-[8px] border border-slate-200/80 overflow-hidden">
                         <button type="button" 
                                 onclick="toggleUtsGradeSection('X')" 
                                 class="w-full flex items-center justify-between px-3 py-2 bg-slate-50/80 hover:bg-slate-100 text-xs font-bold text-slate-800 transition-colors cursor-pointer">
@@ -854,7 +854,7 @@
                     </div>
 
                     <!-- Accordion Tingkat Kelas XI -->
-                    <div class="uts-grade-accordion rounded-xl border border-slate-200/80 overflow-hidden">
+                    <div class="uts-grade-accordion rounded-[8px] border border-slate-200/80 overflow-hidden">
                         <button type="button" 
                                 onclick="toggleUtsGradeSection('XI')" 
                                 class="w-full flex items-center justify-between px-3 py-2 bg-slate-50/80 hover:bg-slate-100 text-xs font-bold text-slate-800 transition-colors cursor-pointer">
@@ -892,7 +892,7 @@
                     </div>
 
                     <!-- Accordion Tingkat Kelas XII -->
-                    <div class="uts-grade-accordion rounded-xl border border-slate-200/80 overflow-hidden">
+                    <div class="uts-grade-accordion rounded-[8px] border border-slate-200/80 overflow-hidden">
                         <button type="button" 
                                 onclick="toggleUtsGradeSection('XII')" 
                                 class="w-full flex items-center justify-between px-3 py-2 bg-slate-50/80 hover:bg-slate-100 text-xs font-bold text-slate-800 transition-colors cursor-pointer">
@@ -931,7 +931,7 @@
 
                     @if($classesOther->isNotEmpty())
                     <!-- Accordion Kelas Lainnya -->
-                    <div class="uts-grade-accordion rounded-xl border border-slate-200/80 overflow-hidden">
+                    <div class="uts-grade-accordion rounded-[8px] border border-slate-200/80 overflow-hidden">
                         <button type="button" 
                                 onclick="toggleUtsGradeSection('UMUM')" 
                                 class="w-full flex items-center justify-between px-3 py-2 bg-slate-50/80 hover:bg-slate-100 text-xs font-bold text-slate-800 transition-colors cursor-pointer">
@@ -981,7 +981,7 @@
         @endphp
 
         <!-- Card Guru UTS -->
-        <div class="uts-teacher-block bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:border-slate-300 transition-all duration-200 overflow-hidden"
+        <div class="uts-teacher-block bg-white rounded-[12px] border border-slate-200/80 shadow-xs hover:border-slate-300 transition-all duration-200 overflow-hidden"
              data-teacher-name="{{ strtolower($t->name) }}"
              data-teacher-id="{{ $t->id }}">
             
@@ -989,7 +989,7 @@
             <div class="p-4 sm:p-5 flex items-center justify-between gap-3 cursor-pointer select-none hover:bg-slate-50/70 transition-colors"
                  onclick="toggleUtsTeacherAccordion('{{ $t->id }}')">
                 <div class="flex items-center gap-3.5 min-w-0">
-                    <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl {{ $t->is_current ? 'bg-emerald-600 text-white shadow-xs' : ($t->role === 'admin' ? 'bg-slate-900 text-white' : 'bg-emerald-50 border border-emerald-100 text-emerald-700') }} flex items-center justify-center font-bold text-sm shrink-0">
+                    <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-[8px] {{ $t->is_current ? 'bg-emerald-600 text-white shadow-xs' : ($t->role === 'admin' ? 'bg-slate-900 text-white' : 'bg-emerald-50 border border-emerald-100 text-emerald-700') }} flex items-center justify-center font-bold text-sm shrink-0">
                         {{ $t->initials }}
                     </div>
                     
@@ -1029,7 +1029,7 @@
 
                 <!-- Right: Bar Pilihan Kelas X, XI, XII & Chevron Toggle -->
                 <div class="flex items-center gap-2 sm:gap-2.5 shrink-0">
-                    <div class="inline-flex items-center p-0.5 sm:p-1 bg-slate-100 rounded-xl border border-slate-200/80 gap-0.5 shadow-2xs" onclick="event.stopPropagation()">
+                    <div class="inline-flex items-center p-0.5 sm:p-1 bg-slate-100 rounded-[8px] border border-slate-200/80 gap-0.5 shadow-2xs" onclick="event.stopPropagation()">
                         <!-- Tombol Kelas X -->
                         <button type="button" 
                                 onclick="selectUtsTeacherGrade('{{ $t->id }}', 'X')"
@@ -1079,7 +1079,7 @@
                         @endif
                     </div>
 
-                    <button type="button" class="w-8 h-8 rounded-xl border border-slate-200/80 bg-white flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer">
+                    <button type="button" class="w-8 h-8 rounded-[8px] border border-slate-200/80 bg-white flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors cursor-pointer">
                         <svg id="chevron-uts-{{ $t->id }}" class="w-4 h-4 transition-transform duration-200 transform {{ ($t->is_current || $tIdx === 0) ? 'rotate-180' : '' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
                         </svg>
@@ -1122,7 +1122,7 @@
                             $gradesList = implode(',', $grp->detected_grades ?? []);
                         @endphp
 
-                        <div class="uts-exam-row bg-white rounded-xl border border-slate-200/80 p-4 hover:border-emerald-300 hover:shadow-2xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-3.5"
+                        <div class="uts-exam-row bg-white rounded-[8px] border border-slate-200/80 p-4 hover:border-emerald-300 hover:shadow-2xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-3.5"
                              data-exam-title="{{ strtolower($grp->title) }}"
                              data-exam-classes="{{ strtolower($classList ?: 'semua kelas') }}"
                              data-exam-status="{{ $status }}"
@@ -1154,7 +1154,7 @@
                                         @endif
 
                                         @if($grp->session_count > 1)
-                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                            <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-[#142C5C] border border-slate-200">
                                                 {{ $grp->session_count }} Sesi Terjadwal
                                             </span>
                                         @endif
@@ -1183,7 +1183,7 @@
                                 @if($grp->session_count > 1)
                                     <button type="button" 
                                             onclick="const d = document.getElementById('drawer-sessions-uts-{{ $grp->group_id }}'); if(d) d.classList.toggle('hidden');" 
-                                            class="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-semibold transition-all shadow-2xs cursor-pointer">
+                                            class="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-[8px] text-xs font-semibold transition-all shadow-2xs cursor-pointer">
                                         <span>Buka {{ $grp->session_count }} Sesi</span>
                                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -1191,7 +1191,7 @@
                                     </button>
                                 @endif
 
-                                <a href="{{ route('admin.exams.show', $primary->id) }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs hover:shadow-emerald-500/20 transition-all active:scale-[0.98]">
+                                <a href="{{ route('admin.exams.show', $primary->id) }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[8px] text-xs font-semibold shadow-xs hover:shadow-emerald-500/20 transition-all active:scale-[0.98]">
                                     <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -1200,11 +1200,11 @@
                                 </a>
 
                                 @if($canManage)
-                                    <a href="{{ route('admin.exams.edit', $primary->id) }}" class="inline-flex items-center justify-center px-3 py-2 bg-white border border-slate-200/80 hover:bg-slate-50 hover:border-slate-300 text-slate-700 rounded-xl text-xs font-medium shadow-2xs transition-all">Edit</a>
+                                    <a href="{{ route('admin.exams.edit', $primary->id) }}" class="inline-flex items-center justify-center px-3 py-2 bg-white border border-slate-200/80 hover:bg-slate-50 hover:border-slate-300 text-slate-700 rounded-[8px] text-xs font-medium shadow-2xs transition-all">Edit</a>
                                     @if(!$isOngoing)
                                         <form action="{{ route('admin.exams.destroy', $primary->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Hapus ujian ini?');">
                                             @csrf @method('DELETE')
-                                            <button type="submit" class="inline-flex items-center justify-center px-3 py-2 bg-white border border-slate-200/80 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-700 rounded-xl text-xs font-medium shadow-2xs transition-all cursor-pointer">Hapus</button>
+                                            <button type="submit" class="inline-flex items-center justify-center px-3 py-2 bg-white border border-slate-200/80 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 text-slate-700 rounded-[8px] text-xs font-medium shadow-2xs transition-all cursor-pointer">Hapus</button>
                                         </form>
                                     @endif
                                 @endif
@@ -1218,7 +1218,7 @@
                                 </div>
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                     @foreach($grp->sessions as $idx => $s)
-                                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs">
+                                    <div class="flex items-center justify-between p-2.5 rounded-[8px] bg-slate-50 border border-slate-200/80 text-xs">
                                         <div>
                                             <div class="font-bold text-slate-800">Sesi {{ $idx + 1 }} • {{ \Carbon\Carbon::parse($s->start_at)->format('H:i') }} - {{ \Carbon\Carbon::parse($s->end_at)->format('H:i') }} WIB</div>
                                             <div class="text-slate-500 text-[11px] mt-0.5">Kelas: {{ $s->classes->pluck('name')->implode(', ') ?: 'Semua Kelas' }}</div>
@@ -1247,7 +1247,7 @@
     </div>
 
     <!-- Pesan jika pencarian UTS nihil -->
-    <div id="noMatchUtsMessage" class="hidden py-12 text-center bg-white rounded-2xl border border-slate-200 p-6">
+    <div id="noMatchUtsMessage" class="hidden py-12 text-center bg-white rounded-[12px] border border-slate-200 p-6">
         <h5 class="text-sm font-bold text-slate-800">Guru atau Ujian UTS Tidak Ditemukan</h5>
         <p class="text-xs text-slate-500 mt-1">Sesuaikan kata kunci pencarian atau status.</p>
     </div>
@@ -1283,14 +1283,14 @@
 
         if (category === 'uas') {
             if (cardUas) {
-                cardUas.className = 'sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-150 bg-white/15 text-white';
-                cardUas.querySelector('span')?.classList.replace('bg-blue-200/60', 'bg-[#DCE9FF]');
+                cardUas.className = 'sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-[8px] text-xs font-bold transition-all duration-150 bg-white/15 text-white';
+                cardUas.querySelector('span')?.classList.replace('bg-blue-200/60', 'bg-slate-100');
             }
             if (cardUts) {
-                cardUts.className = 'sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 text-slate-200 hover:text-white hover:bg-white/10';
-                cardUts.querySelector('span')?.classList.replace('bg-[#DCE9FF]', 'bg-blue-200/60');
+                cardUts.className = 'sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-[8px] text-xs font-medium transition-all duration-150 text-slate-200 hover:text-white hover:bg-white/10';
+                cardUts.querySelector('span')?.classList.replace('bg-slate-100', 'bg-blue-200/60');
             }
-            if (bUas) bUas.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-[#2457E8] border border-blue-200/70';
+            if (bUas) bUas.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-50 text-[#142C5C] border border-slate-200/70';
             if (bUts) bUts.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-200/60 text-slate-500';
 
             if (uasContainer) uasContainer.classList.remove('hidden');
@@ -1305,15 +1305,15 @@
             runUasFilter();
         } else {
             if (cardUas) {
-                cardUas.className = 'sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 text-slate-200 hover:text-white hover:bg-white/10';
-                cardUas.querySelector('span')?.classList.replace('bg-[#DCE9FF]', 'bg-blue-200/60');
+                cardUas.className = 'sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-[8px] text-xs font-medium transition-all duration-150 text-slate-200 hover:text-white hover:bg-white/10';
+                cardUas.querySelector('span')?.classList.replace('bg-slate-100', 'bg-blue-200/60');
             }
             if (cardUts) {
-                cardUts.className = 'sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-150 bg-white/15 text-white';
-                cardUts.querySelector('span')?.classList.replace('bg-blue-200/60', 'bg-[#DCE9FF]');
+                cardUts.className = 'sidebar-exam-sublink flex items-center gap-2.5 px-3 py-2 rounded-[8px] text-xs font-bold transition-all duration-150 bg-white/15 text-white';
+                cardUts.querySelector('span')?.classList.replace('bg-blue-200/60', 'bg-slate-100');
             }
             if (bUas) bUas.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-200/60 text-slate-500';
-            if (bUts) bUts.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-[#2457E8] border border-blue-200/70';
+            if (bUts) bUts.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-slate-50 text-[#142C5C] border border-slate-200/70';
 
             if (uasContainer) uasContainer.classList.add('hidden');
             if (utsContainer) utsContainer.classList.remove('hidden');
@@ -1406,9 +1406,9 @@
         if (labelEl) labelEl.textContent = label || 'Semua Status';
         if (btnEl) {
             if (val) {
-                btnEl.className = 'appearance-none min-w-[130px] pl-3 pr-7 py-1.5 bg-indigo-50 text-indigo-700 rounded-xl border border-indigo-200 text-xs font-bold transition-all shadow-2xs cursor-pointer select-none relative text-left';
+                btnEl.className = 'appearance-none min-w-[130px] pl-3 pr-7 py-1.5 bg-slate-100 text-[#142C5C] rounded-[8px] border border-slate-200 text-xs font-bold transition-all shadow-2xs cursor-pointer select-none relative text-left';
             } else {
-                btnEl.className = 'appearance-none min-w-[130px] pl-3 pr-7 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200/80 text-xs font-semibold transition-all shadow-2xs cursor-pointer select-none relative text-left';
+                btnEl.className = 'appearance-none min-w-[130px] pl-3 pr-7 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-[8px] border border-slate-200/80 text-xs font-semibold transition-all shadow-2xs cursor-pointer select-none relative text-left';
             }
         }
         toggleUasStatusFilterMenu(true);
@@ -1438,9 +1438,9 @@
         if (labelEl) labelEl.textContent = label || 'Semua Kelas';
         if (btnEl) {
             if (currentUasGrade) {
-                btnEl.className = 'appearance-none min-w-[130px] pl-3 pr-7 py-1.5 bg-indigo-50 text-indigo-700 rounded-xl border border-indigo-200 text-xs font-bold transition-all shadow-2xs cursor-pointer select-none relative text-left';
+                btnEl.className = 'appearance-none min-w-[130px] pl-3 pr-7 py-1.5 bg-slate-100 text-[#142C5C] rounded-[8px] border border-slate-200 text-xs font-bold transition-all shadow-2xs cursor-pointer select-none relative text-left';
             } else {
-                btnEl.className = 'appearance-none min-w-[130px] pl-3 pr-7 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200/80 text-xs font-semibold transition-all shadow-2xs cursor-pointer select-none relative text-left';
+                btnEl.className = 'appearance-none min-w-[130px] pl-3 pr-7 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-[8px] border border-slate-200/80 text-xs font-semibold transition-all shadow-2xs cursor-pointer select-none relative text-left';
             }
         }
         toggleUasGradeFilterMenu(true);
@@ -1568,9 +1568,9 @@
         if (labelEl) labelEl.textContent = label || 'Semua Status';
         if (btnEl) {
             if (val) {
-                btnEl.className = 'appearance-none min-w-[130px] pl-3 pr-8 py-2 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200 text-xs font-bold transition-all shadow-2xs cursor-pointer select-none relative text-left';
+                btnEl.className = 'appearance-none min-w-[130px] pl-3 pr-8 py-2 bg-emerald-50 text-emerald-700 rounded-[8px] border border-emerald-200 text-xs font-bold transition-all shadow-2xs cursor-pointer select-none relative text-left';
             } else {
-                btnEl.className = 'appearance-none min-w-[130px] pl-3 pr-8 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200/80 text-xs font-semibold transition-all shadow-2xs cursor-pointer select-none relative text-left';
+                btnEl.className = 'appearance-none min-w-[130px] pl-3 pr-8 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-[8px] border border-slate-200/80 text-xs font-semibold transition-all shadow-2xs cursor-pointer select-none relative text-left';
             }
         }
         toggleUtsStatusFilterMenu(true);
@@ -1621,9 +1621,9 @@
         if (labelEl) labelEl.textContent = label || 'Pilih Kelas';
         if (btnEl) {
             if (currentUtsTargetGrade || currentUtsTargetClass) {
-                btnEl.className = 'appearance-none min-w-[130px] pl-3 pr-8 py-2 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-200 text-xs font-bold transition-all shadow-2xs cursor-pointer select-none relative text-left';
+                btnEl.className = 'appearance-none min-w-[130px] pl-3 pr-8 py-2 bg-emerald-50 text-emerald-700 rounded-[8px] border border-emerald-200 text-xs font-bold transition-all shadow-2xs cursor-pointer select-none relative text-left';
             } else {
-                btnEl.className = 'appearance-none min-w-[130px] pl-3 pr-8 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl border border-slate-200/80 text-xs font-semibold transition-all shadow-2xs cursor-pointer select-none relative text-left';
+                btnEl.className = 'appearance-none min-w-[130px] pl-3 pr-8 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-[8px] border border-slate-200/80 text-xs font-semibold transition-all shadow-2xs cursor-pointer select-none relative text-left';
             }
         }
         toggleUtsClassFilterMenu(true);

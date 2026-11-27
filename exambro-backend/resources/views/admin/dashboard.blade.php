@@ -4,12 +4,12 @@
 
 @section('content')
 <!-- Hero Welcome Banner -->
-<div class="relative overflow-hidden rounded-[16px] bg-gradient-to-r from-[#0D2149] via-[#142C5C] to-[#2457E8] p-6 sm:p-8 text-white mb-[22px] shadow-sm">
+<div class="relative overflow-hidden rounded-[16px] bg-[#142C5C] p-6 sm:p-8 text-white mb-[22px] shadow-sm">
     <!-- Subtle Geometric Concentric Circles -->
     <svg data-decorative="true" class="hidden sm:block absolute -right-10 -top-12 w-72 h-72 pointer-events-none" viewBox="0 0 300 300" fill="none" aria-hidden="true">
-        <circle cx="190" cy="120" r="120" stroke="#DCE9FF" stroke-opacity="0.14" stroke-width="1.5"/>
-        <circle cx="190" cy="120" r="85" stroke="#DCE9FF" stroke-opacity="0.18" stroke-width="1.5"/>
-        <circle cx="190" cy="120" r="50" fill="#DCE9FF" fill-opacity="0.08"/>
+        <circle cx="190" cy="120" r="120" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="1.5"/>
+        <circle cx="190" cy="120" r="85" stroke="#FFFFFF" stroke-opacity="0.11" stroke-width="1.5"/>
+        <circle cx="190" cy="120" r="50" fill="#FFFFFF" fill-opacity="0.04"/>
     </svg>
 
     <div class="relative z-10 max-w-2xl">
@@ -24,8 +24,8 @@
         </p>
 
         <div class="mt-5 flex flex-wrap items-center gap-3">
-            <a href="{{ route('admin.exams.index') }}" class="inline-flex items-center gap-[6px] px-4 py-2.5 bg-white hover:bg-[#DCE9FF] text-[#142C5C] rounded-[8px] text-xs font-bold transition shadow-xs">
-                <svg class="w-[15px] h-[15px] text-[#2457E8] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <a href="{{ route('admin.exams.index') }}" class="inline-flex items-center gap-[6px] px-4 py-2.5 bg-white hover:bg-slate-100 text-[#142C5C] rounded-[8px] text-xs font-bold transition shadow-xs">
+                <svg class="w-[15px] h-[15px] text-[#142C5C] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                 </svg>
                 <span>Kelola Jadwal Ujian</span>
@@ -52,7 +52,7 @@
     @endphp
     <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-[18px] mb-[22px]">
         <!-- Total Siswa -->
-        <div class="stat-card bg-white hover:border-[#2457E8]/40">
+        <div class="stat-card bg-white hover:border-[#142C5C]/35">
             <div class="flex items-start justify-between gap-3">
                 <div>
                     <div class="text-[12px] font-bold uppercase tracking-[0.05em] text-slate-500">Total Siswa</div>
@@ -61,7 +61,7 @@
                         <span class="text-xs text-slate-500 font-medium">Siswa</span>
                     </div>
                 </div>
-                <div class="w-10 h-10 rounded-[8px] bg-[#DCE9FF] text-[#2457E8] flex items-center justify-center shrink-0">
+                <div class="w-10 h-10 rounded-[8px] bg-slate-100 text-[#142C5C] flex items-center justify-center shrink-0">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                     </svg>
@@ -69,12 +69,12 @@
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                 <span class="text-slate-400">Terdaftar aktif</span>
-                <a href="{{ route('admin.students.index') }}" class="font-semibold text-[#2457E8] hover:underline">Kelola</a>
+                <a href="{{ route('admin.students.index') }}" class="font-semibold text-[#142C5C] hover:underline">Kelola</a>
             </div>
         </div>
 
         <!-- Total Kelas -->
-        <div class="stat-card bg-white hover:border-[#2457E8]/40">
+        <div class="stat-card bg-white hover:border-[#142C5C]/35">
             <div class="flex items-start justify-between gap-3">
                 <div>
                     <div class="text-[12px] font-bold uppercase tracking-[0.05em] text-slate-500">Total Kelas</div>
@@ -83,7 +83,7 @@
                         <span class="text-xs text-slate-500 font-medium">Kelas</span>
                     </div>
                 </div>
-                <div class="w-10 h-10 rounded-[8px] bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+                <div class="w-10 h-10 rounded-[8px] bg-slate-100 text-[#142C5C] flex items-center justify-center shrink-0">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                     </svg>
@@ -91,12 +91,12 @@
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                 <span class="text-slate-400">Ruang kelas aktif</span>
-                <a href="{{ route('admin.classes.index') }}" class="font-semibold text-[#2457E8] hover:underline">Kelola</a>
+                <a href="{{ route('admin.classes.index') }}" class="font-semibold text-[#142C5C] hover:underline">Kelola</a>
             </div>
         </div>
 
         <!-- Total Guru -->
-        <div class="stat-card bg-white hover:border-[#2457E8]/40">
+        <div class="stat-card bg-white hover:border-[#142C5C]/35">
             <div class="flex items-start justify-between gap-3">
                 <div>
                     <div class="text-[12px] font-bold uppercase tracking-[0.05em] text-slate-500">Total Guru</div>
@@ -114,12 +114,12 @@
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                 <span class="text-slate-400">Pengampu &amp; pengawas</span>
-                <a href="{{ route('admin.teachers.index') }}" class="font-semibold text-[#2457E8] hover:underline">Kelola</a>
+                <a href="{{ route('admin.teachers.index') }}" class="font-semibold text-[#142C5C] hover:underline">Kelola</a>
             </div>
         </div>
 
         <!-- Total Jadwal Ujian -->
-        <div class="stat-card bg-white hover:border-[#2457E8]/40">
+        <div class="stat-card bg-white hover:border-[#142C5C]/35">
             <div class="flex items-start justify-between gap-3">
                 <div>
                     <div class="text-[12px] font-bold uppercase tracking-[0.05em] text-slate-500">Jadwal Ujian</div>
@@ -136,7 +136,7 @@
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                 <span class="text-slate-400">{{ $ongoingExams->count() }} sedang berlangsung</span>
-                <a href="{{ route('admin.exams.index') }}" class="font-semibold text-[#2457E8] hover:underline">Lihat</a>
+                <a href="{{ route('admin.exams.index') }}" class="font-semibold text-[#142C5C] hover:underline">Lihat</a>
             </div>
         </div>
     </div>
@@ -148,7 +148,7 @@
     @endphp
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[22px] mb-[22px]">
         <!-- Ujian Saya (Guru) -->
-        <div class="stat-card bg-white hover:border-[#2457E8]/40">
+        <div class="stat-card bg-white hover:border-[#142C5C]/35">
             <div class="flex items-start justify-between gap-3">
                 <div>
                     <div class="text-[12px] font-bold uppercase tracking-[0.05em] text-slate-500">Ujian Buatan Saya</div>
@@ -157,7 +157,7 @@
                         <span class="text-xs text-slate-500 font-medium">Ujian</span>
                     </div>
                 </div>
-                <div class="w-10 h-10 rounded-[8px] bg-[#DCE9FF] text-[#2457E8] flex items-center justify-center shrink-0">
+                <div class="w-10 h-10 rounded-[8px] bg-slate-100 text-[#142C5C] flex items-center justify-center shrink-0">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                     </svg>
@@ -165,7 +165,7 @@
             </div>
             <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                 <span class="text-slate-400">Ujian mapel mandiri</span>
-                <a href="{{ route('admin.exams.index') }}" class="font-semibold text-[#2457E8] hover:underline">Kelola</a>
+                <a href="{{ route('admin.exams.index') }}" class="font-semibold text-[#142C5C] hover:underline">Kelola</a>
             </div>
         </div>
 
@@ -221,7 +221,7 @@
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
             <h3 class="card-title text-[#142C5C]">Ujian Sedang Berlangsung</h3>
         </div>
-        <a href="{{ route('admin.exams.index') }}" class="text-xs font-semibold px-3 py-1.5 rounded-[8px] bg-[#DCE9FF]/60 hover:bg-[#DCE9FF] text-[#2457E8] transition whitespace-nowrap">
+        <a href="{{ route('admin.exams.index') }}" class="text-xs font-semibold px-3 py-1.5 rounded-[8px] bg-slate-100 hover:bg-slate-200/80 text-[#142C5C] transition whitespace-nowrap">
             Lihat Semua
         </a>
     </div>
@@ -229,11 +229,11 @@
     @if($ongoingExams->isNotEmpty())
         <div class="divide-y divide-slate-100">
             @foreach($ongoingExams as $exam)
-            <div class="p-[22px] hover:bg-[#F5F8FF]/60 transition-colors flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div class="p-[22px] hover:bg-slate-50/70 transition-colors flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div class="space-y-1.5 max-w-xl min-w-0">
                     <div class="flex items-center gap-2 flex-wrap">
                         <h4 class="text-base font-bold text-slate-900">{{ $exam->title }}</h4>
-                        <span class="px-2 py-0.5 rounded-[6px] text-xs font-semibold bg-[#DCE9FF] text-[#142C5C]">
+                        <span class="px-2 py-0.5 rounded-[6px] text-xs font-semibold bg-slate-100 text-[#142C5C]">
                             {{ $exam->duration }} Menit
                         </span>
                     </div>
@@ -279,7 +279,7 @@
                         </span>
                     </div>
 
-                    <a href="{{ route('admin.exams.show', $exam->id) }}" class="inline-flex items-center justify-center gap-[6px] px-4 py-2.5 bg-[#2457E8] hover:bg-blue-700 text-white rounded-[8px] text-xs font-bold shadow-xs transition-all w-full sm:w-auto shrink-0 active:scale-[0.98] whitespace-nowrap">
+                    <a href="{{ route('admin.exams.show', $exam->id) }}" class="inline-flex items-center justify-center gap-[6px] px-4 py-2.5 bg-[#142C5C] hover:bg-[#142C5C] text-white rounded-[8px] text-xs font-bold shadow-xs transition-all w-full sm:w-auto shrink-0 active:scale-[0.98] whitespace-nowrap">
                         <svg class="w-[15px] h-[15px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                             <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -292,7 +292,7 @@
         </div>
     @else
         <div class="p-12 flex flex-col items-center justify-center text-center">
-            <div class="w-14 h-14 rounded-[12px] bg-[#F5F8FF] text-[#2457E8] flex items-center justify-center mb-4 border border-[#DCE9FF]">
+            <div class="w-14 h-14 rounded-[12px] bg-slate-100 text-[#142C5C] flex items-center justify-center mb-4 border border-slate-200">
                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>

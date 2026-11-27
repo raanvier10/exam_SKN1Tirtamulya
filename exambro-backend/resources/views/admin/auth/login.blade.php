@@ -17,7 +17,8 @@
             font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             font-size: 14px;
             line-height: 1.55;
-            background-color: #F5F8FF;
+            background-color: #FFFFFF;
+            color: #0F172A;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
@@ -28,28 +29,17 @@
         .flex > *, .grid > * {
             min-width: 0;
         }
+        .card {
+            background-color: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.03);
+        }
         svg[stroke="currentColor"]:not([data-decorative]) {
             stroke-width: 2;
             stroke-linecap: round;
             stroke-linejoin: round;
             flex-shrink: 0;
-        }
-        .bg-geo-grid {
-            background-image:
-                linear-gradient(to right, rgba(36, 87, 232, 0.12) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(36, 87, 232, 0.12) 1px, transparent 1px);
-            background-size: 72px 72px;
-        }
-        .bg-diagonal-stripes {
-            background-image: repeating-linear-gradient(
-                -45deg,
-                rgba(20, 44, 92, 0.18) 0px,
-                rgba(20, 44, 92, 0.18) 8px,
-                rgba(36, 87, 232, 0.12) 8px,
-                rgba(36, 87, 232, 0.12) 16px,
-                transparent 16px,
-                transparent 28px
-            );
         }
         input[type="password"]::-ms-reveal,
         input[type="password"]::-ms-clear {
@@ -62,184 +52,236 @@
         }
     </style>
 </head>
-<body class="text-slate-900 antialiased min-h-screen flex flex-col justify-between relative overflow-x-hidden selection:bg-blue-600 selection:text-white">
+<body class="min-h-[100svh] lg:h-[100dvh] lg:overflow-hidden antialiased flex flex-col bg-white overflow-x-hidden selection:bg-[#142C5C] selection:text-white">
 
-    <!-- Bold Blue Geometric Pattern Background -->
-    <div class="fixed inset-0 -z-10 pointer-events-none overflow-hidden">
-        <div class="bg-geo-grid absolute inset-0 opacity-80"
-             style="-webkit-mask-image: linear-gradient(to right, black 0%, rgba(0,0,0,0.22) 32%, rgba(0,0,0,0.22) 68%, black 100%); mask-image: linear-gradient(to right, black 0%, rgba(0,0,0,0.22) 32%, rgba(0,0,0,0.22) 68%, black 100%);"></div>
+    <!-- Top Navbar -->
+    <header class="border-b border-slate-200 bg-white sticky top-0 z-30 shrink-0">
+        <div class="max-w-[1280px] mx-auto px-4 sm:px-8 h-14 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3 min-w-0">
+                <img src="{{ asset('images/logo.webp') }}" alt="Logo SMKN 1 Tirtamulya" class="w-8 h-8 object-contain shrink-0">
+                <span class="text-[18px] sm:text-[20px] font-extrabold text-[#142C5C] tracking-tight leading-none">ExaSatrya</span>
+            </div>
 
-        <!-- Top-Left: Layered Diagonal-Cut Panel + Bold Diagonal Stripes -->
-        <div class="hidden sm:block absolute top-0 left-0 w-72 h-72 bg-[#DCE9FF]/75"
-             style="clip-path: polygon(0 0, 100% 0, 0 100%);"></div>
-        <div class="hidden sm:block bg-diagonal-stripes absolute top-0 left-0 w-52 h-52"
-             style="clip-path: polygon(0 0, 100% 0, 0 100%);"></div>
-        <div class="hidden sm:block absolute top-0 left-0 w-64 h-64 origin-top-left"
-             style="clip-path: polygon(96% 0, 100% 0, 0 100%, 0 96%); background-color: rgba(36, 87, 232, 0.25);"></div>
-
-        <!-- Top-Right: Concentric Circles + Large Halftone Dots -->
-        <svg class="absolute -top-10 -right-12 w-64 h-64 sm:w-[420px] sm:h-[420px]" viewBox="0 0 420 420" fill="none" aria-hidden="true">
-            <circle cx="310" cy="110" r="190" stroke="#2457E8" stroke-opacity="0.24" stroke-width="2"/>
-            <circle cx="310" cy="110" r="145" stroke="#142C5C" stroke-opacity="0.22" stroke-width="2.5"/>
-            <circle cx="310" cy="110" r="95" fill="#DCE9FF" fill-opacity="0.85"/>
-            <circle cx="310" cy="110" r="55" fill="#2457E8" fill-opacity="0.16"/>
-            <circle cx="150" cy="150" r="7" fill="#2457E8" fill-opacity="0.26"/>
-            <circle cx="180" cy="150" r="5.5" fill="#2457E8" fill-opacity="0.22"/>
-            <circle cx="210" cy="150" r="4" fill="#142C5C" fill-opacity="0.20"/>
-            <circle cx="150" cy="180" r="6" fill="#142C5C" fill-opacity="0.22"/>
-            <circle cx="180" cy="180" r="4.5" fill="#2457E8" fill-opacity="0.20"/>
-            <circle cx="210" cy="180" r="3" fill="#2457E8" fill-opacity="0.18"/>
-            <circle cx="150" cy="210" r="4.5" fill="#2457E8" fill-opacity="0.20"/>
-            <circle cx="180" cy="210" r="3.5" fill="#142C5C" fill-opacity="0.18"/>
-        </svg>
-
-        <!-- Bottom-Left: Concentric Arcs + Halftone Dots -->
-        <svg class="absolute -bottom-12 -left-12 w-64 h-64 sm:w-[420px] sm:h-[420px]" viewBox="0 0 420 420" fill="none" aria-hidden="true">
-            <circle cx="110" cy="310" r="190" stroke="#142C5C" stroke-opacity="0.22" stroke-width="2.5"/>
-            <circle cx="110" cy="310" r="140" stroke="#2457E8" stroke-opacity="0.25" stroke-width="2"/>
-            <circle cx="110" cy="310" r="92" fill="#DCE9FF" fill-opacity="0.85"/>
-            <path d="M20 185L185 350" stroke="#142C5C" stroke-opacity="0.22" stroke-width="3"/>
-            <circle cx="210" cy="240" r="3.5" fill="#142C5C" fill-opacity="0.20"/>
-            <circle cx="240" cy="240" r="5" fill="#2457E8" fill-opacity="0.22"/>
-            <circle cx="270" cy="240" r="6.5" fill="#2457E8" fill-opacity="0.26"/>
-            <circle cx="210" cy="270" r="4.5" fill="#2457E8" fill-opacity="0.22"/>
-            <circle cx="240" cy="270" r="6" fill="#142C5C" fill-opacity="0.22"/>
-            <circle cx="270" cy="270" r="7.5" fill="#2457E8" fill-opacity="0.28"/>
-        </svg>
-
-        <!-- Bottom-Right: Layered Diagonal-Cut Panel + Bold Diagonal Stripes -->
-        <div class="hidden sm:block absolute bottom-0 right-0 w-72 h-72 bg-[#DCE9FF]/80"
-             style="clip-path: polygon(100% 0, 100% 100%, 0 100%);"></div>
-        <div class="hidden sm:block bg-diagonal-stripes absolute bottom-0 right-0 w-52 h-52"
-             style="clip-path: polygon(100% 0, 100% 100%, 0 100%);"></div>
-        <div class="hidden sm:block absolute bottom-0 right-0 w-64 h-64"
-             style="clip-path: polygon(100% 0, 100% 4%, 4% 100%, 0 100%); background-color: rgba(20, 44, 92, 0.25);"></div>
-    </div>
-
-    <!-- Navbar Header -->
-    <header class="border-b border-slate-200/80 bg-white/90 backdrop-blur sticky top-0 z-40">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-3">
-            <a href="{{ route('student.portal') }}" class="flex items-center gap-3">
-                <img src="{{ asset('images/logo.webp') }}" alt="Logo SMKN 1 Tirtamulya" class="w-9 h-9 object-contain shrink-0">
-                <div>
-                    <div class="text-base font-extrabold text-slate-900 tracking-tight leading-none">ExaSatrya</div>
-                    <p class="text-xs text-slate-500 mt-0.5 font-medium">SMKN 1 Tirtamulya</p>
+            <div class="flex items-center gap-3.5 shrink-0">
+                <div class="text-right min-w-0">
+                    <div class="text-[12.5px] font-bold text-[#142C5C] leading-tight">Panel Guru &amp; Admin</div>
+                    <div class="text-[11px] text-slate-500 font-medium leading-tight truncate">SMKN 1 Tirtamulya</div>
                 </div>
-            </a>
-            <a href="{{ route('student.portal') }}" class="text-xs font-semibold px-3.5 py-2 rounded-lg border border-slate-200 bg-white hover:border-blue-600 text-slate-700 hover:text-blue-700 transition whitespace-nowrap">
-                Portal Siswa
-            </a>
+            </div>
         </div>
     </header>
 
-    <!-- Main Login Content -->
-    <main class="flex-grow flex items-center justify-center p-4 sm:p-6">
-        <div class="w-full max-w-md">
-            <div class="text-center mb-6">
-                <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                    Login <span class="text-blue-600">Guru &amp; Admin</span>
-                </h1>
-                <p class="text-slate-600 text-sm mt-1">
-                    Masuk untuk mengelola jadwal dan sesi ujian.
-                </p>
+    @php
+        $adminHighlights = [
+            [
+                'title' => 'Manajemen Jadwal Ujian',
+                'desc' => 'Atur waktu pelaksanaan, durasi, kelas peserta, dan tautan ujian secara terpusat.',
+                'icon' => '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+            ],
+            [
+                'title' => 'Pemantauan Real-Time',
+                'desc' => 'Awasi status peserta, pelanggaran, serta buka kunci sesi ujian dari satu panel.',
+                'icon' => '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+            ],
+            [
+                'title' => 'Akses Berbasis Peran',
+                'desc' => 'Terpisah aman untuk Administrator Kurikulum, PIC Jurusan, dan Guru Pengampu.',
+                'icon' => '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>',
+            ],
+        ];
+    @endphp
+
+    <!-- Main Content -->
+    <main class="max-w-[1040px] mx-auto px-4 sm:px-8 py-2 sm:py-4 lg:overflow-y-auto w-full flex-1 flex flex-col justify-center">
+        <!-- Hero -->
+        <div class="text-center mb-3.5 sm:mb-5">
+            <div class="text-[11px] sm:text-[13px] font-bold uppercase tracking-[0.16em] text-[#142C5C]/75 mb-1">
+                Panel Guru &amp; Administrator
+            </div>
+            <h1 class="text-[32px] sm:text-[44px] font-extrabold text-[#142C5C] tracking-tight leading-[1.04] mb-1.5 sm:mb-2">
+                ExaSatrya
+            </h1>
+            <p class="text-[13px] sm:text-[15px] text-slate-500 max-w-lg mx-auto leading-snug sm:leading-relaxed">
+                Kelola jadwal asesmen, data peserta, dan pemantauan integritas ujian sekolah secara terpusat.
+            </p>
+            <div class="w-10 sm:w-12 h-[3px] sm:h-[3.5px] bg-[#142C5C] rounded-full mx-auto mt-2.5 sm:mt-3"></div>
+        </div>
+
+        <div class="flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-9 max-w-[860px] mx-auto w-full">
+            <!-- Left Highlights (Desktop only; accessible via floating button on mobile) -->
+            <div class="hidden lg:block w-full lg:w-[360px] shrink-0 space-y-5">
+                @foreach($adminHighlights as $item)
+                    <div class="flex items-start gap-3.5">
+                        <div class="w-10 h-10 rounded-[10px] bg-slate-100 border border-slate-200/80 text-[#142C5C] flex items-center justify-center shrink-0">
+                            <svg class="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">{!! $item['icon'] !!}</svg>
+                        </div>
+                        <div class="min-w-0">
+                            <h2 class="text-[14.5px] font-bold text-[#142C5C] tracking-[-0.01em]">{{ $item['title'] }}</h2>
+                            <p class="text-[12.5px] text-slate-500 mt-0.5 leading-snug">{{ $item['desc'] }}</p>
+                        </div>
+                    </div>
+                @endforeach
             </div>
 
-            <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm">
-                @if($errors->any())
-                    <div class="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm font-medium flex items-start gap-2.5">
-                        <svg class="w-5 h-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <!-- Centered Vertical Divider -->
+            <div class="hidden lg:block w-px self-stretch my-4 bg-slate-200/90 shrink-0" aria-hidden="true"></div>
+
+            <!-- Right Login Form Card -->
+            <div class="w-full lg:w-[390px] shrink-0">
+                <div class="card p-5 sm:p-6 max-w-[420px] lg:max-w-none w-full mx-auto">
+                    <div class="mb-3.5 sm:mb-4">
+                        <h2 class="text-[17px] sm:text-[18px] font-extrabold text-[#142C5C] tracking-tight leading-snug">Masuk Guru &amp; Admin</h2>
+                        <p class="text-[12px] sm:text-[12.5px] text-slate-500 mt-0.5">
+                            Gunakan Username / NIP, password, dan kode verifikasi.
+                        </p>
+                    </div>
+
+                    @if($errors->any())
+                        <div class="mb-3.5 p-3 rounded-[8px] bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium flex items-start gap-2">
+                            <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            <div>
+                                @foreach($errors->all() as $error)
+                                    <p>{{ $error }}</p>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <form action="{{ route('admin.login.post') }}" method="POST" class="space-y-2.5 sm:space-y-3">
+                        @csrf
                         <div>
-                            @foreach($errors->all() as $error)
-                                <p>{{ $error }}</p>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
-                <form action="{{ route('admin.login.post') }}" method="POST" class="space-y-4">
-                    @csrf
-                    <div>
-                        <label for="username" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Username</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                </svg>
+                            <label for="username" class="block text-xs font-bold text-[#142C5C] mb-1">Username / NIP</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <svg class="w-[15px] h-[15px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                </span>
+                                <input id="username" type="text" name="username" value="{{ old('username') }}" required autofocus autocomplete="username"
+                                       placeholder="Masukkan Username / NIP"
+                                       class="w-full h-10 pl-10 pr-3.5 rounded-[8px] border border-slate-200 bg-slate-50/70 focus:bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#142C5C] focus:ring-2 focus:ring-[#142C5C]/10">
                             </div>
-                            <input id="username" type="text" name="username" value="{{ old('username') }}" required autofocus autocomplete="username" class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-3 focus:ring-blue-600/15 transition" placeholder="Username / NIP">
                         </div>
-                    </div>
 
-                    <div>
-                        <div class="flex items-center justify-between mb-1.5">
-                            <label for="password" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Password</label>
-                            <button type="button" onclick="showForgotPasswordModal()" class="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline">
-                                Lupa Password?
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label for="password" class="block text-xs font-bold text-[#142C5C]">Password</label>
+                                <button type="button" onclick="showForgotPasswordModal()" class="text-[11.5px] font-semibold text-[#142C5C] hover:underline cursor-pointer">
+                                    Lupa Password?
+                                </button>
+                            </div>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <svg class="w-[15px] h-[15px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                    </svg>
+                                </span>
+                                <input type="password" id="password" name="password" required autocomplete="current-password"
+                                       placeholder="Masukkan password"
+                                       class="w-full h-10 pl-10 pr-11 rounded-[8px] border border-slate-200 bg-slate-50/70 focus:bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#142C5C] focus:ring-2 focus:ring-[#142C5C]/10">
+                                <button type="button" onclick="togglePassword('password', 'password_icon')" class="absolute inset-y-0 right-0 px-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer" title="Lihat/Sembunyikan Password" aria-label="Lihat atau sembunyikan password">
+                                    <svg id="password_icon" class="w-[16px] h-[16px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="captcha" class="block text-xs font-bold text-[#142C5C] mb-1">Kode Verifikasi</label>
+                            <div class="flex items-stretch gap-2 mb-2">
+                                <div class="flex-1 h-10 rounded-[8px] border border-slate-200 bg-slate-50/70 flex items-center justify-center overflow-hidden">
+                                    <img id="captchaImg" src="{{ route('admin.captcha') }}" alt="Kode Verifikasi" class="h-full w-full object-contain select-none">
+                                </div>
+                                <button type="button" onclick="refreshCaptcha()" class="inline-flex items-center justify-center gap-1.5 px-3.5 h-10 rounded-[8px] border border-slate-200 bg-white hover:border-[#142C5C] text-xs font-semibold text-[#142C5C] transition shrink-0 cursor-pointer" title="Muat ulang kode">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                                    </svg>
+                                    <span>Ganti</span>
+                                </button>
+                            </div>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <svg class="w-[15px] h-[15px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>
+                                    </svg>
+                                </span>
+                                <input id="captcha" type="text" name="captcha" maxlength="5" required autocomplete="off"
+                                       placeholder="Masukkan 5 karakter"
+                                       class="w-full h-10 pl-10 pr-3.5 rounded-[8px] border border-slate-200 bg-slate-50/70 focus:bg-white text-sm tabular-nums uppercase tracking-[0.14em] font-bold text-[#142C5C] placeholder:normal-case placeholder:tracking-normal placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:border-[#142C5C] focus:ring-2 focus:ring-[#142C5C]/10">
+                            </div>
+                        </div>
+
+                        <div class="pt-1">
+                            <button type="submit" class="w-full h-10 bg-[#142C5C] hover:bg-[#142C5C] text-white rounded-[8px] text-[13.5px] font-bold inline-flex items-center justify-center transition active:scale-[0.99] cursor-pointer">
+                                <span>Masuk</span>
                             </button>
                         </div>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                                </svg>
-                            </div>
-                            <input type="password" id="password" name="password" required autocomplete="current-password" class="w-full pl-11 pr-11 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-3 focus:ring-blue-600/15 transition" placeholder="Masukkan password">
-                            <button type="button" onclick="togglePassword('password', 'password_icon')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none transition" title="Lihat/Sembunyikan Password">
-                                <svg id="password_icon" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Kode Verifikasi CAPTCHA -->
-                    <div>
-                        <label for="captcha" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kode Verifikasi</label>
-                        <div class="flex items-stretch gap-2.5 mb-2.5">
-                            <div class="flex-1 h-12 rounded-xl border border-slate-200 bg-[#F5F8FF] flex items-center justify-center overflow-hidden">
-                                <img id="captchaImg" src="{{ route('admin.captcha') }}" alt="Kode Verifikasi" class="h-full w-full object-contain select-none">
-                            </div>
-                            <button type="button" onclick="refreshCaptcha()" class="inline-flex items-center justify-center gap-1.5 px-4 h-12 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-semibold text-slate-700 transition shrink-0" title="Muat ulang kode">
-                                <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                                </svg>
-                                Ganti
-                            </button>
-                        </div>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                <svg class="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                                </svg>
-                            </div>
-                            <input id="captcha" type="text" name="captcha" maxlength="5" required autocomplete="off" class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm uppercase tracking-widest font-semibold focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-3 focus:ring-blue-600/15 transition" placeholder="Masukkan 5 karakter">
-                        </div>
-                    </div>
-
-                    <div class="pt-1">
-                        <button type="submit" class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold shadow-xs transition active:scale-[0.98] focus:outline-none focus:ring-3 focus:ring-blue-600/25">
-                            Masuk
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </main>
 
+    <!-- Mobile Floating Info Button & Modal -->
+    <button type="button"
+            id="adminInfoFab"
+            onclick="document.getElementById('adminInfoModal').classList.remove('hidden')"
+            aria-label="Informasi Panel Admin"
+            title="Informasi Panel Admin"
+            class="lg:hidden fixed bottom-12 right-4 z-40 w-11 h-11 rounded-full bg-[#142C5C] hover:bg-[#142C5C] text-white shadow-lg border border-white/25 flex items-center justify-center transition active:scale-95 cursor-pointer">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+    </button>
+
+    <div id="adminInfoModal" class="hidden lg:hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-[2px] flex items-center justify-center p-4" onclick="if (event.target === this) this.classList.add('hidden')">
+        <div class="w-full max-w-md max-h-[85dvh] overflow-y-auto bg-white border border-slate-200 rounded-[16px] p-5 shadow-xl space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div>
+                    <h3 class="text-[15px] font-bold text-[#142C5C] tracking-[-0.01em]">Informasi Panel Admin</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Akses pengelolaan ujian sekolah</p>
+                </div>
+                <button type="button" onclick="document.getElementById('adminInfoModal').classList.add('hidden')" aria-label="Tutup informasi" class="w-8 h-8 rounded-[8px] border border-slate-200 text-slate-500 hover:text-[#142C5C] flex items-center justify-center cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                @foreach($adminHighlights as $item)
+                    <div class="flex items-start gap-3">
+                        <div class="w-9 h-9 rounded-[10px] bg-slate-100 border border-slate-200/80 text-[#142C5C] flex items-center justify-center shrink-0">
+                            <svg class="w-[17px] h-[17px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">{!! $item['icon'] !!}</svg>
+                        </div>
+                        <div class="min-w-0">
+                            <h4 class="text-[14px] font-bold text-[#142C5C]">{{ $item['title'] }}</h4>
+                            <p class="text-[12.5px] text-slate-500 mt-0.5 leading-snug">{{ $item['desc'] }}</p>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <button type="button" onclick="document.getElementById('adminInfoModal').classList.add('hidden')" class="w-full h-10 bg-[#142C5C] hover:bg-[#142C5C] text-white rounded-[8px] text-xs font-bold transition cursor-pointer">
+                Mengerti
+            </button>
+        </div>
+    </div>
+
     <!-- Footer -->
-    <footer class="border-t border-slate-200/80 bg-white/80 py-4 text-center text-xs text-slate-500">
-        &copy; {{ date('Y') }} SMKN 1 Tirtamulya &bull; Sistem Ujian Terproteksi ExaSatrya
+    <footer class="hidden sm:block bg-[#142C5C] text-blue-100/90 py-2.5 px-4 text-center text-[11.5px] sm:text-xs font-medium shrink-0">
+        &copy; {{ date('Y') }} SMKN 1 Tirtamulya &nbsp;|&nbsp; ExaSatrya &ndash; Sistem Ujian Terproteksi
     </footer>
 
     <!-- Modal Dialog Bantuan Lupa Password -->
-    <div id="forgotPasswordModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs hidden items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-200 space-y-4">
-            <h3 class="text-base font-bold text-slate-900">Bantuan Lupa Password</h3>
+    <div id="forgotPasswordModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-[2px] hidden items-center justify-center p-4" onclick="if (event.target === this) closeForgotPasswordModal()">
+        <div class="bg-white rounded-[16px] max-w-sm w-full p-6 shadow-xl border border-slate-200 space-y-4">
+            <h3 class="text-[15px] font-bold text-[#142C5C]">Bantuan Lupa Password</h3>
             <p class="text-xs text-slate-600 leading-relaxed">
                 Hubungi <strong>Tim Kurikulum</strong> atau <strong>Administrator IT SMKN 1 Tirtamulya</strong> dengan menyebutkan Username/NIP Anda untuk reset password.
             </p>
-            <button type="button" onclick="closeForgotPasswordModal()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition">
+            <button type="button" onclick="closeForgotPasswordModal()" class="w-full h-10 bg-[#142C5C] hover:bg-[#142C5C] text-white rounded-[8px] text-xs font-bold transition cursor-pointer">
                 Mengerti
             </button>
         </div>
@@ -268,12 +310,24 @@
             const icon = document.getElementById(iconId);
             if (input.type === 'password') {
                 input.type = 'text';
-                icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />`;
+                icon.innerHTML = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`;
             } else {
                 input.type = 'password';
-                icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />`;
+                icon.innerHTML = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
             }
         }
+
+        (function () {
+            const fab = document.getElementById('adminInfoFab');
+            if (!fab) return;
+            const toggleFabForKeyboard = () => {
+                const activeTag = document.activeElement ? document.activeElement.tagName : '';
+                const isTyping = activeTag === 'INPUT' || activeTag === 'TEXTAREA' || activeTag === 'SELECT';
+                fab.classList.toggle('hidden', isTyping);
+            };
+            document.addEventListener('focusin', toggleFabForKeyboard);
+            document.addEventListener('focusout', () => setTimeout(toggleFabForKeyboard, 120));
+        })();
     </script>
 </body>
 </html>

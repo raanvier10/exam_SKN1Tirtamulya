@@ -9,7 +9,7 @@
             <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Edit Jadwal Ujian</h2>
             <p class="text-xs sm:text-sm text-slate-500 mt-1">Perbarui parameter jadwal, target kelas, dan tautan kuesioner soal.</p>
         </div>
-        <a href="{{ route('admin.exams.show', $exam->id) }}" class="inline-flex items-center gap-[6px] px-3.5 py-2 rounded-[8px] text-xs sm:text-sm font-medium text-slate-600 bg-white border border-slate-200/80 hover:bg-slate-50 hover:text-indigo-600 transition-all shadow-2xs self-start sm:self-auto whitespace-nowrap">
+        <a href="{{ route('admin.exams.show', $exam->id) }}" class="inline-flex items-center gap-[6px] px-3.5 py-2 rounded-[8px] text-xs sm:text-sm font-medium text-slate-600 bg-white border border-slate-200/80 hover:bg-slate-50 hover:text-[#142C5C] transition-all shadow-2xs self-start sm:self-auto whitespace-nowrap">
             <svg class="w-[15px] h-[15px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
@@ -25,15 +25,15 @@
         <input type="hidden" name="start_at" id="start_at_hidden" value="{{ old('start_at', \Carbon\Carbon::parse($exam->start_at)->format('Y-m-d H:i:s')) }}">
 
         <!-- Card 1: Informasi Dasar -->
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-5">
+        <div class="bg-white rounded-[12px] border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-5">
             <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
-                <div class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">1</div>
+                <div class="w-7 h-7 rounded-lg bg-slate-100 text-[#142C5C] flex items-center justify-center font-bold text-xs">1</div>
                 <h3 class="text-base font-bold text-slate-900">Informasi & Kuesioner Soal</h3>
             </div>
 
             <div>
                 <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Judul Ujian <span class="text-rose-500">*</span></label>
-                <input type="text" name="title" value="{{ old('title', $exam->title) }}" required class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 transition-all">
+                <input type="text" name="title" value="{{ old('title', $exam->title) }}" required class="w-full bg-slate-50/50 border border-slate-200 rounded-[8px] px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#142C5C] focus:ring-3 focus:ring-[#142C5C]/10 transition-all">
             </div>
 
             <!-- Kategori / Jenis Ujian (UAS vs UTS) -->
@@ -41,9 +41,9 @@
                 <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Kategori / Jenis Ujian <span class="text-rose-500">*</span></label>
                 @if(Auth::user()->isTeacher())
                     <!-- Mode Guru: Terkunci Otomatis ke UTS / Penilaian Mapel -->
-                    <div class="p-3.5 rounded-xl border-2 border-emerald-500 bg-emerald-50/50 flex items-center justify-between gap-3 shadow-2xs">
+                    <div class="p-3.5 rounded-[8px] border-2 border-emerald-500 bg-emerald-50/50 flex items-center justify-between gap-3 shadow-2xs">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-2xs">
+                            <div class="w-10 h-10 rounded-[8px] bg-emerald-600 text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-2xs">
                                 📝
                             </div>
                             <div>
@@ -67,10 +67,10 @@
                              id="cardExamTypeUas"
                              role="button"
                              tabindex="0"
-                             class="relative flex items-center justify-between p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-150 select-none shadow-xs">
+                             class="relative flex items-center justify-between p-3.5 rounded-[8px] border-2 cursor-pointer transition-all duration-150 select-none shadow-xs">
                             <input type="radio" name="type" id="radioTypeUas" value="uas" {{ old('type', $exam->type ?? 'uas') === 'uas' ? 'checked' : '' }} class="sr-only">
                             <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                                <div class="w-9 h-9 rounded-lg bg-slate-200/70 text-[#142C5C] flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
                                     🏫
                                 </div>
                                 <div>
@@ -88,7 +88,7 @@
                              id="cardExamTypeUts"
                              role="button"
                              tabindex="0"
-                             class="relative flex items-center justify-between p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-150 select-none shadow-xs">
+                             class="relative flex items-center justify-between p-3.5 rounded-[8px] border-2 cursor-pointer transition-all duration-150 select-none shadow-xs">
                             <input type="radio" name="type" id="radioTypeUts" value="uts" {{ old('type', $exam->type ?? 'uas') === 'uts' ? 'checked' : '' }} class="sr-only">
                             <div class="flex items-center gap-3">
                                 <div class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
@@ -108,18 +108,26 @@
 
             <div>
                 <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Deskripsi / Petunjuk (Opsional)</label>
-                <textarea name="description" rows="2" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 transition-all">{{ old('description', $exam->description) }}</textarea>
+                <textarea name="description" rows="2" class="w-full bg-slate-50/50 border border-slate-200 rounded-[8px] px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#142C5C] focus:ring-3 focus:ring-[#142C5C]/10 transition-all">{{ old('description', $exam->description) }}</textarea>
+            </div>
+
+            <div>
+                <div class="flex items-center justify-between mb-2">
+                    <label for="access_code" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Kode Masuk Ujian / PIN (Opsional)</label>
+                    <span class="text-[11px] text-slate-400">Kosongkan bila tanpa kode</span>
+                </div>
+                <input type="text" id="access_code" name="access_code" maxlength="20" value="{{ old('access_code', $exam->access_code) }}" placeholder="Contoh: BEFD5Z" class="w-full sm:max-w-xs bg-slate-50/50 border border-slate-200 rounded-[8px] px-4 py-2.5 text-sm font-bold tracking-[0.12em] uppercase tabular-nums text-[#142C5C] placeholder:normal-case placeholder:tracking-normal placeholder:font-normal placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-[#142C5C] focus:ring-3 focus:ring-[#142C5C]/10 transition-all">
             </div>
 
             <div>
                 <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Google Form URL <span class="text-rose-500">*</span></label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                        <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg class="w-4 h-4 text-[#142C5C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                         </svg>
                     </div>
-                    <input type="url" name="google_form_url" value="{{ old('google_form_url', $exam->google_form_url) }}" required class="w-full bg-slate-50/50 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-900 tabular-nums placeholder-slate-400 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 transition-all">
+                    <input type="url" name="google_form_url" value="{{ old('google_form_url', $exam->google_form_url) }}" required class="w-full bg-slate-50/50 border border-slate-200 rounded-[8px] pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-900 tabular-nums placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#142C5C] focus:ring-3 focus:ring-[#142C5C]/10 transition-all">
                 </div>
 
                 @php
@@ -128,7 +136,7 @@
                     $serverHost = \App\Http\Controllers\SebExamController::getPublicServerBaseUrl();
                 @endphp
                 <!-- Card Akses Safe Exam Browser (iOS / SEB) -->
-                <div class="mt-4 p-3.5 sm:p-4 rounded-xl bg-purple-50/60 border border-purple-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="mt-4 p-3.5 sm:p-4 rounded-[8px] bg-purple-50/60 border border-purple-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div class="overflow-hidden min-w-0">
                         <div class="text-purple-900 text-xs font-semibold uppercase tracking-wider mb-1 flex items-center gap-1.5 flex-wrap">
                             <span class="inline-flex items-center justify-center px-1.5 py-0.5 rounded bg-purple-600 text-white text-[10px] font-extrabold tracking-wide shrink-0 shadow-2xs">
@@ -143,13 +151,13 @@
                     </div>
 
                     <div class="flex items-center gap-2 shrink-0">
-                        <button type="button" onclick="openSebQrModal()" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-200 hover:border-purple-600 rounded-xl text-xs font-bold shadow-2xs transition-all shrink-0 active:scale-[0.98]">
+                        <button type="button" onclick="openSebQrModal()" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-200 hover:border-purple-600 rounded-[8px] text-xs font-bold shadow-2xs transition-all shrink-0 active:scale-[0.98]">
                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
                             </svg>
                             Tampilkan QR
                         </button>
-                        <a href="{{ route('seb.exam.config', $exam) }}" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-200 hover:border-purple-600 rounded-xl text-xs font-bold shadow-2xs transition-all shrink-0 active:scale-[0.98]" title="Unduh file konfigurasi .seb">
+                        <a href="{{ route('seb.exam.config', $exam) }}" class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white hover:bg-purple-600 text-purple-700 hover:text-white border border-purple-200 hover:border-purple-600 rounded-[8px] text-xs font-bold shadow-2xs transition-all shrink-0 active:scale-[0.98]" title="Unduh file konfigurasi .seb">
                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                             </svg>
@@ -161,9 +169,9 @@
         </div>
 
         <!-- Card 2: Pengaturan Waktu & Durasi -->
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-6">
+        <div class="bg-white rounded-[12px] border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-6">
             <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
-                <div class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">2</div>
+                <div class="w-7 h-7 rounded-lg bg-slate-100 text-[#142C5C] flex items-center justify-center font-bold text-xs">2</div>
                 <h3 class="text-base font-bold text-slate-900">Jadwal Pelaksanaan & Durasi</h3>
             </div>
 
@@ -171,18 +179,18 @@
                 <!-- 1. Tanggal Ujian -->
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Tanggal Ujian <span class="text-rose-500">*</span></label>
-                    <input type="date" id="exam_date" value="{{ \Carbon\Carbon::parse($exam->start_at)->format('Y-m-d') }}" required class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 transition-all font-medium">
+                    <input type="date" id="exam_date" value="{{ \Carbon\Carbon::parse($exam->start_at)->format('Y-m-d') }}" required class="w-full bg-slate-50/50 border border-slate-200 rounded-[8px] px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-[#142C5C] focus:ring-3 focus:ring-[#142C5C]/10 transition-all font-medium">
                 </div>
 
                 <!-- 2. Jam Mulai -->
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Jam Mulai <span class="text-rose-500">*</span></label>
-                    <input type="time" id="exam_time" value="{{ \Carbon\Carbon::parse($exam->start_at)->format('H:i') }}" required class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 transition-all font-medium">
+                    <input type="time" id="exam_time" value="{{ \Carbon\Carbon::parse($exam->start_at)->format('H:i') }}" required class="w-full bg-slate-50/50 border border-slate-200 rounded-[8px] px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-[#142C5C] focus:ring-3 focus:ring-[#142C5C]/10 transition-all font-medium">
                     <div class="flex items-center gap-1.5 mt-2 flex-wrap">
-                        <button type="button" onclick="setExamTime('07:30')" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors">07:30</button>
-                        <button type="button" onclick="setExamTime('08:00')" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors">08:00</button>
-                        <button type="button" onclick="setExamTime('09:30')" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors">09:30</button>
-                        <button type="button" onclick="setExamTime('13:00')" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors">13:00</button>
+                        <button type="button" onclick="setExamTime('07:30')" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-slate-100 hover:text-[#142C5C] text-slate-600 rounded-md transition-colors">07:30</button>
+                        <button type="button" onclick="setExamTime('08:00')" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-slate-100 hover:text-[#142C5C] text-slate-600 rounded-md transition-colors">08:00</button>
+                        <button type="button" onclick="setExamTime('09:30')" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-slate-100 hover:text-[#142C5C] text-slate-600 rounded-md transition-colors">09:30</button>
+                        <button type="button" onclick="setExamTime('13:00')" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-slate-100 hover:text-[#142C5C] text-slate-600 rounded-md transition-colors">13:00</button>
                     </div>
                 </div>
 
@@ -190,30 +198,30 @@
                 <div>
                     <div class="flex items-center justify-between mb-2">
                         <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Durasi (Menit) <span class="text-rose-500">*</span></label>
-                        <span class="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded" id="edit_duration_jp_pill">{{ round($exam->duration / 35, 1) }} JP</span>
+                        <span class="text-[10px] font-bold text-[#142C5C] bg-slate-100 border border-slate-200 px-2 py-0.5 rounded" id="edit_duration_jp_pill">{{ round($exam->duration / 35, 1) }} JP</span>
                     </div>
-                    <input type="number" name="duration" id="exam_duration" required min="1" value="{{ old('duration', $exam->duration) }}" class="w-full bg-slate-50/50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 transition-all font-medium">
+                    <input type="number" name="duration" id="exam_duration" required min="1" value="{{ old('duration', $exam->duration) }}" class="w-full bg-slate-50/50 border border-slate-200 rounded-[8px] px-3.5 py-2.5 text-sm text-slate-900 focus:bg-white focus:outline-none focus:border-[#142C5C] focus:ring-3 focus:ring-[#142C5C]/10 transition-all font-medium">
                     <div class="flex items-center gap-1.5 mt-2 flex-wrap">
-                        <button type="button" onclick="setExamDuration(35)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors" title="1 Jam Pelajaran">1 JP (35m)</button>
-                        <button type="button" onclick="setExamDuration(70)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors" title="2 Jam Pelajaran">2 JP (70m)</button>
-                        <button type="button" onclick="setExamDuration(105)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-slate-600 rounded-md transition-colors" title="3 Jam Pelajaran">3 JP (105m)</button>
+                        <button type="button" onclick="setExamDuration(35)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-slate-100 hover:text-[#142C5C] text-slate-600 rounded-md transition-colors" title="1 Jam Pelajaran">1 JP (35m)</button>
+                        <button type="button" onclick="setExamDuration(70)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-slate-100 hover:text-[#142C5C] text-slate-600 rounded-md transition-colors" title="2 Jam Pelajaran">2 JP (70m)</button>
+                        <button type="button" onclick="setExamDuration(105)" class="px-2 py-0.5 text-[11px] font-medium bg-slate-100 hover:bg-slate-100 hover:text-[#142C5C] text-slate-600 rounded-md transition-colors" title="3 Jam Pelajaran">3 JP (105m)</button>
                     </div>
                 </div>
             </div>
 
             <!-- Live Schedule Calculation Preview Box (Redesigned Structured Layout) -->
-            <div class="p-4 sm:p-5 rounded-2xl bg-indigo-50/60 border border-indigo-100/90 space-y-3">
+            <div class="p-4 sm:p-5 rounded-2xl bg-slate-50/80 border border-slate-200 space-y-3">
                 <div class="flex flex-wrap items-center justify-between gap-2">
                     <div class="flex items-center gap-2">
-                        <div class="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-xs shadow-2xs">
+                        <div class="w-6 h-6 rounded-lg bg-[#142C5C] text-white flex items-center justify-center text-xs shadow-2xs">
                             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                         </div>
-                        <span class="text-xs font-bold text-indigo-950 uppercase tracking-wider">Kalkulasi Jadwal Sesi Ujian</span>
+                        <span class="text-xs font-bold text-[#142C5C] uppercase tracking-wider">Kalkulasi Jadwal Sesi Ujian</span>
                     </div>
-                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-indigo-200/80 text-xs font-bold text-indigo-700 shadow-2xs">
-                        <svg class="w-3.5 h-3.5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 text-xs font-bold text-[#142C5C] shadow-2xs">
+                        <svg class="w-3.5 h-3.5 text-[#142C5C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <span>Durasi: <span id="preview_duration_pill">90 Menit</span></span>
@@ -223,8 +231,8 @@
                 <!-- 2-Column Detail Cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     <!-- Date Metric -->
-                    <div class="flex items-center gap-3 p-3 rounded-xl bg-white border border-indigo-100/80 shadow-2xs">
-                        <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-700 flex flex-col items-center justify-center shrink-0 leading-none">
+                    <div class="flex items-center gap-3 p-3 rounded-[8px] bg-white border border-slate-200 shadow-2xs">
+                        <div class="w-10 h-10 rounded-[8px] bg-slate-100 text-slate-700 flex flex-col items-center justify-center shrink-0 leading-none">
                             <span class="text-[9px] uppercase font-bold text-slate-400" id="preview_day_short">SAB</span>
                             <span class="text-sm font-black text-slate-800" id="preview_date_num">12</span>
                         </div>
@@ -235,8 +243,8 @@
                     </div>
 
                     <!-- Time Range Metric -->
-                    <div class="flex items-center gap-3 p-3 rounded-xl bg-white border border-indigo-100/80 shadow-2xs">
-                        <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                    <div class="flex items-center gap-3 p-3 rounded-[8px] bg-white border border-slate-200 shadow-2xs">
+                        <div class="w-10 h-10 rounded-[8px] bg-slate-100 text-[#142C5C] flex items-center justify-center shrink-0">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
@@ -252,8 +260,8 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-1.5 text-[11px] text-indigo-800/70 pt-0.5">
-                    <svg class="w-3.5 h-3.5 shrink-0 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="flex items-center gap-1.5 text-[11px] text-[#142C5C]/75 pt-0.5">
+                    <svg class="w-3.5 h-3.5 shrink-0 text-[#142C5C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     <span>Siswa hanya dapat mengakses ujian tepat dalam rentang waktu pelaksanaan di atas.</span>
@@ -276,7 +284,7 @@
                         @if($currentViolation === 1)
                             <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Mode Ketat (1x Keluar)
                         @elseif($currentViolation === 3)
-                            <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Mode Standar (3x Keluar)
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#142C5C]"></span> Mode Standar (3x Keluar)
                         @elseif($currentViolation === 5)
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Mode Longgar (5x Keluar)
                         @else
@@ -288,27 +296,27 @@
                 <!-- 3 Preset Cards -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <!-- Preset 1x -->
-                    <button type="button" onclick="selectViolationPreset(1)" id="preset_violation_1" class="violation-preset-card p-4 rounded-2xl border text-left transition-all {{ $currentViolation === 1 ? 'border-indigo-500 bg-indigo-50/50 ring-2 ring-indigo-500/20 shadow-xs' : 'border-slate-200/80 bg-white hover:border-slate-300 hover:shadow-xs' }} cursor-pointer group">
+                    <button type="button" onclick="selectViolationPreset(1)" id="preset_violation_1" class="violation-preset-card p-4 rounded-2xl border text-left transition-all {{ $currentViolation === 1 ? 'border-[#142C5C] bg-slate-50/80 ring-2 ring-[#142C5C]/15 shadow-xs' : 'border-slate-200/80 bg-white hover:border-slate-300 hover:shadow-xs' }} cursor-pointer group">
                         <div class="flex items-center justify-between">
-                            <span class="text-lg font-bold {{ $currentViolation === 1 ? 'text-indigo-900' : 'text-slate-900 group-hover:text-indigo-600' }} transition-colors">1x Keluar</span>
+                            <span class="text-lg font-bold {{ $currentViolation === 1 ? 'text-[#142C5C]' : 'text-slate-900 group-hover:text-[#142C5C]' }} transition-colors">1x Keluar</span>
                             <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-rose-50 text-rose-600 border border-rose-100">Ketat</span>
                         </div>
                         <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">Langsung terkunci saat pertama kali minimize aplikasi.</p>
                     </button>
 
                     <!-- Preset 3x -->
-                    <button type="button" onclick="selectViolationPreset(3)" id="preset_violation_3" class="violation-preset-card p-4 rounded-2xl border text-left transition-all {{ $currentViolation === 3 ? 'border-indigo-500 bg-indigo-50/50 ring-2 ring-indigo-500/20 shadow-xs' : 'border-slate-200/80 bg-white hover:border-slate-300 hover:shadow-xs' }} cursor-pointer group">
+                    <button type="button" onclick="selectViolationPreset(3)" id="preset_violation_3" class="violation-preset-card p-4 rounded-2xl border text-left transition-all {{ $currentViolation === 3 ? 'border-[#142C5C] bg-slate-50/80 ring-2 ring-[#142C5C]/15 shadow-xs' : 'border-slate-200/80 bg-white hover:border-slate-300 hover:shadow-xs' }} cursor-pointer group">
                         <div class="flex items-center justify-between">
-                            <span class="text-lg font-bold {{ $currentViolation === 3 ? 'text-indigo-900' : 'text-slate-900 group-hover:text-indigo-600' }} transition-colors">3x Keluar</span>
-                            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 border border-indigo-200/60">Standar</span>
+                            <span class="text-lg font-bold {{ $currentViolation === 3 ? 'text-[#142C5C]' : 'text-slate-900 group-hover:text-[#142C5C]' }} transition-colors">3x Keluar</span>
+                            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-slate-200/70 text-[#142C5C] border border-slate-200">Standar</span>
                         </div>
-                        <p class="text-xs text-indigo-700/80 mt-1.5 leading-relaxed">Rekomendasi resmi SMKN 1 Tirtamulya untuk ujian formal.</p>
+                        <p class="text-xs text-[#142C5C]/75 mt-1.5 leading-relaxed">Rekomendasi resmi SMKN 1 Tirtamulya untuk ujian formal.</p>
                     </button>
 
                     <!-- Preset 5x -->
-                    <button type="button" onclick="selectViolationPreset(5)" id="preset_violation_5" class="violation-preset-card p-4 rounded-2xl border text-left transition-all {{ $currentViolation === 5 ? 'border-indigo-500 bg-indigo-50/50 ring-2 ring-indigo-500/20 shadow-xs' : 'border-slate-200/80 bg-white hover:border-slate-300 hover:shadow-xs' }} cursor-pointer group">
+                    <button type="button" onclick="selectViolationPreset(5)" id="preset_violation_5" class="violation-preset-card p-4 rounded-2xl border text-left transition-all {{ $currentViolation === 5 ? 'border-[#142C5C] bg-slate-50/80 ring-2 ring-[#142C5C]/15 shadow-xs' : 'border-slate-200/80 bg-white hover:border-slate-300 hover:shadow-xs' }} cursor-pointer group">
                         <div class="flex items-center justify-between">
-                            <span class="text-lg font-bold {{ $currentViolation === 5 ? 'text-indigo-900' : 'text-slate-900 group-hover:text-indigo-600' }} transition-colors">5x Keluar</span>
+                            <span class="text-lg font-bold {{ $currentViolation === 5 ? 'text-[#142C5C]' : 'text-slate-900 group-hover:text-[#142C5C]' }} transition-colors">5x Keluar</span>
                             <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-600 border border-emerald-100">Longgar</span>
                         </div>
                         <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">Toleransi tinggi, cocok untuk simulasi & kendala teknis.</p>
@@ -325,7 +333,7 @@
                     </div>
 
                     <div class="flex items-center gap-2 self-center sm:self-auto">
-                        <div class="inline-flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-2xs">
+                        <div class="inline-flex items-center bg-white border border-slate-200 rounded-[8px] p-1 shadow-2xs">
                             <button type="button" onclick="stepViolation(-1)" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 active:bg-slate-200 font-bold transition-colors">
                                 −
                             </button>
@@ -345,15 +353,15 @@
                     <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>Jika siswa keluar aplikasi melebihi <strong id="violation_live_text" class="text-indigo-700 font-bold">{{ $currentViolation }} kali</strong>, ujian otomatis terkunci dan wajib dibuka oleh guru pengawas atau kurikulum.</span>
+                    <span>Jika siswa keluar aplikasi melebihi <strong id="violation_live_text" class="text-[#142C5C] font-bold">{{ $currentViolation }} kali</strong>, ujian otomatis terkunci dan wajib dibuka oleh guru pengawas atau kurikulum.</span>
                 </div>
             </div>
         </div>
 
         <!-- Card 3: Target Kelas & Status -->
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-6">
+        <div class="bg-white rounded-[12px] border border-slate-200/80 shadow-xs p-6 sm:p-8 space-y-6">
             <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
-                <div class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">3</div>
+                <div class="w-7 h-7 rounded-lg bg-slate-100 text-[#142C5C] flex items-center justify-center font-bold text-xs">3</div>
                 <h3 class="text-base font-bold text-slate-900">Target Kelas & Status Publikasi</h3>
             </div>
 
@@ -364,7 +372,7 @@
                         <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Target Kelas / Peserta <span class="text-rose-500">*</span></label>
                         <p class="text-xs text-slate-500 mt-0.5">Pilih minimal 1 kelas yang wajib mengikuti ujian ini.</p>
                     </div>
-                    <button type="button" id="toggle-all-classes" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors">
+                    <button type="button" id="toggle-all-classes" class="text-xs font-bold text-[#142C5C] hover:text-[#142C5C] bg-slate-100 hover:bg-slate-200/70 px-3 py-1.5 rounded-lg transition-colors">
                         Pilih Semua Kelas
                     </button>
                 </div>
@@ -378,14 +386,14 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
-                    <input type="text" id="classSearchInput" placeholder="Cari kelas..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200/80 rounded-xl text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all">
+                    <input type="text" id="classSearchInput" placeholder="Cari kelas..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200/80 rounded-[8px] text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#142C5C]/10 focus:border-[#142C5C] transition-all">
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 p-4 bg-slate-50/70 border border-slate-200/80 rounded-2xl max-h-56 overflow-y-auto">
                     @forelse($classes as $c)
-                    <label class="class-card group flex items-center gap-2.5 p-2.5 bg-white border border-slate-200/80 rounded-xl cursor-pointer transition-all hover:border-indigo-300 select-none" data-classname="{{ strtolower($c->name) }}">
-                        <input type="checkbox" name="classes[]" value="{{ $c->id }}" {{ in_array($c->id, old('classes', $selectedClasses ?? [])) ? 'checked' : '' }} class="class-checkbox rounded text-indigo-600 focus:ring-indigo-500/20 border-slate-300 w-4 h-4">
-                        <span class="text-xs font-semibold text-slate-700 group-hover:text-indigo-700 transition-colors">{{ $c->name }}</span>
+                    <label class="class-card group flex items-center gap-2.5 p-2.5 bg-white border border-slate-200/80 rounded-[8px] cursor-pointer transition-all hover:border-[#142C5C]/50 select-none" data-classname="{{ strtolower($c->name) }}">
+                        <input type="checkbox" name="classes[]" value="{{ $c->id }}" {{ in_array($c->id, old('classes', $selectedClasses ?? [])) ? 'checked' : '' }} class="class-checkbox rounded text-[#142C5C] focus:ring-[#142C5C]/10 border-slate-300 w-4 h-4">
+                        <span class="text-xs font-semibold text-slate-700 group-hover:text-[#142C5C] transition-colors">{{ $c->name }}</span>
                     </label>
                     @empty
                     <div class="col-span-full text-xs text-slate-400 py-3 text-center">Belum ada data kelas yang terdaftar.</div>
@@ -414,8 +422,8 @@
                     </div>
 
                     <!-- Option 2: Draft / Nonaktif -->
-                    <div onclick="selectExamStatus('inactive')" id="card_status_inactive" class="status-card p-4 rounded-2xl border-2 {{ $exam->status === 'inactive' ? 'border-indigo-500 bg-indigo-50/40' : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100' }} cursor-pointer transition-all flex items-start gap-3">
-                        <div class="w-4 h-4 rounded-full border-2 {{ $exam->status === 'inactive' ? 'border-indigo-600 bg-indigo-600' : 'border-slate-400' }} mt-0.5 flex items-center justify-center shrink-0">
+                    <div onclick="selectExamStatus('inactive')" id="card_status_inactive" class="status-card p-4 rounded-2xl border-2 {{ $exam->status === 'inactive' ? 'border-[#142C5C] bg-slate-50/80' : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100' }} cursor-pointer transition-all flex items-start gap-3">
+                        <div class="w-4 h-4 rounded-full border-2 {{ $exam->status === 'inactive' ? 'border-[#142C5C] bg-[#142C5C]' : 'border-slate-400' }} mt-0.5 flex items-center justify-center shrink-0">
                             <div class="w-1.5 h-1.5 rounded-full {{ $exam->status === 'inactive' ? 'bg-white' : 'bg-transparent' }}"></div>
                         </div>
                         <div>
@@ -429,10 +437,10 @@
 
         <!-- Tombol Aksi Bawah -->
         <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-2">
-            <a href="{{ route('admin.exams.show', $exam->id) }}" class="px-5 py-2.5 text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl transition-colors shadow-2xs text-center">
+            <a href="{{ route('admin.exams.show', $exam->id) }}" class="px-5 py-2.5 text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-[8px] transition-colors shadow-2xs text-center">
                 Batal
             </a>
-            <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold shadow-sm shadow-indigo-500/25 transition-all duration-150 active:scale-[0.98]">
+            <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-[#142C5C] hover:bg-[#142C5C] text-white rounded-[8px] text-sm font-semibold shadow-sm shadow-slate-900/10 transition-all duration-150 active:scale-[0.98]">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
@@ -530,13 +538,13 @@
 
         if (status === 'active') {
             activeCard.className = "status-card p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50/40 cursor-pointer transition-all flex items-start gap-3";
-            inactiveCard.className = "status-card p-4 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-slate-100 cursor-pointer transition-all flex items-start gap-3";
+            inactiveCard.className = "status-card p-4 rounded-[12px] border border-slate-200 bg-slate-50/50 hover:bg-slate-100 cursor-pointer transition-all flex items-start gap-3";
             activeCard.querySelector('div').className = "w-4 h-4 rounded-full border-2 border-emerald-600 bg-emerald-600 mt-0.5 flex items-center justify-center shrink-0";
             inactiveCard.querySelector('div').className = "w-4 h-4 rounded-full border-2 border-slate-400 mt-0.5 flex items-center justify-center shrink-0";
         } else {
-            inactiveCard.className = "status-card p-4 rounded-2xl border-2 border-indigo-500 bg-indigo-50/40 cursor-pointer transition-all flex items-start gap-3";
-            activeCard.className = "status-card p-4 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-slate-100 cursor-pointer transition-all flex items-start gap-3";
-            inactiveCard.querySelector('div').className = "w-4 h-4 rounded-full border-2 border-indigo-600 bg-indigo-600 mt-0.5 flex items-center justify-center shrink-0";
+            inactiveCard.className = "status-card p-4 rounded-2xl border-2 border-[#142C5C] bg-slate-50/80 cursor-pointer transition-all flex items-start gap-3";
+            activeCard.className = "status-card p-4 rounded-[12px] border border-slate-200 bg-slate-50/50 hover:bg-slate-100 cursor-pointer transition-all flex items-start gap-3";
+            inactiveCard.querySelector('div').className = "w-4 h-4 rounded-full border-2 border-[#142C5C] bg-[#142C5C] mt-0.5 flex items-center justify-center shrink-0";
             activeCard.querySelector('div').className = "w-4 h-4 rounded-full border-2 border-slate-400 mt-0.5 flex items-center justify-center shrink-0";
         }
     }
@@ -584,13 +592,13 @@
             const el = document.getElementById(`preset_violation_${v}`);
             if (!el) return;
             if (v === num) {
-                el.className = "violation-preset-card p-4 rounded-2xl border text-left transition-all border-indigo-500 bg-indigo-50/50 ring-2 ring-indigo-500/20 shadow-xs cursor-pointer group";
+                el.className = "violation-preset-card p-4 rounded-2xl border text-left transition-all border-[#142C5C] bg-slate-50/80 ring-2 ring-[#142C5C]/15 shadow-xs cursor-pointer group";
                 const title = el.querySelector('span.text-lg');
-                if (title) title.className = "text-lg font-bold text-indigo-900";
+                if (title) title.className = "text-lg font-bold text-[#142C5C]";
             } else {
                 el.className = "violation-preset-card p-4 rounded-2xl border text-left transition-all border-slate-200/80 bg-white hover:border-slate-300 hover:shadow-xs cursor-pointer group";
                 const title = el.querySelector('span.text-lg');
-                if (title) title.className = "text-lg font-bold text-slate-900 group-hover:text-indigo-600 transition-colors";
+                if (title) title.className = "text-lg font-bold text-slate-900 group-hover:text-[#142C5C] transition-colors";
             }
         });
 
@@ -598,7 +606,7 @@
         const badge = document.getElementById('violation_badge');
         if (badge) {
             if (num === 1) badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Mode Ketat (1x Keluar)';
-            else if (num === 3) badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Mode Standar (3x Keluar)';
+            else if (num === 3) badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-[#142C5C]"></span> Mode Standar (3x Keluar)';
             else if (num === 5) badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Mode Longgar (5x Keluar)';
             else badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Mode Kustom (${num}x Keluar)`;
         }
@@ -628,7 +636,7 @@
             radioUas.checked = false;
 
             if (cardUts) {
-                cardUts.className = 'relative flex items-center justify-between p-3.5 rounded-xl border-2 border-emerald-600 bg-emerald-50/40 ring-2 ring-emerald-500/20 cursor-pointer transition-all duration-150 select-none shadow-xs';
+                cardUts.className = 'relative flex items-center justify-between p-3.5 rounded-[8px] border-2 border-emerald-600 bg-emerald-50/40 ring-2 ring-emerald-500/20 cursor-pointer transition-all duration-150 select-none shadow-xs';
             }
             if (indUts) {
                 indUts.className = 'w-5 h-5 rounded-full border-2 border-emerald-600 bg-emerald-600 text-white flex items-center justify-center shrink-0 transition-all';
@@ -636,7 +644,7 @@
             }
 
             if (cardUas) {
-                cardUas.className = 'relative flex items-center justify-between p-3.5 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60 cursor-pointer transition-all duration-150 select-none';
+                cardUas.className = 'relative flex items-center justify-between p-3.5 rounded-[8px] border-2 border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60 cursor-pointer transition-all duration-150 select-none';
             }
             if (indUas) {
                 indUas.className = 'w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0 transition-all';
@@ -647,15 +655,15 @@
             radioUts.checked = false;
 
             if (cardUas) {
-                cardUas.className = 'relative flex items-center justify-between p-3.5 rounded-xl border-2 border-indigo-600 bg-indigo-50/40 ring-2 ring-indigo-500/20 cursor-pointer transition-all duration-150 select-none shadow-xs';
+                cardUas.className = 'relative flex items-center justify-between p-3.5 rounded-[8px] border-2 border-[#142C5C] bg-slate-50/80 ring-2 ring-[#142C5C]/15 cursor-pointer transition-all duration-150 select-none shadow-xs';
             }
             if (indUas) {
-                indUas.className = 'w-5 h-5 rounded-full border-2 border-indigo-600 bg-indigo-600 text-white flex items-center justify-center shrink-0 transition-all';
+                indUas.className = 'w-5 h-5 rounded-full border-2 border-[#142C5C] bg-[#142C5C] text-white flex items-center justify-center shrink-0 transition-all';
                 indUas.innerHTML = '<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>';
             }
 
             if (cardUts) {
-                cardUts.className = 'relative flex items-center justify-between p-3.5 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60 cursor-pointer transition-all duration-150 select-none';
+                cardUts.className = 'relative flex items-center justify-between p-3.5 rounded-[8px] border-2 border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/60 cursor-pointer transition-all duration-150 select-none';
             }
             if (indUts) {
                 indUts.className = 'w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0 transition-all';
@@ -670,7 +678,7 @@
 </script>
 
 <!-- Modal QR Code Safe Exam Browser -->
-<dialog id="sebQrModal" class="backdrop:bg-slate-900/40 backdrop:backdrop-blur-xs p-0 rounded-2xl border border-slate-200 shadow-2xl w-full max-w-sm m-auto overflow-hidden">
+<dialog id="sebQrModal" class="backdrop:bg-slate-900/40 backdrop:backdrop-blur-xs p-0 rounded-[16px] border border-slate-200 shadow-2xl w-full max-w-sm m-auto overflow-hidden">
     <div class="px-5 py-4 border-b border-slate-100 bg-white flex items-center justify-between">
         <div>
             <h3 class="text-base font-bold text-slate-900">QR Code Ujian (SEB iOS)</h3>
@@ -686,11 +694,11 @@
         </div>
         <div class="text-xs font-bold text-slate-800">{{ $exam->title }}</div>
         <p class="text-[11px] text-slate-500 mt-1 mb-2">Arahkan kamera iPhone siswa langsung ke kode QR di atas untuk membuka aplikasi Safe Exam Browser.</p>
-        <div class="text-[11px] text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2.5 py-1 rounded-lg mb-3">
+        <div class="text-[11px] text-[#142C5C] bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-lg mb-3">
             Host: <strong class="tabular-nums">{{ $serverHost }}</strong> (iPhone & Laptop wajib di Wi-Fi / Hotspot yang sama).
         </div>
 
-        <div class="flex items-center gap-2 bg-purple-50/70 p-2 rounded-xl border border-purple-200 text-left">
+        <div class="flex items-center gap-2 bg-purple-50/70 p-2 rounded-[8px] border border-purple-200 text-left">
             <span class="text-[11px] tabular-nums text-purple-900 truncate select-all flex-1 pl-1">{{ $sebSchemeUrl }}</span>
             <button type="button" onclick="navigator.clipboard.writeText('{{ $sebSchemeUrl }}'); alert('Link SEB berhasil disalin!');" class="px-2.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-semibold shrink-0 transition-colors shadow-2xs">
                 Salin Link

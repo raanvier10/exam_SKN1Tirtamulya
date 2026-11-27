@@ -31,7 +31,7 @@
                 <svg class="w-[14px] h-[14px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" /></svg>
                 <span>Reset Draf</span>
             </button>
-            <a href="{{ $backUrl }}" class="inline-flex items-center gap-[6px] px-3.5 py-2 rounded-[8px] text-xs sm:text-sm font-semibold text-slate-700 bg-white border border-slate-200 hover:border-[#2457E8] hover:text-[#2457E8] transition-all shadow-2xs whitespace-nowrap">
+            <a href="{{ $backUrl }}" class="inline-flex items-center gap-[6px] px-3.5 py-2 rounded-[8px] text-xs sm:text-sm font-semibold text-slate-700 bg-white border border-slate-200 hover:border-[#142C5C] hover:text-[#142C5C] transition-all shadow-2xs whitespace-nowrap">
                 <svg class="w-[15px] h-[15px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
                 <span>Kembali</span>
             </a>
@@ -39,9 +39,9 @@
     </div>
 
     <!-- Banner Pemulihan Draf Autosave -->
-    <div id="draftRestoredBanner" class="hidden mb-6 p-4 rounded-2xl bg-[#F5F8FF] border border-blue-200 text-[#142C5C] flex items-center justify-between gap-3 shadow-2xs">
+    <div id="draftRestoredBanner" class="hidden mb-6 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-[#142C5C] flex items-center justify-between gap-3 shadow-2xs">
         <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-xl bg-[#2457E8] text-white flex items-center justify-center shrink-0">
+            <div class="w-8 h-8 rounded-[8px] bg-[#142C5C] text-white flex items-center justify-center shrink-0">
                 <i data-lucide="check" class="w-4 h-4"></i>
             </div>
             <div>
@@ -55,21 +55,21 @@
     </div>
 
     <!-- STEPPER PROGRESS BAR -->
-    <div class="mb-6 bg-white p-2.5 sm:p-3 rounded-2xl border border-slate-200 shadow-2xs">
+    <div class="mb-6 bg-white p-2.5 sm:p-3 rounded-[12px] border border-slate-200 shadow-2xs">
         <div class="grid grid-cols-3 gap-2 sm:gap-3 relative">
             <!-- Step 1 Button -->
-            <button type="button" onclick="handleStepTabClick(1)" id="step-tab-1" class="step-tab flex items-center gap-2 sm:gap-3 p-2.5 rounded-xl transition-all text-left bg-[#F5F8FF] text-[#142C5C] border border-blue-200 shadow-2xs cursor-pointer">
-                <div class="step-icon-box w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#2457E8] text-white flex items-center justify-center shrink-0 transition-all">
+            <button type="button" onclick="handleStepTabClick(1)" id="step-tab-1" class="step-tab flex items-center gap-2 sm:gap-3 p-2.5 rounded-[8px] transition-all text-left bg-slate-50 text-[#142C5C] border border-slate-200 shadow-2xs cursor-pointer">
+                <div class="step-icon-box w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#142C5C] text-white flex items-center justify-center shrink-0 transition-all">
                     <i data-lucide="file-text" class="w-4 h-4"></i>
                 </div>
                 <div class="min-w-0">
-                    <span class="step-sub text-[10px] font-semibold text-[#2457E8] uppercase tracking-wider block">Langkah 1</span>
+                    <span class="step-sub text-[10px] font-semibold text-[#142C5C] uppercase tracking-wider block">Langkah 1</span>
                     <span class="step-label text-xs sm:text-sm font-bold text-[#142C5C] truncate block">Info &amp; Soal</span>
                 </div>
             </button>
 
             <!-- Step 2 Button -->
-            <button type="button" onclick="handleStepTabClick(2)" id="step-tab-2" class="step-tab flex items-center gap-2 sm:gap-3 p-2.5 rounded-xl transition-all text-left bg-slate-50/70 text-slate-500 hover:bg-slate-100/80 border border-transparent cursor-pointer">
+            <button type="button" onclick="handleStepTabClick(2)" id="step-tab-2" class="step-tab flex items-center gap-2 sm:gap-3 p-2.5 rounded-[8px] transition-all text-left bg-slate-50/70 text-slate-500 hover:bg-slate-100/80 border border-transparent cursor-pointer">
                 <div class="step-icon-box w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-white border border-slate-200 text-slate-400 flex items-center justify-center shrink-0 transition-all">
                     <i data-lucide="calendar" class="w-4 h-4"></i>
                 </div>
@@ -80,7 +80,7 @@
             </button>
 
             <!-- Step 3 Button -->
-            <button type="button" onclick="handleStepTabClick(3)" id="step-tab-3" class="step-tab flex items-center gap-2 sm:gap-3 p-2.5 rounded-xl transition-all text-left bg-slate-50/70 text-slate-500 hover:bg-slate-100/80 border border-transparent cursor-pointer">
+            <button type="button" onclick="handleStepTabClick(3)" id="step-tab-3" class="step-tab flex items-center gap-2 sm:gap-3 p-2.5 rounded-[8px] transition-all text-left bg-slate-50/70 text-slate-500 hover:bg-slate-100/80 border border-transparent cursor-pointer">
                 <div class="step-icon-box w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-white border border-slate-200 text-slate-400 flex items-center justify-center shrink-0 transition-all">
                     <i data-lucide="shield-check" class="w-4 h-4"></i>
                 </div>
@@ -100,8 +100,8 @@
         <!-- LANGKAH 1: INFORMASI UJIAN & LINK SOAL                        -->
         <!-- ============================================================= -->
         <div id="step-panel-1" class="step-panel space-y-5">
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
-                <div class="bg-[#0D2149] px-6 py-4 text-white">
+            <div class="card overflow-hidden">
+                <div class="bg-[#142C5C] px-6 py-4 text-white">
                     <h3 class="text-sm sm:text-base font-bold tracking-tight">Informasi Ujian &amp; Kuesioner Soal</h3>
                     <p class="text-xs text-blue-200 mt-0.5">Tentukan nama ujian dan cantumkan tautan Google Form kuesioner soal.</p>
                 </div>
@@ -121,10 +121,10 @@
                                      id="cardExamTypeUas"
                                      role="button"
                                      tabindex="0"
-                                     class="relative flex items-center justify-between p-3.5 rounded-xl border-2 border-[#2457E8] bg-[#F5F8FF] cursor-pointer transition-all duration-150 select-none">
+                                     class="relative flex items-center justify-between p-3.5 rounded-[8px] border-2 border-[#142C5C] bg-slate-50 cursor-pointer transition-all duration-150 select-none">
                                     <input type="radio" name="type" id="radioTypeUas" value="uas" {{ $activeType === 'uas' ? 'checked' : '' }} class="sr-only">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-9 h-9 rounded-lg bg-[#2457E8]/10 text-[#2457E8] flex items-center justify-center shrink-0">
+                                        <div class="w-9 h-9 rounded-lg bg-[#142C5C]/10 text-[#142C5C] flex items-center justify-center shrink-0">
                                             <i data-lucide="building-2" class="w-4 h-4"></i>
                                         </div>
                                         <div>
@@ -132,7 +132,7 @@
                                             <div class="text-[11px] text-slate-500">Ujian sekolah serentak, diawasi per ruang kelas</div>
                                         </div>
                                     </div>
-                                    <div id="indicatorTypeUas" class="w-5 h-5 rounded-full border-2 border-[#2457E8] bg-[#2457E8] text-white flex items-center justify-center shrink-0 transition-all">
+                                    <div id="indicatorTypeUas" class="w-5 h-5 rounded-full border-2 border-[#142C5C] bg-[#142C5C] text-white flex items-center justify-center shrink-0 transition-all">
                                         <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                                     </div>
                                 </div>
@@ -142,7 +142,7 @@
                                      id="cardExamTypeUts"
                                      role="button"
                                      tabindex="0"
-                                     class="relative flex items-center justify-between p-3.5 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 cursor-pointer transition-all duration-150 select-none">
+                                     class="relative flex items-center justify-between p-3.5 rounded-[8px] border-2 border-slate-200 bg-white hover:border-slate-300 cursor-pointer transition-all duration-150 select-none">
                                     <input type="radio" name="type" id="radioTypeUts" value="uts" {{ $activeType === 'uts' ? 'checked' : '' }} class="sr-only">
                                     <div class="flex items-center gap-3">
                                         <div class="w-9 h-9 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
@@ -171,7 +171,7 @@
                                     <i data-lucide="book-open" class="w-4 h-4"></i>
                                 </div>
                                 <input type="text" name="title" id="input_title" value="{{ old('title') }}" required
-                                       class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all"
+                                       class="w-full bg-white border border-slate-200 rounded-[8px] pl-10 pr-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#142C5C] focus:ring-2 focus:ring-[#142C5C]/10 transition-all"
                                        placeholder="Contoh: PTS Matematika Wajib Kelas X">
                             </div>
                             <div id="error_title" class="hidden text-xs text-rose-500 font-semibold mt-1.5 flex items-center gap-1">
@@ -187,11 +187,11 @@
                                 Tautan Google Form Soal <span class="text-rose-500">*</span>
                             </label>
                             <div class="relative">
-                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#2457E8]">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#142C5C]">
                                     <i data-lucide="link" class="w-4 h-4"></i>
                                 </div>
                                 <input type="url" name="google_form_url" id="input_google_form_url" value="{{ old('google_form_url') }}" required
-                                       class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-900 tabular-nums placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all"
+                                       class="w-full bg-white border border-slate-200 rounded-[8px] pl-10 pr-4 py-2.5 text-xs sm:text-sm text-slate-900 tabular-nums placeholder:text-slate-400 focus:outline-none focus:border-[#142C5C] focus:ring-2 focus:ring-[#142C5C]/10 transition-all"
                                        placeholder="https://docs.google.com/forms/d/e/.../viewform">
                             </div>
                             <div id="error_google_form_url" class="hidden text-xs text-rose-500 font-semibold mt-1.5 flex items-center gap-1">
@@ -200,7 +200,7 @@
                             </div>
                             <div class="flex items-center justify-between gap-2 mt-1.5 flex-wrap">
                                 <p class="text-[11px] text-slate-500">Pastikan form disetel terbuka tanpa login khusus editor.</p>
-                                <button type="button" onclick="testFormUrl()" class="text-[11px] font-semibold text-[#2457E8] hover:underline inline-flex items-center gap-1 cursor-pointer">
+                                <button type="button" onclick="testFormUrl()" class="text-[11px] font-semibold text-[#142C5C] hover:underline inline-flex items-center gap-1 cursor-pointer">
                                     <span>Uji Buka Form</span>
                                     <i data-lucide="external-link" class="w-3 h-3"></i>
                                 </button>
@@ -215,7 +215,7 @@
                             Petunjuk Pengerjaan <span class="text-slate-400 font-normal">(opsional)</span>
                         </label>
                         <textarea name="description" id="input_description" rows="3"
-                                  class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all"
+                                  class="w-full bg-white border border-slate-200 rounded-[8px] px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#142C5C] focus:ring-2 focus:ring-[#142C5C]/10 transition-all"
                                   placeholder="Tuliskan catatan tata tertib atau petunjuk pengerjaan bagi siswa...">{{ old('description') }}</textarea>
                     </div>
                 </div>
@@ -223,10 +223,10 @@
 
             <!-- Navigasi Langkah 1 -->
             <div class="flex items-center justify-between pt-1">
-                <a href="{{ $backUrl }}" class="px-4 py-2.5 text-xs sm:text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl transition-colors shadow-2xs">
+                <a href="{{ $backUrl }}" class="px-4 py-2.5 text-xs sm:text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-[8px] transition-colors shadow-2xs">
                     Batal
                 </a>
-                <button type="button" onclick="validateAndGoToStep(2)" class="inline-flex items-center gap-2 px-6 py-2.5 bg-[#2457E8] hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-all active:scale-[0.98] cursor-pointer">
+                <button type="button" onclick="validateAndGoToStep(2)" class="inline-flex items-center gap-2 px-6 py-2.5 bg-[#142C5C] hover:bg-[#142C5C] text-white rounded-[8px] text-xs sm:text-sm font-bold shadow-xs transition-all active:scale-[0.98] cursor-pointer">
                     <span>Lanjut ke Jadwal &amp; Kelas</span>
                     <i data-lucide="arrow-right" class="w-4 h-4"></i>
                 </button>
@@ -238,8 +238,8 @@
         <!-- ============================================================= -->
         <div id="step-panel-2" class="step-panel hidden space-y-5">
             <!-- Card Gabungan: Durasi Standar & Sesi Jadwal -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
-                <div class="bg-[#0D2149] px-6 py-4 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div class="card overflow-hidden">
+                <div class="bg-[#142C5C] px-6 py-4 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
                         <h3 class="text-sm sm:text-base font-bold tracking-tight">Durasi, Sesi Jadwal &amp; Kelas Target</h3>
                         <p class="text-xs text-blue-200 mt-0.5">Atur durasi standar (<span id="preview_duration_jp_text" class="text-white font-semibold">2 Jam Pelajaran</span>) serta pembagian sesi per kelas.</p>
@@ -254,14 +254,14 @@
                     <div class="flex flex-col sm:flex-row sm:items-center gap-3">
                         <div class="relative flex-1">
                             <input type="number" name="duration" id="exam_duration" required min="1" value="{{ old('duration', 70) }}"
-                                   class="w-full bg-white border border-slate-200 rounded-xl pl-4 pr-16 py-2.5 text-sm text-slate-900 font-bold focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all">
+                                   class="w-full bg-white border border-slate-200 rounded-[8px] pl-4 pr-16 py-2.5 text-sm text-slate-900 font-bold focus:outline-none focus:border-[#142C5C] focus:ring-2 focus:ring-[#142C5C]/10 transition-all">
                             <span class="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none text-xs font-bold text-slate-400 uppercase tracking-wider">MENIT</span>
                         </div>
 
                         <div class="grid grid-cols-3 sm:flex items-center gap-2 shrink-0">
-                            <button type="button" data-duration="35" onclick="setExamDuration(35)" class="duration-preset-btn w-full sm:w-28 py-2.5 text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:text-[#2457E8] hover:border-[#2457E8] hover:bg-[#F5F8FF] rounded-xl transition-all text-center cursor-pointer">1 JP (35m)</button>
-                            <button type="button" data-duration="70" onclick="setExamDuration(70)" class="duration-preset-btn w-full sm:w-28 py-2.5 text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:text-[#2457E8] hover:border-[#2457E8] hover:bg-[#F5F8FF] rounded-xl transition-all text-center cursor-pointer">2 JP (70m)</button>
-                            <button type="button" data-duration="105" onclick="setExamDuration(105)" class="duration-preset-btn w-full sm:w-28 py-2.5 text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:text-[#2457E8] hover:border-[#2457E8] hover:bg-[#F5F8FF] rounded-xl transition-all text-center cursor-pointer">3 JP (105m)</button>
+                            <button type="button" data-duration="35" onclick="setExamDuration(35)" class="duration-preset-btn w-full sm:w-28 py-2.5 text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:text-[#142C5C] hover:border-[#142C5C] hover:bg-slate-50/80 rounded-[8px] transition-all text-center cursor-pointer">1 JP (35m)</button>
+                            <button type="button" data-duration="70" onclick="setExamDuration(70)" class="duration-preset-btn w-full sm:w-28 py-2.5 text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:text-[#142C5C] hover:border-[#142C5C] hover:bg-slate-50/80 rounded-[8px] transition-all text-center cursor-pointer">2 JP (70m)</button>
+                            <button type="button" data-duration="105" onclick="setExamDuration(105)" class="duration-preset-btn w-full sm:w-28 py-2.5 text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:text-[#142C5C] hover:border-[#142C5C] hover:bg-slate-50/80 rounded-[8px] transition-all text-center cursor-pointer">3 JP (105m)</button>
                         </div>
                     </div>
 
@@ -272,7 +272,7 @@
                                 <h4 class="text-sm font-bold text-[#142C5C]">Daftar Sesi Jadwal <span class="text-rose-500">*</span></h4>
                                 <p class="text-xs text-slate-500 mt-0.5">Tiap sesi hanya muncul pada akun siswa dari kelas yang dipilih pada sesi tersebut.</p>
                             </div>
-                            <button type="button" id="addScheduleBtn" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-[#2457E8] bg-[#F5F8FF] hover:bg-blue-100/70 rounded-xl border border-blue-200 transition-colors shrink-0 cursor-pointer">
+                            <button type="button" id="addScheduleBtn" class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-[#142C5C] bg-slate-50 hover:bg-slate-100 rounded-[8px] border border-slate-200 transition-colors shrink-0 cursor-pointer">
                                 <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                                 <span>Tambah Sesi Baru</span>
                             </button>
@@ -289,11 +289,11 @@
 
             <!-- Navigasi Langkah 2 -->
             <div class="flex items-center justify-between pt-1">
-                <button type="button" onclick="goToStep(1)" class="inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl transition-colors shadow-2xs cursor-pointer">
+                <button type="button" onclick="goToStep(1)" class="inline-flex items-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-[8px] transition-colors shadow-2xs cursor-pointer">
                     <i data-lucide="arrow-left" class="w-4 h-4"></i>
                     <span>Kembali</span>
                 </button>
-                <button type="button" onclick="validateAndGoToStep(3)" class="inline-flex items-center gap-2 px-6 py-2.5 bg-[#2457E8] hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-all active:scale-[0.98] cursor-pointer">
+                <button type="button" onclick="validateAndGoToStep(3)" class="inline-flex items-center gap-2 px-6 py-2.5 bg-[#142C5C] hover:bg-[#142C5C] text-white rounded-[8px] text-xs sm:text-sm font-bold shadow-xs transition-all active:scale-[0.98] cursor-pointer">
                     <span>Lanjut ke Review &amp; Keamanan</span>
                     <i data-lucide="arrow-right" class="w-4 h-4"></i>
                 </button>
@@ -305,8 +305,8 @@
         <!-- ============================================================= -->
         <div id="step-panel-3" class="step-panel hidden space-y-5">
             <!-- Pengaturan Keamanan & Status -->
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
-                <div class="bg-[#0D2149] px-6 py-4 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div class="card overflow-hidden">
+                <div class="bg-[#142C5C] px-6 py-4 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
                         <h3 class="text-sm sm:text-base font-bold tracking-tight">Keamanan &amp; Status Publikasi</h3>
                         <p class="text-xs text-blue-200 mt-0.5">Tentukan batas toleransi keluar aplikasi serta status penayangan jadwal.</p>
@@ -326,7 +326,7 @@
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <button type="button" onclick="selectViolationPreset(1)" id="preset_violation_1" class="violation-preset-card p-3.5 rounded-xl border text-left transition-all border-slate-200 bg-white hover:border-slate-300 cursor-pointer group">
+                            <button type="button" onclick="selectViolationPreset(1)" id="preset_violation_1" class="violation-preset-card p-3.5 rounded-[8px] border text-left transition-all border-slate-200 bg-white hover:border-slate-300 cursor-pointer group">
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm font-bold text-slate-900">1x Keluar</span>
                                     <span class="text-[11px] font-semibold text-rose-600">Ketat</span>
@@ -334,15 +334,15 @@
                                 <p class="text-xs text-slate-500 mt-1 leading-relaxed">Langsung terkunci saat pertama kali minimize aplikasi.</p>
                             </button>
 
-                            <button type="button" onclick="selectViolationPreset(3)" id="preset_violation_3" class="violation-preset-card p-3.5 rounded-xl border-2 text-left transition-all border-[#2457E8] bg-[#F5F8FF] cursor-pointer group">
+                            <button type="button" onclick="selectViolationPreset(3)" id="preset_violation_3" class="violation-preset-card p-3.5 rounded-[8px] border-2 text-left transition-all border-[#142C5C] bg-slate-50 cursor-pointer group">
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm font-bold text-[#142C5C]">3x Keluar</span>
-                                    <span class="text-[11px] font-semibold text-[#2457E8]">Standar</span>
+                                    <span class="text-[11px] font-semibold text-[#142C5C]">Standar</span>
                                 </div>
                                 <p class="text-xs text-slate-600 mt-1 leading-relaxed">Rekomendasi resmi SMKN 1 Tirtamulya untuk ujian formal.</p>
                             </button>
 
-                            <button type="button" onclick="selectViolationPreset(5)" id="preset_violation_5" class="violation-preset-card p-3.5 rounded-xl border text-left transition-all border-slate-200 bg-white hover:border-slate-300 cursor-pointer group">
+                            <button type="button" onclick="selectViolationPreset(5)" id="preset_violation_5" class="violation-preset-card p-3.5 rounded-[8px] border text-left transition-all border-slate-200 bg-white hover:border-slate-300 cursor-pointer group">
                                 <div class="flex items-center justify-between">
                                     <span class="text-sm font-bold text-slate-900">5x Keluar</span>
                                     <span class="text-[11px] font-semibold text-slate-600">Longgar</span>
@@ -352,13 +352,13 @@
                         </div>
 
                         <!-- Custom Stepper Row -->
-                        <div class="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                        <div class="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-[8px] bg-slate-50 border border-slate-200">
                             <div class="flex items-center gap-2 text-xs font-semibold text-slate-600">
                                 <i data-lucide="sliders" class="w-4 h-4 text-slate-400"></i>
                                 <span>Atau sesuaikan angka manual:</span>
                             </div>
                             <div class="flex items-center gap-2 self-center sm:self-auto">
-                                <div class="inline-flex items-center bg-white border border-slate-200 rounded-xl p-1">
+                                <div class="inline-flex items-center bg-white border border-slate-200 rounded-[8px] p-1">
                                     <button type="button" onclick="stepViolation(-1)" class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 font-bold transition-colors cursor-pointer">−</button>
                                     <input type="number" name="max_violation" id="max_violation" min="1" max="20" value="{{ old('max_violation', 3) }}" required
                                            oninput="handleViolationInput(this.value)"
@@ -380,8 +380,8 @@
                         <input type="hidden" name="status" id="status_input" value="{{ old('status', 'active') }}">
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                            <div onclick="selectExamStatus('active')" id="card_status_active" class="status-card p-4 rounded-xl border-2 border-[#2457E8] bg-[#F5F8FF] cursor-pointer transition-all flex items-start gap-3">
-                                <div class="w-4 h-4 rounded-full border-2 border-[#2457E8] bg-[#2457E8] mt-0.5 flex items-center justify-center shrink-0">
+                            <div onclick="selectExamStatus('active')" id="card_status_active" class="status-card p-4 rounded-[8px] border-2 border-[#142C5C] bg-slate-50 cursor-pointer transition-all flex items-start gap-3">
+                                <div class="w-4 h-4 rounded-full border-2 border-[#142C5C] bg-[#142C5C] mt-0.5 flex items-center justify-center shrink-0">
                                     <div class="w-1.5 h-1.5 rounded-full bg-white"></div>
                                 </div>
                                 <div>
@@ -390,7 +390,7 @@
                                 </div>
                             </div>
 
-                            <div onclick="selectExamStatus('inactive')" id="card_status_inactive" class="status-card p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition-all flex items-start gap-3">
+                            <div onclick="selectExamStatus('inactive')" id="card_status_inactive" class="status-card p-4 rounded-[8px] border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition-all flex items-start gap-3">
                                 <div class="w-4 h-4 rounded-full border-2 border-slate-400 mt-0.5 flex items-center justify-center shrink-0">
                                     <div class="w-1.5 h-1.5 rounded-full bg-transparent"></div>
                                 </div>
@@ -410,17 +410,17 @@
                         </div>
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
+                            <div class="bg-slate-50 p-3.5 rounded-[8px] border border-slate-200 space-y-1">
                                 <div class="text-[11px] font-semibold text-slate-500">Judul &amp; Tautan Soal</div>
                                 <div id="review_title" class="font-bold text-slate-900 text-sm truncate">—</div>
                                 <div class="text-[11px] text-slate-500 truncate tabular-nums" id="review_url">—</div>
                             </div>
 
-                            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
+                            <div class="bg-slate-50 p-3.5 rounded-[8px] border border-slate-200 space-y-1">
                                 <div class="text-[11px] font-semibold text-slate-500">Durasi &amp; Keamanan</div>
                                 <div class="flex items-center gap-3 font-bold text-slate-900">
                                     <span id="review_duration">70 Menit (2 JP)</span>
-                                    <span id="review_violation" class="text-[#2457E8]">Max 3x Keluar</span>
+                                    <span id="review_violation" class="text-[#142C5C]">Max 3x Keluar</span>
                                 </div>
                                 <div class="text-[11px] text-slate-500" id="review_sessions_count">Total 1 Sesi Terdaftar</div>
                             </div>
@@ -438,11 +438,11 @@
 
             <!-- Navigasi Langkah 3 & Submit -->
             <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
-                <button type="button" onclick="goToStep(2)" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl transition-colors shadow-2xs cursor-pointer">
+                <button type="button" onclick="goToStep(2)" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 text-xs sm:text-sm font-semibold bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-[8px] transition-colors shadow-2xs cursor-pointer">
                     <i data-lucide="arrow-left" class="w-4 h-4"></i>
                     <span>Kembali ke Jadwal</span>
                 </button>
-                <button type="submit" id="submitExamBtn" class="inline-flex items-center justify-center gap-2 px-7 py-2.5 bg-[#2457E8] hover:bg-blue-700 text-white rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-all active:scale-[0.98] cursor-pointer">
+                <button type="submit" id="submitExamBtn" class="inline-flex items-center justify-center gap-2 px-7 py-2.5 bg-[#142C5C] hover:bg-[#142C5C] text-white rounded-[8px] text-xs sm:text-sm font-bold shadow-xs transition-all active:scale-[0.98] cursor-pointer">
                     <i data-lucide="check-circle-2" class="w-4 h-4"></i>
                     <span>Simpan &amp; Jadwalkan Ujian</span>
                 </button>
@@ -501,17 +501,17 @@
             const label = tab.querySelector('.step-label');
 
             if (s === step) {
-                tab.className = "step-tab flex items-center gap-2 sm:gap-3 p-2.5 rounded-xl transition-all text-left bg-[#F5F8FF] text-[#142C5C] border border-blue-200 shadow-2xs cursor-pointer";
-                if (iconBox) iconBox.className = "step-icon-box w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#2457E8] text-white flex items-center justify-center shrink-0 transition-all";
-                if (sub) sub.className = "step-sub text-[10px] font-bold text-[#2457E8] uppercase tracking-wider block";
+                tab.className = "step-tab flex items-center gap-2 sm:gap-3 p-2.5 rounded-[8px] transition-all text-left bg-slate-50 text-[#142C5C] border border-slate-200 shadow-2xs cursor-pointer";
+                if (iconBox) iconBox.className = "step-icon-box w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#142C5C] text-white flex items-center justify-center shrink-0 transition-all";
+                if (sub) sub.className = "step-sub text-[10px] font-bold text-[#142C5C] uppercase tracking-wider block";
                 if (label) label.className = "step-label text-xs sm:text-sm font-bold text-[#142C5C] truncate block";
             } else if (s < step) {
-                tab.className = "step-tab flex items-center gap-2 sm:gap-3 p-2.5 rounded-xl transition-all text-left bg-slate-50 text-[#142C5C] border border-slate-200 shadow-2xs cursor-pointer";
-                if (iconBox) iconBox.className = "step-icon-box w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#0D2149] text-white flex items-center justify-center shrink-0 transition-all";
+                tab.className = "step-tab flex items-center gap-2 sm:gap-3 p-2.5 rounded-[8px] transition-all text-left bg-slate-50 text-[#142C5C] border border-slate-200 shadow-2xs cursor-pointer";
+                if (iconBox) iconBox.className = "step-icon-box w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#142C5C] text-white flex items-center justify-center shrink-0 transition-all";
                 if (sub) sub.className = "step-sub text-[10px] font-semibold text-slate-500 uppercase tracking-wider block";
                 if (label) label.className = "step-label text-xs sm:text-sm font-semibold text-[#142C5C] truncate block";
             } else {
-                tab.className = "step-tab flex items-center gap-2 sm:gap-3 p-2.5 rounded-xl transition-all text-left bg-slate-50/70 text-slate-500 hover:bg-slate-100/80 border border-transparent cursor-pointer";
+                tab.className = "step-tab flex items-center gap-2 sm:gap-3 p-2.5 rounded-[8px] transition-all text-left bg-slate-50/70 text-slate-500 hover:bg-slate-100/80 border border-transparent cursor-pointer";
                 if (iconBox) iconBox.className = "step-icon-box w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-white border border-slate-200 text-slate-400 flex items-center justify-center shrink-0 transition-all";
                 if (sub) sub.className = "step-sub text-[10px] font-semibold text-slate-400 uppercase tracking-wider block";
                 if (label) label.className = "step-label text-xs sm:text-sm font-medium text-slate-600 truncate block";
@@ -552,7 +552,7 @@
     // ==========================================
     function markFieldInvalid(el, errorEl, message) {
         if (!el) return;
-        el.classList.remove('border-slate-200', 'focus:border-indigo-500', 'focus:ring-indigo-500/15');
+        el.classList.remove('border-slate-200', 'focus:border-[#142C5C]', 'focus:ring-[#142C5C]/10');
         el.classList.add('border-rose-500', 'bg-rose-50/20', 'ring-2', 'ring-rose-500/20');
         if (errorEl) {
             if (message) {
@@ -734,9 +734,9 @@
             else if (lowerName.startsWith('12') || lowerName.startsWith('xii ') || lowerName === 'xii') grade = '12';
 
             classCardsHtml += `
-                <label class="slot-class-card group flex items-center gap-2 p-2.5 rounded-xl border transition-all cursor-pointer select-none ${isChecked ? 'bg-[#F5F8FF] border-[#2457E8]' : 'bg-white border-slate-200 hover:border-slate-300'}" data-classname="${lowerName}" data-grade="${grade}">
+                <label class="slot-class-card group flex items-center gap-2 p-2.5 rounded-[8px] border transition-all cursor-pointer select-none ${isChecked ? 'bg-slate-50 border-[#142C5C]' : 'bg-white border-slate-200 hover:border-slate-300'}" data-classname="${lowerName}" data-grade="${grade}">
                     <input type="checkbox" name="schedules[${idx}][classes][]" value="${c.id}" ${isChecked ? 'checked' : ''}
-                           class="slot-class-checkbox rounded text-[#2457E8] focus:ring-[#2457E8]/20 border-slate-300 w-4 h-4 shrink-0"
+                           class="slot-class-checkbox rounded text-[#142C5C] focus:ring-[#142C5C]/10 border-slate-300 w-4 h-4 shrink-0"
                            onchange="onSlotClassChanged(${idx}); triggerAutosave();">
                     <span class="text-xs ${isChecked ? 'font-bold text-[#142C5C]' : 'font-medium text-slate-700'} truncate">${c.name}</span>
                 </label>
@@ -750,7 +750,7 @@
             <!-- Header Sesi -->
             <div class="flex items-center justify-between gap-3 pb-3 border-b border-slate-100">
                 <div class="flex items-center gap-2.5">
-                    <div class="flex items-center justify-center w-6 h-6 rounded-lg bg-[#0D2149] text-white text-xs font-bold shrink-0 schedule-num">${num}</div>
+                    <div class="flex items-center justify-center w-6 h-6 rounded-lg bg-[#142C5C] text-white text-xs font-bold shrink-0 schedule-num">${num}</div>
                     <span class="text-xs sm:text-sm font-bold text-[#142C5C]">Jadwal Sesi <span class="slot-title-num">${num}</span></span>
                 </div>
                 <button type="button" onclick="removeScheduleSlot(this)" class="remove-slot-btn inline-flex items-center gap-1.5 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 px-2.5 py-1 rounded-lg transition-colors font-semibold cursor-pointer ${num === 1 ? 'hidden' : ''}">
@@ -763,7 +763,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1.5">Tanggal Ujian <span class="text-rose-500">*</span></label>
-                    <input type="date" name="schedules[${idx}][date]" value="${dateVal}" required class="schedule-date w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 font-medium focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all">
+                    <input type="date" name="schedules[${idx}][date]" value="${dateVal}" required class="schedule-date w-full bg-white border border-slate-200 rounded-[8px] px-3.5 py-2.5 text-sm text-slate-900 font-medium focus:outline-none focus:border-[#142C5C] focus:ring-2 focus:ring-[#142C5C]/10 transition-all">
                     <div class="schedule-date-error hidden text-xs text-rose-500 font-semibold mt-1 flex items-center gap-1">
                         <i data-lucide="alert-circle" class="w-3.5 h-3.5 shrink-0"></i>
                         <span>Tanggal ujian wajib diisi.</span>
@@ -771,7 +771,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1.5">Jam Mulai <span class="text-rose-500">*</span></label>
-                    <input type="time" name="schedules[${idx}][time]" value="${defaultTime}" required class="schedule-time w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 font-medium focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all">
+                    <input type="time" name="schedules[${idx}][time]" value="${defaultTime}" required class="schedule-time w-full bg-white border border-slate-200 rounded-[8px] px-3.5 py-2.5 text-sm text-slate-900 font-medium focus:outline-none focus:border-[#142C5C] focus:ring-2 focus:ring-[#142C5C]/10 transition-all">
                     <div class="schedule-time-error hidden text-xs text-rose-500 font-semibold mt-1 flex items-center gap-1">
                         <i data-lucide="alert-circle" class="w-3.5 h-3.5 shrink-0"></i>
                         <span>Jam mulai wajib diisi.</span>
@@ -780,12 +780,12 @@
                 <div>
                     <div class="flex items-center justify-between mb-1.5">
                         <label class="block text-xs font-semibold text-slate-700">Durasi Sesi</label>
-                        <button type="button" onclick="toggleSlotDurationLock(${idx}, this)" class="slot-dur-lock-btn text-[11px] font-semibold text-[#2457E8] hover:underline cursor-pointer">
+                        <button type="button" onclick="toggleSlotDurationLock(${idx}, this)" class="slot-dur-lock-btn text-[11px] font-semibold text-[#142C5C] hover:underline cursor-pointer">
                             ${defaultDuration ? 'Ikuti Standar' : 'Ubah'}
                         </button>
                     </div>
                     <div class="relative">
-                        <input type="number" name="schedules[${idx}][duration]" value="${defaultDuration || ''}" min="1" ${defaultDuration ? '' : 'readonly'} placeholder="Ikuti Standar (${globalDurationVal} mnt)" class="schedule-duration w-full border border-slate-200 rounded-xl pl-3.5 pr-14 py-2.5 text-sm font-medium placeholder:text-slate-500 focus:outline-none focus:border-[#2457E8] focus:ring-2 focus:ring-[#2457E8]/15 transition-all ${defaultDuration ? 'bg-white text-slate-900' : 'bg-slate-100/80 text-slate-600 cursor-not-allowed'}" oninput="updateAllPreviews(); triggerAutosave();">
+                        <input type="number" name="schedules[${idx}][duration]" value="${defaultDuration || ''}" min="1" ${defaultDuration ? '' : 'readonly'} placeholder="Ikuti Standar (${globalDurationVal} mnt)" class="schedule-duration w-full border border-slate-200 rounded-[8px] pl-3.5 pr-14 py-2.5 text-sm font-medium placeholder:text-slate-500 focus:outline-none focus:border-[#142C5C] focus:ring-2 focus:ring-[#142C5C]/10 transition-all ${defaultDuration ? 'bg-white text-slate-900' : 'bg-slate-100/80 text-slate-600 cursor-not-allowed'}" oninput="updateAllPreviews(); triggerAutosave();">
                         <span class="absolute inset-y-0 right-0 flex items-center pr-3.5 pointer-events-none text-[11px] font-semibold text-slate-400 uppercase">Menit</span>
                     </div>
                 </div>
@@ -794,16 +794,16 @@
             <!-- Baris 2: Pilih Kelas Target -->
             <div class="space-y-3 pt-2 border-t border-slate-100">
                 <div class="flex flex-col sm:flex-row sm:items-center gap-2.5">
-                    <div class="inline-flex p-1 bg-slate-100 rounded-xl text-xs font-semibold text-slate-600 shrink-0 self-start sm:self-auto">
+                    <div class="inline-flex p-1 bg-slate-100 rounded-[8px] text-xs font-semibold text-slate-600 shrink-0 self-start sm:self-auto">
                         <button type="button" onclick="filterSlotGrade(${idx}, 'all', this)" class="grade-filter-btn px-2.5 py-1 rounded-lg bg-white text-[#142C5C] shadow-2xs cursor-pointer">Semua</button>
                         <button type="button" onclick="filterSlotGrade(${idx}, '10', this)" class="grade-filter-btn px-2.5 py-1 rounded-lg hover:text-slate-900 cursor-pointer">Kelas X</button>
                         <button type="button" onclick="filterSlotGrade(${idx}, '11', this)" class="grade-filter-btn px-2.5 py-1 rounded-lg hover:text-slate-900 cursor-pointer">Kelas XI</button>
                         <button type="button" onclick="filterSlotGrade(${idx}, '12', this)" class="grade-filter-btn px-2.5 py-1 rounded-lg hover:text-slate-900 cursor-pointer">Kelas XII</button>
                     </div>
 
-                    <input type="text" oninput="filterSlotClasses(${idx}, this.value)" placeholder="Cari nama kelas..." class="flex-1 min-w-[160px] px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#2457E8]">
+                    <input type="text" oninput="filterSlotClasses(${idx}, this.value)" placeholder="Cari nama kelas..." class="flex-1 min-w-[160px] px-3.5 py-2 bg-white border border-slate-200 rounded-[8px] text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#142C5C]">
 
-                    <button type="button" onclick="toggleAllSlotClasses(${idx})" class="slot-toggle-btn text-xs font-bold text-[#2457E8] bg-[#F5F8FF] hover:bg-blue-100/70 border border-blue-200 px-3.5 py-2 rounded-xl transition-all shrink-0 cursor-pointer">
+                    <button type="button" onclick="toggleAllSlotClasses(${idx})" class="slot-toggle-btn text-xs font-bold text-[#142C5C] bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3.5 py-2 rounded-[8px] transition-all shrink-0 cursor-pointer">
                         Pilih Semua
                     </button>
                 </div>
@@ -902,10 +902,10 @@
             const cb = card.querySelector('.slot-class-checkbox');
             const span = card.querySelector('span');
             if (cb && cb.checked) {
-                card.className = "slot-class-card group flex items-center gap-2 p-2.5 rounded-xl border transition-all cursor-pointer select-none bg-[#F5F8FF] border-[#2457E8]";
+                card.className = "slot-class-card group flex items-center gap-2 p-2.5 rounded-[8px] border transition-all cursor-pointer select-none bg-slate-50 border-[#142C5C]";
                 if (span) span.className = "text-xs font-bold text-[#142C5C] truncate";
             } else {
-                card.className = "slot-class-card group flex items-center gap-2 p-2.5 rounded-xl border transition-all cursor-pointer select-none bg-white border-slate-200 hover:border-slate-300";
+                card.className = "slot-class-card group flex items-center gap-2 p-2.5 rounded-[8px] border transition-all cursor-pointer select-none bg-white border-slate-200 hover:border-slate-300";
                 if (span) span.className = "text-xs font-medium text-slate-700 truncate";
             }
         });
@@ -1008,9 +1008,9 @@
         document.querySelectorAll('.duration-preset-btn').forEach(btn => {
             const btnVal = parseInt(btn.getAttribute('data-duration'));
             if (btnVal === durationVal) {
-                btn.className = 'duration-preset-btn w-full sm:w-28 py-2.5 text-xs font-bold rounded-xl transition-all bg-[#2457E8] text-white shadow-xs text-center cursor-pointer';
+                btn.className = 'duration-preset-btn w-full sm:w-28 py-2.5 text-xs font-bold rounded-[8px] transition-all bg-[#142C5C] text-white shadow-xs text-center cursor-pointer';
             } else {
-                btn.className = 'duration-preset-btn w-full sm:w-28 py-2.5 text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:text-[#2457E8] hover:border-[#2457E8] hover:bg-[#F5F8FF] rounded-xl transition-all text-center cursor-pointer';
+                btn.className = 'duration-preset-btn w-full sm:w-28 py-2.5 text-xs font-semibold bg-white border border-slate-200 text-slate-700 hover:text-[#142C5C] hover:border-[#142C5C] hover:bg-slate-50/80 rounded-[8px] transition-all text-center cursor-pointer';
             }
         });
 
@@ -1089,10 +1089,10 @@
                 : '<span class="text-rose-600 font-medium">Belum ada kelas</span>';
 
             rowsHtml += `
-                <tr class="hover:bg-[#F5F8FF] transition-colors">
+                <tr class="hover:bg-slate-50/80 transition-colors">
                     <td class="py-3 px-4 font-semibold text-[#142C5C] whitespace-nowrap">Sesi ${i + 1}</td>
                     <td class="py-3 px-4 text-slate-800 whitespace-nowrap">${dateString}</td>
-                    <td class="py-3 px-4 tabular-nums text-xs text-[#2457E8] font-semibold whitespace-nowrap">${timeString}</td>
+                    <td class="py-3 px-4 tabular-nums text-xs text-[#142C5C] font-semibold whitespace-nowrap">${timeString}</td>
                     <td class="py-3 px-4 text-slate-600 whitespace-nowrap">${effectiveDur} Menit</td>
                     <td class="py-3 px-4 text-slate-700">${classLabel}</td>
                 </tr>
@@ -1100,7 +1100,7 @@
         });
 
         listContainer.innerHTML = `
-            <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white">
+            <div class="overflow-x-auto rounded-[8px] border border-slate-200 bg-white">
                 <table class="w-full text-left border-collapse text-xs">
                     <thead>
                         <tr class="bg-slate-50 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-600 font-bold">
@@ -1131,14 +1131,14 @@
         const inactiveCard = document.getElementById('card_status_inactive');
 
         if (status === 'active') {
-            activeCard.className = "status-card p-4 rounded-xl border-2 border-[#2457E8] bg-[#F5F8FF] cursor-pointer transition-all flex items-start gap-3";
-            inactiveCard.className = "status-card p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition-all flex items-start gap-3";
-            activeCard.querySelector('div').className = "w-4 h-4 rounded-full border-2 border-[#2457E8] bg-[#2457E8] mt-0.5 flex items-center justify-center shrink-0";
+            activeCard.className = "status-card p-4 rounded-[8px] border-2 border-[#142C5C] bg-slate-50 cursor-pointer transition-all flex items-start gap-3";
+            inactiveCard.className = "status-card p-4 rounded-[8px] border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition-all flex items-start gap-3";
+            activeCard.querySelector('div').className = "w-4 h-4 rounded-full border-2 border-[#142C5C] bg-[#142C5C] mt-0.5 flex items-center justify-center shrink-0";
             inactiveCard.querySelector('div').className = "w-4 h-4 rounded-full border-2 border-slate-400 mt-0.5 flex items-center justify-center shrink-0";
         } else {
-            inactiveCard.className = "status-card p-4 rounded-xl border-2 border-[#2457E8] bg-[#F5F8FF] cursor-pointer transition-all flex items-start gap-3";
-            activeCard.className = "status-card p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition-all flex items-start gap-3";
-            inactiveCard.querySelector('div').className = "w-4 h-4 rounded-full border-2 border-[#2457E8] bg-[#2457E8] mt-0.5 flex items-center justify-center shrink-0";
+            inactiveCard.className = "status-card p-4 rounded-[8px] border-2 border-[#142C5C] bg-slate-50 cursor-pointer transition-all flex items-start gap-3";
+            activeCard.className = "status-card p-4 rounded-[8px] border border-slate-200 bg-white hover:bg-slate-50 cursor-pointer transition-all flex items-start gap-3";
+            inactiveCard.querySelector('div').className = "w-4 h-4 rounded-full border-2 border-[#142C5C] bg-[#142C5C] mt-0.5 flex items-center justify-center shrink-0";
             activeCard.querySelector('div').className = "w-4 h-4 rounded-full border-2 border-slate-400 mt-0.5 flex items-center justify-center shrink-0";
         }
         triggerAutosave();
@@ -1172,11 +1172,11 @@
             const el = document.getElementById(`preset_violation_${v}`);
             if (!el) return;
             if (v === num) {
-                el.className = "violation-preset-card p-3.5 rounded-xl border-2 text-left transition-all border-[#2457E8] bg-[#F5F8FF] cursor-pointer group";
+                el.className = "violation-preset-card p-3.5 rounded-[8px] border-2 text-left transition-all border-[#142C5C] bg-slate-50 cursor-pointer group";
                 const title = el.querySelector('span.font-bold');
                 if (title) title.className = "text-sm font-bold text-[#142C5C]";
             } else {
-                el.className = "violation-preset-card p-3.5 rounded-xl border text-left transition-all border-slate-200 bg-white hover:border-slate-300 cursor-pointer group";
+                el.className = "violation-preset-card p-3.5 rounded-[8px] border text-left transition-all border-slate-200 bg-white hover:border-slate-300 cursor-pointer group";
                 const title = el.querySelector('span.font-bold');
                 if (title) title.className = "text-sm font-bold text-slate-900";
             }
@@ -1208,12 +1208,12 @@
             radioUts.checked = true;
             radioUas.checked = false;
 
-            if (cardUts) cardUts.className = 'relative flex items-center justify-between p-3.5 rounded-xl border-2 border-[#2457E8] bg-[#F5F8FF] cursor-pointer transition-all duration-150 select-none';
+            if (cardUts) cardUts.className = 'relative flex items-center justify-between p-3.5 rounded-[8px] border-2 border-[#142C5C] bg-slate-50 cursor-pointer transition-all duration-150 select-none';
             if (indUts) {
-                indUts.className = 'w-5 h-5 rounded-full border-2 border-[#2457E8] bg-[#2457E8] text-white flex items-center justify-center shrink-0 transition-all';
+                indUts.className = 'w-5 h-5 rounded-full border-2 border-[#142C5C] bg-[#142C5C] text-white flex items-center justify-center shrink-0 transition-all';
                 indUts.innerHTML = '<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>';
             }
-            if (cardUas) cardUas.className = 'relative flex items-center justify-between p-3.5 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 cursor-pointer transition-all duration-150 select-none';
+            if (cardUas) cardUas.className = 'relative flex items-center justify-between p-3.5 rounded-[8px] border-2 border-slate-200 bg-white hover:border-slate-300 cursor-pointer transition-all duration-150 select-none';
             if (indUas) {
                 indUas.className = 'w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0 transition-all';
                 indUas.innerHTML = '';
@@ -1222,12 +1222,12 @@
             radioUas.checked = true;
             radioUts.checked = false;
 
-            if (cardUas) cardUas.className = 'relative flex items-center justify-between p-3.5 rounded-xl border-2 border-[#2457E8] bg-[#F5F8FF] cursor-pointer transition-all duration-150 select-none';
+            if (cardUas) cardUas.className = 'relative flex items-center justify-between p-3.5 rounded-[8px] border-2 border-[#142C5C] bg-slate-50 cursor-pointer transition-all duration-150 select-none';
             if (indUas) {
-                indUas.className = 'w-5 h-5 rounded-full border-2 border-[#2457E8] bg-[#2457E8] text-white flex items-center justify-center shrink-0 transition-all';
+                indUas.className = 'w-5 h-5 rounded-full border-2 border-[#142C5C] bg-[#142C5C] text-white flex items-center justify-center shrink-0 transition-all';
                 indUas.innerHTML = '<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>';
             }
-            if (cardUts) cardUts.className = 'relative flex items-center justify-between p-3.5 rounded-xl border-2 border-slate-200 bg-white hover:border-slate-300 cursor-pointer transition-all duration-150 select-none';
+            if (cardUts) cardUts.className = 'relative flex items-center justify-between p-3.5 rounded-[8px] border-2 border-slate-200 bg-white hover:border-slate-300 cursor-pointer transition-all duration-150 select-none';
             if (indUts) {
                 indUts.className = 'w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0 transition-all';
                 indUts.innerHTML = '';

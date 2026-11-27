@@ -447,6 +447,7 @@ class ExamController extends Controller
             'google_form_url' => 'required|url:http,https|max:2048',
             'duration' => 'required|integer|min:1',
             'max_violation' => 'required|integer|min:1',
+            'access_code' => 'nullable|string|max:20',
             'status' => 'required|in:active,inactive',
             'schedules' => 'required|array|min:1',
             'schedules.*.date' => 'required|date',
@@ -700,35 +701,11 @@ class ExamController extends Controller
             ->limit(100)
             ->get();
 
-        $webEmergencyEnabled = Auth::user()->isAdmin() ? \App\Models\AppSetting::isWebEmergencyEnabled() : false;
-        $webEmergencyPin = ($webEmergencyEnabled && Auth::user()->isAdmin()) ? \App\Models\AppSetting::webEmergencyPin() : null;
-
         return view('admin.unlock.index', compact(
             'lockedSessions',
             'unlockArchive',
-            'search',
-            'webEmergencyEnabled',
-            'webEmergencyPin'
+            'search'
         ));
-    }
-
-    public function toggleWebEmergency()
-    {
-        $enabled = !\App\Models\AppSetting::isWebEmergencyEnabled();
-        \App\Models\AppSetting::setValue('web_exam_enabled', $enabled ? '1' : '0');
-
-        if ($enabled) {
-            $pin = \App\Models\AppSetting::webEmergencyPin();
-            return back()->with('success', "Mode Web Ujian Darurat DIAKTIFKAN. PIN Pengawas saat ini: {$pin}");
-        }
-
-        return back()->with('success', 'Mode Web Ujian Darurat telah DINONAKTIFKAN.');
-    }
-
-    public function rotateWebEmergencyPin()
-    {
-        $pin = \App\Models\AppSetting::rotateWebEmergencyPin();
-        return back()->with('success', "PIN Pengawas Web Darurat diperbarui menjadi: {$pin}");
     }
 
     public function exportUnlockExcel(Request $request)
@@ -780,7 +757,8 @@ class ExamController extends Controller
                     'COMPLETED', 'FINISHED' => 'Selesai',
                     default => $s->unlocked_at ? 'Aktif (Pernah Dibuka)' : 'Aktif',
                 };
-                $accessMode = str_starts_with((string) ($s->device_id ?? ''), 'WEB_DARURAT') ? 'Web Darurat' : 'APK / SEB';
+                $deviceId = (string) ($s->device_id ?? '');
+                $accessMode = str_starts_with($deviceId, 'WEB_PORTAL') ? 'Web Portal' : 'SEB / Lainnya';
 
                 $sheet->setCellValue('A' . $rowNum, $idx + 1);
                 $sheet->setCellValueExplicit('B' . $rowNum, $safeText($s->user?->username ?? '-'), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
@@ -946,6 +924,7 @@ class ExamController extends Controller
             'start_at' => 'required|date',
             'duration' => 'required|integer|min:1',
             'max_violation' => 'required|integer|min:1',
+            'access_code' => 'nullable|string|max:20',
             'status' => 'required|in:active,inactive',
             'classes' => 'required|array|min:1',
             'classes.*' => 'exists:classes,id',
@@ -965,6 +944,10 @@ class ExamController extends Controller
         }
 
         $validated['end_at'] = \Carbon\Carbon::parse($validated['start_at'])->addMinutes((int)$validated['duration']);
+        $rawCode = strtoupper(trim((string) ($request->input('access_code') ?? '')));
+        if ($request->has('access_code')) {
+            $validated['access_code'] = $rawCode !== '' ? $rawCode : null;
+        }
 
         $exam->update($validated);
 
@@ -1079,14 +1062,23 @@ class ExamController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    public function quickUpdateGoogleForm(Request $request, Exam $exam)
+    private function authorizeExamInlineAction(Exam $exam, string $teacherMsg): ?\Illuminate\Http\RedirectResponse
     {
         if (Auth::user()->isTeacher() && $exam->created_by !== Auth::id()) {
-            return back()->with('error', 'Anda hanya dapat mengubah link form ujian yang Anda buat sendiri.');
+            return back()->with('error', $teacherMsg);
         }
 
         if (!$this->canPicManageFullExam($exam, $this->departmentClassIds())) {
             return back()->with('error', 'Jadwal ujian lintas jurusan hanya dapat diubah oleh Admin Kurikulum.');
+        }
+
+        return null;
+    }
+
+    public function quickUpdateGoogleForm(Request $request, Exam $exam)
+    {
+        if ($deny = $this->authorizeExamInlineAction($exam, 'Anda hanya dapat mengubah link form ujian yang Anda buat sendiri.')) {
+            return $deny;
         }
 
         $request->validate([
@@ -1101,6 +1093,18 @@ class ExamController extends Controller
         ]);
 
         return back()->with('success', 'Link Google Form ujian berhasil diperbarui.');
+    }
+
+    public function rotateAccessCode(Exam $exam)
+    {
+        if ($deny = $this->authorizeExamInlineAction($exam, 'Anda hanya dapat mengubah kode ujian yang Anda buat sendiri.')) {
+            return $deny;
+        }
+
+        $code = Exam::generateAccessCode();
+        $exam->update(['access_code' => $code]);
+
+        return back()->with('success', "Kode masuk ujian diperbarui menjadi: {$code}");
     }
 
     public function destroy(Exam $exam)

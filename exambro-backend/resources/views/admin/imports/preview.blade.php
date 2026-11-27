@@ -15,7 +15,7 @@
         </div>
 
         <a href="{{ $backRoute }}"
-           class="inline-flex items-center justify-center h-[40px] px-[16px] bg-white border border-[#E2E8F0] hover:bg-[#F8FAFC] text-[#0F172A] rounded-[8px] text-[14px] font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 self-start sm:self-auto whitespace-nowrap">
+           class="inline-flex items-center justify-center h-[40px] px-[16px] bg-white border border-[#E2E8F0] hover:bg-[#F8FAFC] text-[#0F172A] rounded-[8px] text-[14px] font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#142C5C]/10 self-start sm:self-auto whitespace-nowrap">
             Ganti File
         </a>
     </div>
@@ -26,7 +26,7 @@
         <div class="flex flex-wrap items-center justify-between gap-4 border-b border-[#E2E8F0] pb-3 mb-6">
             <div class="flex items-center gap-6 flex-wrap" role="tablist">
                 <button type="button" onclick="filterPreviewTab('all', this)"
-                        class="preview-tab inline-flex items-center gap-2 pb-[13px] -mb-[13px] border-b-2 border-[#2563EB] text-[14px] font-semibold text-[#0F172A] transition-colors duration-150 cursor-pointer whitespace-nowrap focus:outline-none">
+                        class="preview-tab inline-flex items-center gap-2 pb-[13px] -mb-[13px] border-b-2 border-[#142C5C] text-[14px] font-semibold text-[#0F172A] transition-colors duration-150 cursor-pointer whitespace-nowrap focus:outline-none">
                     <span>Semua</span>
                     <span class="preview-tab-badge inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[12px] font-medium bg-[#F1F5F9] text-[#0F172A] tabular-nums">{{ $counts['all'] }}</span>
                 </button>
@@ -49,7 +49,7 @@
 
             @if($counts['error'] + $counts['duplicate'] > 0)
                 <button type="button" onclick="downloadPreviewErrorsCsv()"
-                        class="inline-flex items-center justify-center gap-[8px] h-[40px] px-[16px] bg-white border border-[#E2E8F0] hover:bg-[#F8FAFC] text-[#0F172A] rounded-[8px] text-[14px] font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 whitespace-nowrap cursor-pointer">
+                        class="inline-flex items-center justify-center gap-[8px] h-[40px] px-[16px] bg-white border border-[#E2E8F0] hover:bg-[#F8FAFC] text-[#0F172A] rounded-[8px] text-[14px] font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#142C5C]/10 whitespace-nowrap cursor-pointer">
                     <svg class="w-4 h-4 text-[#64748B] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                     </svg>
@@ -155,7 +155,7 @@
         <!-- Footer Aksi -->
         <div class="border-t border-[#E2E8F0] pt-4 mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <a href="{{ $backRoute }}"
-               class="inline-flex items-center justify-center h-[40px] px-[16px] bg-white border border-[#E2E8F0] hover:bg-[#F8FAFC] text-[#0F172A] rounded-[8px] text-[14px] font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/25 self-start sm:self-auto whitespace-nowrap">
+               class="inline-flex items-center justify-center h-[40px] px-[16px] bg-white border border-[#E2E8F0] hover:bg-[#F8FAFC] text-[#0F172A] rounded-[8px] text-[14px] font-medium transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#142C5C]/10 self-start sm:self-auto whitespace-nowrap">
                 Kembali
             </a>
 
@@ -175,7 +175,7 @@
                     <input type="hidden" name="import_token" value="{{ $token }}">
                     @if($counts['ready'] > 0)
                         <button type="submit"
-                                class="w-full sm:w-auto inline-flex items-center justify-center h-[40px] px-[20px] bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-[8px] text-[14px] font-semibold transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#2563EB]/35 cursor-pointer whitespace-nowrap">
+                                class="w-full sm:w-auto inline-flex items-center justify-center h-[40px] px-[20px] bg-[#142C5C] hover:bg-[#1D4ED8] text-white rounded-[8px] text-[14px] font-semibold transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-[#142C5C]/10 cursor-pointer whitespace-nowrap">
                             Simpan {{ \Illuminate\Support\Str::title($unitLabel) }}
                         </button>
                     @else
@@ -204,7 +204,7 @@ function filterPreviewTab(status, btn) {
         }
     });
     if (btn) {
-        btn.className = 'preview-tab inline-flex items-center gap-2 pb-[13px] -mb-[13px] border-b-2 border-[#2563EB] text-[14px] font-semibold text-[#0F172A] transition-colors duration-150 cursor-pointer whitespace-nowrap focus:outline-none';
+        btn.className = 'preview-tab inline-flex items-center gap-2 pb-[13px] -mb-[13px] border-b-2 border-[#142C5C] text-[14px] font-semibold text-[#0F172A] transition-colors duration-150 cursor-pointer whitespace-nowrap focus:outline-none';
         const activeBadge = btn.querySelector('.preview-tab-badge');
         if (activeBadge) {
             activeBadge.className = 'preview-tab-badge inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[12px] font-medium bg-[#F1F5F9] text-[#0F172A] tabular-nums';

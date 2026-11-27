@@ -14,43 +14,19 @@ Route::get('/', function () {
     return redirect()->route('student.portal');
 });
 
-// Portal Unduh Aplikasi & Akses Ujian Siswa (Android & iOS)
-Route::get('/portal', function () {
-    $now = \Carbon\Carbon::now();
-    $oneWeekAgo = \Carbon\Carbon::now()->subDays(7)->startOfDay();
-    $todayExams = \App\Models\Exam::where('status', 'active')
-        ->where(function ($q) use ($oneWeekAgo, $now) {
-            $q->where('start_at', '>=', $oneWeekAgo)
-              ->orWhere('end_at', '>=', $oneWeekAgo)
-              ->orWhere(function ($sub) use ($now) {
-                  $sub->where('start_at', '<=', $now)
-                      ->where(function ($endSub) use ($now) {
-                          $endSub->where('end_at', '>=', $now)
-                                 ->orWhereNull('end_at');
-                      });
-              });
-        })
-        ->orderBy('start_at', 'desc')
-        ->get();
-
-    return view('portal.index', compact('todayExams'));
-})->name('student.portal');
+// Portal Utama Ujian Berbasis Web Siswa
+Route::get('/portal', [WebExamController::class, 'index'])->name('student.portal');
+Route::post('/portal/login', [WebExamController::class, 'login'])->middleware('throttle:login')->name('portal.login');
+Route::post('/portal/logout', [WebExamController::class, 'logout'])->name('portal.logout');
+Route::post('/portal/change-password', [WebExamController::class, 'changePassword'])->middleware('throttle:5,1')->name('portal.change-password');
+Route::get('/ujian/{exam}', [WebExamController::class, 'showExam'])->name('portal.exam');
+Route::post('/ujian/{exam}/verify-code', [WebExamController::class, 'verifyCode'])->middleware('throttle:exam-code')->name('portal.verify-code');
+Route::post('/ujian/{exam}/violation', [WebExamController::class, 'recordViolation'])->middleware('throttle:web-violation')->name('portal.violation');
+Route::post('/ujian/{exam}/finish', [WebExamController::class, 'finish'])->name('portal.finish');
 
 Route::get('/download/apk', function () {
-    $apkPath = public_path('downloads/ExaSatrya.apk');
-    if (!file_exists($apkPath)) {
-        $flutterApk = base_path('../exambro_mobile/build/app/outputs/flutter-apk/app-release.apk');
-        if (file_exists($flutterApk)) {
-            return response()->download($flutterApk, 'ExaSatrya_Ujian_SMKN1Tirtamulya.apk', [
-                'Content-Type' => 'application/vnd.android.package-archive',
-            ]);
-        }
-        return response("File APK sedang diproses oleh server. Silakan refresh halaman.", 404);
-    }
-    return response()->download($apkPath, 'ExaSatrya_Ujian_SMKN1Tirtamulya.apk', [
-        'Content-Type' => 'application/vnd.android.package-archive',
-    ]);
-})->middleware('throttle:30,1')->name('download.apk');
+    return redirect()->route('student.portal');
+})->name('download.apk');
 
 Route::get('/download', function () {
     return redirect()->route('student.portal');
@@ -62,16 +38,6 @@ Route::prefix('seb')->name('seb.')->group(function () {
     Route::post('/exam/{exam}/auth', [SebExamController::class, 'authenticate'])->middleware('throttle:10,1')->name('exam.auth');
     Route::post('/exam/{exam}/finish', [SebExamController::class, 'finish'])->name('exam.finish');
     Route::get('/exam/{exam}/config', [SebExamController::class, 'downloadConfig'])->name('exam.config');
-});
-
-// Mode Web Ujian Darurat (untuk siswa yang gagal pakai APK, terkunci PIN Pengawas)
-Route::prefix('darurat')->name('web-exam.')->group(function () {
-    Route::get('/', [WebExamController::class, 'index'])->name('index');
-    Route::post('/login', [WebExamController::class, 'login'])->middleware('throttle:10,1')->name('login');
-    Route::post('/logout', [WebExamController::class, 'logout'])->name('logout');
-    Route::get('/exam/{exam}', [WebExamController::class, 'showExam'])->name('exam');
-    Route::post('/exam/{exam}/violation', [WebExamController::class, 'recordViolation'])->middleware('throttle:30,1')->name('violation');
-    Route::post('/exam/{exam}/finish', [WebExamController::class, 'finish'])->name('finish');
 });
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -160,9 +126,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/teachers/import', fn () => redirect()->route('admin.teachers.index'));
             Route::post('/teachers/import', [TeacherController::class, 'import'])->name('teachers.import');
             Route::resource('teachers', TeacherController::class);
-
-            Route::post('/unlock/web-emergency/toggle', [ExamController::class, 'toggleWebEmergency'])->name('unlock.web-emergency.toggle');
-            Route::post('/unlock/web-emergency/rotate-pin', [ExamController::class, 'rotateWebEmergencyPin'])->name('unlock.web-emergency.rotate-pin');
         });
         
         // Akses Bersama: Admin (Kurikulum) & Guru (Pengawas UAS / Pembuat PTS)
@@ -174,6 +137,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/exams/import', [ExamController::class, 'import'])->name('exams.import');
         Route::get('/exams/{exam}/export-violations', [ExamController::class, 'exportViolations'])->name('exams.export-violations');
         Route::patch('/exams/{exam}/quick-form-url', [ExamController::class, 'quickUpdateGoogleForm'])->name('exams.quick-form-url');
+        Route::post('/exams/{exam}/rotate-access-code', [ExamController::class, 'rotateAccessCode'])->name('exams.rotate-access-code');
         Route::post('/exams/{exam}/students/{user}/unlock', [ExamController::class, 'unlockStudent'])->name('exams.students.unlock');
         Route::post('/exams/{exam}/students/{user}/reset', [ExamController::class, 'resetStudentSession'])->name('exams.students.reset');
         Route::get('/unlock', [ExamController::class, 'unlockCenter'])->name('unlock.index');

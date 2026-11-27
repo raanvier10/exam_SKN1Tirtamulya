@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ujian Selesai - {{ $exam->title }} ({{ !empty($isWebEmergency) ? 'Web Darurat' : 'Safe Exam Browser' }})</title>
+    <title>Ujian Selesai - {{ $exam->title }} ({{ !empty($isWebPortal) ? 'Portal Ujian Web' : 'Safe Exam Browser' }})</title>
     <link rel="icon" type="image/webp" href="{{ asset('images/logo.webp') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -66,7 +66,8 @@
         .instruction {
             font-size: 12.5px;
             color: #142C5C;
-            background: #DCE9FF;
+            background: #F1F5F9;
+            border: 1px solid #E2E8F0;
             padding: 12px 14px;
             border-radius: 8px;
             line-height: 1.55;
@@ -104,16 +105,16 @@
     </div>
 
     <div class="instruction">
-        @if(!empty($isWebEmergency))
-            Jawaban sudah dicatat. Anda dapat kembali ke daftar ujian Web Darurat atau menutup tab browser setelah melapor ke pengawas ruang.
+        @if(!empty($isWebPortal))
+            Jawaban sudah dicatat. Anda dapat kembali ke daftar ujian Portal Ujian Web atau menutup tab browser setelah melapor ke pengawas ruang.
         @else
             Silakan tutup aplikasi <strong>Safe Exam Browser</strong> atau hubungi pengawas ruang untuk meninggalkan kelas.
         @endif
     </div>
 
-    @if(!empty($isWebEmergency))
+    @if(!empty($isWebPortal))
         <div style="margin-top: 18px;">
-            <a href="{{ route('web-exam.index') }}" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;padding:0 18px;border-radius:8px;background:#2457E8;color:#FFFFFF;font-size:13.5px;font-weight:700;text-decoration:none;">
+            <a href="{{ $backUrl ?? route('student.portal') }}" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;padding:0 18px;border-radius:8px;background:#142C5C;color:#FFFFFF;font-size:13.5px;font-weight:700;text-decoration:none;">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 <span>Kembali ke Daftar Ujian</span>
             </a>
