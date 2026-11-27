@@ -164,15 +164,88 @@ void main() {
         isFalse,
       );
 
-      // Normal post-startup switch (pause at 10s, resume at 11s) -> real switch, caught
+      // Normal post-startup switch (pause at 10s, resume at 11s after form already ready at 4s) -> real switch, caught
       expect(
         ExamScreen.shouldIgnoreResumeViolation(
           entryTime: entry,
           awayStartTime: entry.add(const Duration(seconds: 10)),
           now: entry.add(const Duration(seconds: 11)),
+          initialFormReadyTime: entry.add(const Duration(seconds: 4)),
         ),
         isFalse,
       );
+
+      // Slow class network: form still loading at 8s, brief 1.5s OS glitch -> ignored
+      expect(
+        ExamScreen.shouldIgnoreResumeViolation(
+          entryTime: entry,
+          awayStartTime: entry.add(const Duration(seconds: 8)),
+          now: entry.add(const Duration(milliseconds: 9500)),
+          initialFormReadyTime: null,
+        ),
+        isTrue,
+      );
+
+      // Slow class network: form still loading at 8s, but real 4s app switch -> caught
+      expect(
+        ExamScreen.shouldIgnoreResumeViolation(
+          entryTime: entry,
+          awayStartTime: entry.add(const Duration(seconds: 8)),
+          now: entry.add(const Duration(seconds: 12)),
+          initialFormReadyTime: null,
+        ),
+        isFalse,
+      );
+    });
+  });
+
+  group('ExamScreen navigation URL rules', () {
+    test('allows Google Forms, Workspace forms, SSO, and reCAPTCHA/sorry challenges', () {
+      expect(
+        ExamScreen.evaluateNavigationUrl(
+          'https://docs.google.com/forms/d/e/1FAIpQLScTest/viewform?embedded=true',
+        ).allowed,
+        isTrue,
+      );
+      expect(
+        ExamScreen.evaluateNavigationUrl(
+          'https://docs.google.com/a/smkn1tirtamulya.sch.id/forms/d/e/1FAIpQLScTest/viewform',
+        ).allowed,
+        isTrue,
+      );
+      expect(
+        ExamScreen.evaluateNavigationUrl(
+          'https://www.google.com/recaptcha/api2/anchor?k=123',
+        ).allowed,
+        isTrue,
+      );
+      expect(
+        ExamScreen.evaluateNavigationUrl(
+          'https://www.google.com/sorry/index?continue=https://docs.google.com/forms',
+        ).allowed,
+        isTrue,
+      );
+      expect(
+        ExamScreen.evaluateNavigationUrl(
+          'https://consent.google.com/m?continue=https://docs.google.com/forms',
+        ).allowed,
+        isTrue,
+      );
+    });
+
+    test('blocks and flags Google Search, YouTube, Gemini, and non-form Docs', () {
+      for (final blocked in [
+        'https://www.google.com/',
+        'https://www.google.com/search?q=jawaban',
+        'https://gemini.google.com/app',
+        'https://www.youtube.com/watch?v=123',
+        'https://docs.google.com/document/d/123/edit',
+        'https://brainly.co.id/',
+      ]) {
+        final res = ExamScreen.evaluateNavigationUrl(blocked);
+        expect(res.allowed, isFalse, reason: blocked);
+        expect(res.isViolation, isTrue, reason: blocked);
+      }
     });
   });
 }

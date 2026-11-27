@@ -21,6 +21,144 @@ class ExamScreen extends StatefulWidget {
 
   static const Duration startupGracePeriod = Duration(seconds: 5);
   static const Duration startupTransientPauseAllowance = Duration(seconds: 3);
+  static const Duration postFormLoadStabilization = Duration(seconds: 3);
+  static const Duration maxInitialLoadGraceCap = Duration(seconds: 20);
+
+  /// Evaluasi apakah navigasi main-frame di WebView diizinkan untuk soal ujian,
+  /// jalur autentikasi Google SSO, atau verifikasi anti-bot reCAPTCHA.
+  @visibleForTesting
+  static ({bool allowed, bool isViolation, String? violationDescription})
+  evaluateNavigationUrl(String url, {String? examFormUrl}) {
+    final uri = Uri.tryParse(url);
+    final scheme = uri?.scheme.toLowerCase() ?? '';
+    final host = uri?.host.toLowerCase() ?? '';
+    final path = uri?.path.toLowerCase() ?? '';
+
+    // Tolak skema non-HTTP(S) (mis. file://, content://, intent://, javascript:)
+    if (scheme != 'http' && scheme != 'https') {
+      return (allowed: false, isViolation: false, violationDescription: null);
+    }
+
+    // Blokir streaming video YouTube, AI assistant, pencarian, dan layanan non-ujian Google
+    // CATATAN: accounts.youtube.com TIDAK diblokir karena digunakan Google SSO untuk SetSID sinkronisasi session
+    const blockedGoogleHosts = <String>{
+      'www.youtube.com',
+      'm.youtube.com',
+      'youtube.com',
+      'youtu.be',
+      'gemini.google.com',
+      'bard.google.com',
+      'ai.google.com',
+      'aistudio.google.com',
+      'notebooklm.google.com',
+      'scholar.google.com',
+      'translate.google.com',
+      'mail.google.com',
+      'chat.google.com',
+      'classroom.google.com',
+      'keep.google.com',
+      'books.google.com',
+      'sites.google.com',
+      'news.google.com',
+      'maps.google.com',
+      'play.google.com',
+      'search.google.com',
+      'support.google.com',
+    };
+
+    final isGoogleHost = host == 'google.com' ||
+        host == 'www.google.com' ||
+        host == 'google.co.id' ||
+        host == 'www.google.co.id';
+
+    final isSearch = path.startsWith('/search') ||
+        ((path == '/' || path.isEmpty) && isGoogleHost);
+
+    // Jalur sistem Google (reCAPTCHA anti-bot saat 1 kelas memakai 1 IP WiFi & endpoint SSO)
+    final isGoogleSystemChallengeOrSso = isGoogleHost &&
+        (path.startsWith('/recaptcha') || path.startsWith('/accounts'));
+
+    final isGoogleSorry = isGoogleHost && path.startsWith('/sorry');
+
+    final isGoogleJunkPage = isGoogleHost &&
+        (path.startsWith('/webhp') ||
+         path.startsWith('/settings') ||
+         path.startsWith('/preferences') ||
+         path.startsWith('/intl') ||
+         path.startsWith('/about'));
+
+    final isAllowedFormPath = path.startsWith('/forms/d/') ||
+        RegExp(r'^/forms/u/\d+/d/').hasMatch(path) ||
+        RegExp(r'^/a/[^/]+/forms/').hasMatch(path) ||
+        (path.startsWith('/forms/') &&
+            (path.contains('/viewform') ||
+             path.contains('/formresponse') ||
+             path.contains('/alreadyresponded') ||
+             path.contains('/closedform')));
+    final isDocsNonForm = host == 'docs.google.com' && !isAllowedFormPath;
+
+    if (isGoogleSorry) {
+      return (allowed: true, isViolation: false, violationDescription: null);
+    }
+
+    if (blockedGoogleHosts.contains(host) ||
+        isSearch ||
+        isGoogleJunkPage ||
+        isDocsNonForm) {
+      return (
+        allowed: false,
+        isViolation: true,
+        violationDescription:
+            'Mencoba membuka layanan terlarang di luar soal ujian ($host${path.isNotEmpty ? path : ""})',
+      );
+    }
+
+    if (isGoogleSystemChallengeOrSso) {
+      return (allowed: true, isViolation: false, violationDescription: null);
+    }
+
+    // Allow exam original target URL domain if configured
+    final examUri = examFormUrl != null ? Uri.tryParse(examFormUrl) : null;
+    if (examUri != null &&
+        examUri.host.isNotEmpty &&
+        host == examUri.host.toLowerCase()) {
+      return (allowed: true, isViolation: false, violationDescription: null);
+    }
+
+    // Whitelist ketat hanya host Google Forms, Google Auth, dan aset statis
+    final isAllowed = host == 'forms.gle' ||
+        host.endsWith('.forms.gle') ||
+        host == 'forms.google.com' ||
+        host == 'docs.google.com' ||
+        host == 'accounts.google.com' ||
+        host == 'accounts.google.co.id' ||
+        host == 'myaccount.google.com' ||
+        host == 'consent.google.com' ||
+        host == 'gds.google.com' ||
+        host == 'ogs.google.com' ||
+        host == 'apis.google.com' ||
+        host == 'content.googleapis.com' ||
+        host == 'accounts.youtube.com' ||
+        host.endsWith('.gstatic.com') ||
+        host == 'gstatic.com' ||
+        host.endsWith('.googleusercontent.com') ||
+        host == 'googleusercontent.com' ||
+        host.endsWith('.googleapis.com') ||
+        host == 'googleapis.com' ||
+        host.endsWith('.1e100.net') ||
+        host == '1e100.net';
+
+    if (!isAllowed) {
+      return (
+        allowed: false,
+        isViolation: true,
+        violationDescription:
+            'Mencoba membuka tautan terlarang di luar ujian ($host)',
+      );
+    }
+
+    return (allowed: true, isViolation: false, violationDescription: null);
+  }
 
   /// Evaluasi apakah pelanggaran non-kritis harus diabaikan selama masa stabilisasi awal ujian.
   @visibleForTesting
@@ -42,15 +180,31 @@ class ExamScreen extends StatefulWidget {
     required DateTime? entryTime,
     required DateTime? awayStartTime,
     required DateTime now,
+    DateTime? initialFormReadyTime,
   }) {
     if (entryTime == null) return false;
     if (now.difference(entryTime) < startupGracePeriod) {
       return true;
     }
+
+    // Jika pause singkat (< 3 detik) terjadi saat fase awal masuk atau saat soal pertama kali
+    // baru selesai dimuat di jaringan kelas yang padat (maks 20 detik sejak masuk), abaikan glitch OS.
     if (awayStartTime != null &&
-        awayStartTime.difference(entryTime) < startupGracePeriod &&
         now.difference(awayStartTime) < startupTransientPauseAllowance) {
-      return true;
+      final startedInEntryGrace =
+          awayStartTime.difference(entryTime) < startupGracePeriod;
+      final stillLoadingInitialForm = initialFormReadyTime == null &&
+          awayStartTime.difference(entryTime) < maxInitialLoadGraceCap;
+      final inPostLoadStabilization = initialFormReadyTime != null &&
+          awayStartTime.difference(initialFormReadyTime) <
+              postFormLoadStabilization &&
+          awayStartTime.difference(entryTime) < maxInitialLoadGraceCap;
+
+      if (startedInEntryGrace ||
+          stillLoadingInitialForm ||
+          inPostLoadStabilization) {
+        return true;
+      }
     }
     return false;
   }
@@ -79,6 +233,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
 
   DateTime? _awayStartTime;
   DateTime? _entryTime;
+  DateTime? _initialFormReadyTime;
   DateTime? _lastViolationTime;
 
   @override
@@ -175,6 +330,11 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
             },
             onPageFinished: (String url) {
               if (mounted) setState(() => _isLoading = false);
+              if (_initialFormReadyTime == null &&
+                  url.isNotEmpty &&
+                  url != 'about:blank') {
+                _initialFormReadyTime = DateTime.now();
+              }
               _injectAntiCopyProtection();
               try {
                 platform.invokeMethod('flushCookies');
@@ -200,75 +360,20 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                 return NavigationDecision.prevent;
               }
 
-              final uri = Uri.tryParse(request.url);
-              final scheme = uri?.scheme.toLowerCase() ?? '';
-              final host = uri?.host.toLowerCase() ?? '';
-              final path = uri?.path.toLowerCase() ?? '';
+              final decision = ExamScreen.evaluateNavigationUrl(
+                request.url,
+                examFormUrl: widget.exam['google_form_url']?.toString(),
+              );
 
-              // Tolak skema non-HTTP(S) (mis. file://, content://, intent://, javascript:)
-              if (scheme != 'http' && scheme != 'https') {
-                return NavigationDecision.prevent;
+              if (decision.allowed) {
+                return NavigationDecision.navigate;
               }
 
-              // Blokir streaming video YouTube, AI assistant, pencarian, dan layanan non-ujian Google
-              // CATATAN: accounts.youtube.com TIDAK diblokir karena digunakan Google SSO untuk SetSID sinkronisasi session
-              const blockedGoogleHosts = <String>{
-                'www.youtube.com',
-                'm.youtube.com',
-                'youtube.com',
-                'youtu.be',
-                'gemini.google.com',
-                'bard.google.com',
-                'ai.google.com',
-                'aistudio.google.com',
-                'notebooklm.google.com',
-                'scholar.google.com',
-                'translate.google.com',
-                'mail.google.com',
-                'chat.google.com',
-                'classroom.google.com',
-                'keep.google.com',
-                'books.google.com',
-                'sites.google.com',
-                'news.google.com',
-                'maps.google.com',
-                'play.google.com',
-                'search.google.com',
-                'support.google.com',
-              };
-
-              final isSearch = path.startsWith('/search') ||
-                  ((path == '/' || path.isEmpty) &&
-                      (host == 'google.com' ||
-                          host == 'www.google.com' ||
-                          host == 'google.co.id' ||
-                          host == 'www.google.co.id'));
-
-              final isGoogleHost = host == 'google.com' ||
-                  host == 'www.google.com' ||
-                  host == 'google.co.id' ||
-                  host == 'www.google.co.id';
-              final isGoogleJunkPage = isGoogleHost &&
-                  (path.startsWith('/webhp') ||
-                   path.startsWith('/sorry') ||
-                   path.startsWith('/settings') ||
-                   path.startsWith('/preferences') ||
-                   path.startsWith('/intl') ||
-                   path.startsWith('/about'));
-
-              final isAllowedFormPath = path.startsWith('/forms/d/') ||
-                  RegExp(r'^/forms/u/\d+/d/').hasMatch(path) ||
-                  (path.startsWith('/forms/') &&
-                      (path.contains('/viewform') ||
-                       path.contains('/formresponse') ||
-                       path.contains('/alreadyresponded') ||
-                       path.contains('/closedform')));
-              final isDocsNonForm = host == 'docs.google.com' && !isAllowedFormPath;
-
-              if (blockedGoogleHosts.contains(host) || isSearch || isGoogleJunkPage || isDocsNonForm) {
+              if (decision.isViolation) {
                 _handleViolation(
                   'UNAUTHORIZED_URL',
-                  'Mencoba membuka layanan terlarang di luar soal ujian ($host${path.isNotEmpty ? path : ""})',
+                  decision.violationDescription ??
+                      'Mencoba membuka tautan terlarang di luar ujian',
                 );
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -278,59 +383,13 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
                     behavior: SnackBarBehavior.floating,
                   ),
                 );
-                // Auto-reload ke form URL asli jika terjebak di halaman Google
+                // Auto-reload ke form URL asli jika terjebak di halaman terlarang
                 if (_originalFormUrl != null) {
                   _controller.loadRequest(Uri.parse(_originalFormUrl!));
                 }
-                return NavigationDecision.prevent;
               }
 
-              // Allow exam original target URL domain if configured
-              final examUrl = widget.exam['google_form_url']?.toString();
-              final examUri = examUrl != null ? Uri.tryParse(examUrl) : null;
-              if (examUri != null &&
-                  examUri.host.isNotEmpty &&
-                  host == examUri.host.toLowerCase()) {
-                return NavigationDecision.navigate;
-              }
-
-              // Whitelist ketat hanya host Google Forms, Google Auth, dan aset statis
-              final isAllowed = host == 'forms.gle' ||
-                  host.endsWith('.forms.gle') ||
-                  host == 'forms.google.com' ||
-                  host == 'docs.google.com' ||
-                  host == 'accounts.google.com' ||
-                  host == 'accounts.google.co.id' ||
-                  host == 'myaccount.google.com' ||
-                  host == 'ogs.google.com' ||
-                  host == 'apis.google.com' ||
-                  host == 'content.googleapis.com' ||
-                  host == 'accounts.youtube.com' ||
-                  host.endsWith('.gstatic.com') ||
-                  host == 'gstatic.com' ||
-                  host.endsWith('.googleusercontent.com') ||
-                  host == 'googleusercontent.com' ||
-                  host.endsWith('.googleapis.com') ||
-                  host == 'googleapis.com' ||
-                  host.endsWith('.1e100.net') ||
-                  host == '1e100.net';
-
-              if (!isAllowed) {
-                _handleViolation(
-                  'UNAUTHORIZED_URL',
-                  'Mencoba membuka tautan terlarang di luar ujian ($host)',
-                );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Akses ke situs di luar ujian diblokir.'),
-                    backgroundColor: Color(0xFFEF4444),
-                    duration: Duration(seconds: 2),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-                return NavigationDecision.prevent;
-              }
-              return NavigationDecision.navigate;
+              return NavigationDecision.prevent;
             },
           ),
         );
@@ -870,6 +929,7 @@ class _ExamScreenState extends State<ExamScreen> with WidgetsBindingObserver {
           entryTime: _entryTime,
           awayStartTime: awayStart,
           now: now,
+          initialFormReadyTime: _initialFormReadyTime,
         )) {
           return;
         }

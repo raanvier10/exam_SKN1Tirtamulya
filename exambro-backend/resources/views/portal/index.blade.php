@@ -147,8 +147,9 @@
 
         @php
             $apkFile = public_path('downloads/ExaSatrya.apk');
-            $apkSizeLabel = file_exists($apkFile)
-                ? '~' . number_format(filesize($apkFile) / (1024 * 1024), 1) . ' MB'
+            $apkBytes = (is_file($apkFile) && is_readable($apkFile)) ? @filesize($apkFile) : false;
+            $apkSizeLabel = ($apkBytes !== false && $apkBytes > 0)
+                ? '~' . number_format($apkBytes / (1024 * 1024), 1) . ' MB'
                 : '~50 MB';
         @endphp
 
