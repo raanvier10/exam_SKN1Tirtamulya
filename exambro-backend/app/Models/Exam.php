@@ -12,9 +12,35 @@ class Exam extends Model
 {
     use HasFactory;
 
+    private const ACCESS_CODE_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+
     protected $fillable = [
-        'title', 'type', 'description', 'google_form_url', 'start_at', 'end_at', 'duration', 'max_violation', 'status', 'created_by'
+        'title', 'type', 'description', 'google_form_url', 'start_at', 'end_at', 'duration', 'max_violation', 'access_code', 'status', 'created_by'
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Exam $exam) {
+            if (!array_key_exists('access_code', $exam->getAttributes())) {
+                $exam->access_code = static::generateAccessCode();
+            } elseif (trim((string) $exam->access_code) === '') {
+                $exam->access_code = null;
+            } else {
+                $exam->access_code = strtoupper(trim((string) $exam->access_code));
+            }
+        });
+    }
+
+    public static function generateAccessCode(int $length = 6): string
+    {
+        $alphabet = self::ACCESS_CODE_ALPHABET;
+        $max = strlen($alphabet) - 1;
+        $code = '';
+        for ($i = 0; $i < $length; $i++) {
+            $code .= $alphabet[random_int(0, $max)];
+        }
+        return $code;
+    }
 
     public function isUas(): bool
     {

@@ -19,11 +19,9 @@ Panduan kerja AI agent untuk repositori `Exam` (workspace root). Selaraskan juga
   - PHP `^8.3`, Laravel Framework `^13.8`, `maatwebsite/excel` `^4.0` (`PhpOffice\PhpSpreadsheet`), `laravel/tinker` `^3.0`.
   - Dev/Test/Lint: `phpunit/phpunit` `^12.5.12` (suite `tests/Unit` & `tests/Feature`, default testing SQLite `:memory:` via `phpunit.xml`), `laravel/pint` `^1.27`, `laravel/breeze`, `mockery/mockery` `^1.6`.
   - Frontend build: Vite `^8.0.0`, Tailwind CSS `^4.0.0` (`@tailwindcss/vite`), `laravel-vite-plugin` `^3.1`.
-  - Route utama: `/portal`, `/download/apk` (`public/downloads/ExaSatrya.apk`), `/seb/exam/{exam}` (`SebExamController`), `/darurat` (`WebExamController`), `/admin/*`, serta API `/api/login`, `/api/student/exams/*`, `/api/exams/{id}/start`, `/api/exams/{id}/finish`, `/api/violations`.
+  - Route utama: `/portal` (portal ujian web utama siswa + `/ujian/{exam}` via `WebExamController`), `/download/apk` (redirect ke `/portal`), `/seb/exam/{exam}` (`SebExamController`), `/admin/*`, serta API `/api/login`, `/api/student/exams/*`, `/api/exams/{id}/start`, `/api/exams/{id}/finish`, `/api/violations`.
   - Config ujian (`config/exam.php`): koordinat geofence (`school_lat`, `school_lng`, `max_radius` = `600` m).
-- **`exambro_mobile/`** (Aplikasi Android Siswa):
-  - Flutter / Dart `^3.12.2` (`version: 1.0.0+1`), `applicationId = "id.sch.smkn1tirtamulya.exambro"`, Java 17, R8 minify + shrink resources aktif di release build.
-  - Dependensi utama: `http ^1.2.1`, `shared_preferences ^2.2.3`, `webview_flutter ^4.7.0`, `geolocator ^13.0.2`; dev: `flutter_lints ^6.0.0`.
+- **`exambro_mobile/`** *(telah dihapus — ujian siswa kini menggunakan Web Portal `/portal` tanpa aplikasi Android/APK)*
 - **`deploy/` & `.github/workflows/deploy.yml`** (CI/CD & VPS):
   - Auto-deploy pada push ke branch `main` via SSH (`appleboy/ssh-action@v1.0.3`) ke `/var/www/exam_SKN1Tirtamulya`.
 
@@ -37,20 +35,18 @@ Catatan shell Windows: gunakan PowerShell `;` sebagai pemisah perintah (bukan `&
   - Jalankan unit/feature test: `php artisan test` (atau filter test terkait sebelum full run)
   - Format/lint PHP bila perlu: `.\vendor\bin\pint --test`
   - Jika ubah CSS/JS/Vite: `npm run build`
-- **Mobile (`exambro_mobile/`)**:
-  - Analisis statis & lint: `flutter analyze`
-  - Jalankan test: `flutter test`
 
 ## 4. Area Sensitif (Jangan Diubah Sembarangan)
 
 - **Autentikasi, Otorisasi & Keamanan Ujian**:
   - `AdminAuthController` (CAPTCHA & `RateLimiter` brute-force), middleware `EnsureUserRole`, isolasi peran `admin` / PIC Jurusan (`users.department`, `User::departmentClassIds()`) / `guru` / `siswa`.
   - API token & device lock (`Api\AuthController` dengan `sha256` `api_token` + guard `auth:api`, `Api\ApiExamController` single-device binding, violation lock, validasi GPS geofence dari `config/exam.php`).
-  - Akses darurat & SEB (`SebExamController`, `WebExamController`, `AppSetting` untuk toggle & PIN `/darurat`).
+  - Akses ujian web & SEB (`SebExamController`, `WebExamController`, kode masuk per-ujian `exams.access_code`).
 - **Database, Migrasi & Seeder**:
   - Jangan mengubah migrasi lama yang sudah berjalan di produksi; buat migrasi baru yang aman & additive.
   - Hati-hati terhadap seeder (`DepartmentPicSeeder`) dan file database lokal (`*.sqlite` / `*.sqlite3` di-gitignore) agar tidak menimpa data/akun produksi.
 - **Deploy, Secret & Signing Rilis**:
   - `.github/workflows/deploy.yml` dan `deploy/setup-vps.sh`: setiap push ke `main` langsung menjalankan `git reset --hard HEAD`, `git pull origin main`, `composer install --no-dev`, dan `php artisan migrate --force` di server produksi. Jangan ubah workflow/script deploy tanpa izin eksplisit.
-  - File rahasia & signing di-gitignore (`exambro-backend/.env`, `exambro_mobile/android/app/key.properties`, `*.jks`, `*.keystore`): jangan pernah di-commit atau dibocorkan.
-  - `exambro-backend/public/downloads/ExaSatrya.apk`: binary APK distribusi siswa untuk endpoint `/download/apk`; jangan timpa kecuali diminta saat rilis APK baru.
+  - File rahasia & konfigurasi lokal di-gitignore (`exambro-backend/.env`, `*.jks`, `*.keystore`): jangan pernah di-commit atau dibocorkan.
+
+<!-- updated for web-based exam migration -->

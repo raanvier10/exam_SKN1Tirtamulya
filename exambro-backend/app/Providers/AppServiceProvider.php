@@ -27,5 +27,18 @@ class AppServiceProvider extends ServiceProvider
             $key = strtolower(trim((string) $request->input('username'))) . '|' . $request->ip();
             return Limit::perMinute(10)->by($key);
         });
+
+        // Rate limit laporan pelanggaran browser per akun siswa + IP
+        RateLimiter::for('web-violation', function (Request $request) {
+            $userKey = $request->user()?->id ?? $request->session()->getId();
+            return Limit::perMinute(60)->by($userKey . '|' . $request->ip());
+        });
+
+        // Rate limit verifikasi kode masuk per siswa + ujian + IP
+        RateLimiter::for('exam-code', function (Request $request) {
+            $userKey = $request->user()?->id ?? $request->session()->getId();
+            $examKey = $request->route('exam')?->id ?? '0';
+            return Limit::perMinute(10)->by($userKey . '|' . $examKey . '|' . $request->ip());
+        });
     }
 }

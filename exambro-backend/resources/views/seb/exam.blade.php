@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Ujian: {{ $exam->title }} ({{ !empty($isWebEmergency) ? 'Web Darurat' : 'Safe Exam Browser' }})</title>
+    <title>Ujian: {{ $exam->title }} ({{ !empty($isWebPortal) ? 'Portal Ujian Web' : 'Safe Exam Browser' }})</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #2457E8;
-            --primary-hover: #1D4ED8;
+            --primary: #142C5C;
+            --primary-hover: #0D2149;
             --rose: #EF4444;
             --rose-dark: #DC2626;
             --slate-900: #0D2149;
@@ -33,6 +33,7 @@
             -webkit-touch-callout: none !important;
             -webkit-user-select: none !important;
             user-select: none !important;
+            -webkit-user-drag: none !important;
         }
         input, textarea, [contenteditable="true"] {
             -webkit-user-select: text !important;
@@ -65,14 +66,13 @@
         /* Top Header Wrapper with iOS Notch / Dynamic Island Safe Padding */
         .header-wrapper {
             background: var(--slate-900);
-            border-bottom: 1px solid var(--slate-800);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             padding-top: max(10px, var(--sat));
-            padding-left: max(12px, var(--sal));
-            padding-right: max(12px, var(--sar));
-            padding-bottom: 8px;
+            padding-left: max(14px, var(--sal));
+            padding-right: max(14px, var(--sar));
+            padding-bottom: 10px;
             flex-shrink: 0;
             z-index: 50;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
         }
 
         /* Tier 1: Identity & Finish Button */
@@ -80,37 +80,15 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
+            gap: 12px;
             width: 100%;
-        }
-        .identity-left {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            min-width: 0;
-            flex: 1;
-        }
-        .exam-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: rgba(79, 70, 229, 0.25);
-            border: 1px solid rgba(129, 140, 248, 0.35);
-            color: #C7D2FE;
-            font-size: 10px;
-            font-weight: 800;
-            padding: 3px 7px;
-            border-radius: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-            flex-shrink: 0;
         }
         .exam-meta {
             min-width: 0;
             flex: 1;
         }
         .exam-title-text {
-            font-size: 13.5px;
+            font-size: 14.5px;
             font-weight: 700;
             color: #FFFFFF;
             white-space: nowrap;
@@ -119,34 +97,35 @@
             line-height: 1.25;
         }
         .student-info {
-            font-size: 11px;
+            font-size: 11.5px;
             color: var(--slate-400);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            line-height: 1.3;
-            margin-top: 1px;
+            line-height: 1.35;
+            margin-top: 2px;
         }
         .btn-finish {
-            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 6px 14px;
+            background: var(--rose-dark);
+            color: #FFFFFF;
+            border: none;
+            padding: 8px 14px;
             border-radius: 8px;
             font-size: 12px;
-            font-weight: 800;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: background-color 0.15s ease, transform 0.15s ease;
             white-space: nowrap;
             flex-shrink: 0;
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
+        }
+        .btn-finish:hover {
+            background: #B91C1C;
         }
         .btn-finish:active {
             transform: scale(0.97);
-            background: #B91C1C;
         }
 
         /* Tier 2: Cockpit Controls & Timer */
@@ -154,31 +133,29 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 8px;
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px solid rgba(51, 65, 85, 0.6);
+            gap: 10px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
         .timer-badge {
-            background: #112238;
-            border: 1px solid #233B5D;
-            color: #F8FAFC;
-            padding: 4px 10px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #FFFFFF;
+            padding: 5px 10px;
             border-radius: 8px;
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
             font-variant-numeric: tabular-nums;
             font-size: 13px;
             font-weight: 700;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.3px;
             display: inline-flex;
             align-items: center;
             gap: 6px;
             flex-shrink: 0;
         }
         .timer-badge.warning {
-            background: rgba(239, 68, 68, 0.2);
-            border-color: rgba(239, 68, 68, 0.6);
-            color: #FCA5A5;
+            background: rgba(239, 68, 68, 0.22);
+            color: #FECACA;
             animation: pulse 1s infinite;
         }
         @keyframes pulse {
@@ -188,22 +165,29 @@
         .controls-right {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 10px;
             flex-shrink: 0;
         }
-        .btn-tool {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.16);
-            color: #E2E8F0;
-            padding: 4px 10px;
-            border-radius: 7px;
+        .violation-text {
             font-size: 11.5px;
-            font-weight: 700;
+            font-weight: 600;
+            color: #CBD5E1;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+        .btn-tool {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            color: #F8FAFC;
+            padding: 6px 11px;
+            border-radius: 8px;
+            font-size: 11.5px;
+            font-weight: 600;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            transition: all 0.2s;
+            transition: background-color 0.15s ease;
             white-space: nowrap;
             cursor: pointer;
         }
@@ -303,20 +287,14 @@
     <header class="header-wrapper">
         <!-- Tier 1: Identity & Finish Button -->
         <div class="tier-identity">
-            <div class="identity-left">
-                <span class="exam-badge" style="{{ !empty($isWebEmergency) ? 'background: rgba(245, 158, 11, 0.25); border-color: rgba(251, 191, 36, 0.45); color: #FDE68A;' : '' }}">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                    {{ !empty($isWebEmergency) ? 'WEB DARURAT' : 'SEB KIOSK' }}
-                </span>
-                <div class="exam-meta">
-                    <div class="exam-title-text">{{ $exam->title }}</div>
-                    <div class="student-info">{{ $user->name }} • {{ $user->class?->name ?? 'Siswa' }}</div>
-                </div>
+            <div class="exam-meta">
+                <div class="exam-title-text">{{ $exam->title }}</div>
+                <div class="student-info">{{ $user->name }} &mdash; {{ $user->class?->name ?? 'Siswa' }} | {{ !empty($isWebPortal) ? 'UJIAN WEB' : 'SEB KIOSK' }}</div>
             </div>
 
-            <form action="{{ !empty($isWebEmergency) ? route('web-exam.finish', $exam) : route('seb.exam.finish', $exam) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin sudah selesai mengerjakan dan ingin mengirim ujian?');">
+            <form id="examFinishForm" action="{{ !empty($isWebPortal) ? ($finishUrl ?? route('portal.finish', $exam)) : route('seb.exam.finish', $exam) }}" method="POST">
                 @csrf
-                <button type="submit" class="btn-finish">
+                <button type="button" onclick="openFinishConfirmModal()" class="btn-finish">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     <span>Selesai</span>
                 </button>
@@ -331,26 +309,26 @@
             </div>
 
             <div class="controls-right">
-                <button type="button" onclick="reloadExamFrame()" class="btn-tool" title="Muat Ulang Soal jika lembar jawaban tidak muncul">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                    <span>Muat Ulang</span>
-                </button>
-
-                @if(empty($isWebEmergency))
+                @if(!empty($isWebPortal))
+                <span class="violation-text" id="webViolationCounter">
+                    Pelanggaran: <span id="webViolationText">{{ $activeViolationCount ?? 0 }} / {{ $exam->max_violation }}</span>
+                </span>
+                @else
                 <a href="{{ $exam->google_form_url }}" class="btn-tool" title="Buka Google Form Langsung jika layar menampilkan Page Expired">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                     <span>Buka Penuh</span>
                 </a>
-                @else
-                <span class="btn-tool" id="webViolationCounter" style="cursor:default; border-color: rgba(251, 191, 36, 0.45); color: #FDE68A; font-variant-numeric: tabular-nums;">
-                    Pelanggaran: <span id="webViolationText">{{ $activeViolationCount ?? 0 }} / {{ $exam->max_violation }}</span>
-                </span>
                 @endif
+
+                <button type="button" onclick="reloadExamFrame()" class="btn-tool" title="Muat Ulang Soal jika lembar jawaban tidak muncul">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    <span>Muat Ulang</span>
+                </button>
             </div>
         </div>
     </header>
 
-    @if(empty($isWebEmergency))
+    @if(empty($isWebPortal))
     <!-- Dismissible notice banner for iOS Cookie "Page Expired" issue -->
     <div id="iosNoticeBanner" class="ios-notice-banner">
         <div class="ios-notice-text">
@@ -370,8 +348,47 @@
     </div>
 </div>
 
+<!-- Custom In-Page Finish Confirmation Modal (stays inside fullscreen without native confirm/alert) -->
+<div id="finishConfirmModal" onclick="if (event.target === this) closeFinishConfirmModal()" style="position:fixed;inset:0;z-index:998;background:rgba(13,33,73,0.72);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:16px;max-width:380px;width:100%;padding:24px;color:#0F172A;box-shadow:0 20px 50px rgba(13,33,73,0.35);">
+        <h3 style="font-size:17px;font-weight:800;color:#142C5C;margin-bottom:8px;letter-spacing:-0.01em;">Selesaikan Ujian?</h3>
+        <p style="font-size:13px;color:#475569;line-height:1.55;margin-bottom:20px;">
+            Pastikan Anda sudah menekan tombol <strong>Kirim / Submit</strong> pada lembar soal sebelum mengakhiri sesi ujian ini.
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <button type="button" onclick="closeFinishConfirmModal()" style="height:42px;border-radius:10px;border:1px solid #CBD5E1;background:#FFFFFF;color:#334155;font-size:13px;font-weight:700;cursor:pointer;">
+                Kembali
+            </button>
+            <button type="button" id="confirmFinishSubmitBtn" onclick="submitExamFinish()" style="height:42px;border-radius:10px;border:none;background:#DC2626;color:#FFFFFF;font-size:13px;font-weight:700;cursor:pointer;">
+                Ya, Selesai
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
     // 1. Muat Ulang Iframe tanpa kehilangan sesi SEB
+    function openFinishConfirmModal() {
+        const modal = document.getElementById('finishConfirmModal');
+        if (modal) modal.style.display = 'flex';
+    }
+
+    function closeFinishConfirmModal() {
+        const modal = document.getElementById('finishConfirmModal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    function submitExamFinish() {
+        window.__confirmingExamFinish = true;
+        const btn = document.getElementById('confirmFinishSubmitBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Mengirim...';
+        }
+        const form = document.getElementById('examFinishForm');
+        if (form) form.submit();
+    }
+
     function reloadExamFrame() {
         const frame = document.getElementById('examFrame');
         if (frame) {
@@ -396,8 +413,7 @@
             clearInterval(timer);
             countdownEl.textContent = "00:00:00";
             badgeEl.classList.add('warning');
-            alert("Waktu pengerjaan ujian telah habis!");
-            document.querySelector('form[action*="finish"]').submit();
+            submitExamFinish();
             return;
         }
 
@@ -415,29 +431,50 @@
         }
     }, 1000);
 
-    // 3. Anti-Copy & Anti-ContextMenu
+    // 3. Anti-Copy, Anti-Drag, Anti-Shortcut & Anti-ContextMenu (shell halaman ujian)
     document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('dragstart', e => e.preventDefault());
+    ['copy', 'cut', 'paste'].forEach(evt => {
+        document.addEventListener(evt, e => {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+            }
+        });
+    });
     document.addEventListener('selectstart', e => {
         if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
             e.preventDefault();
         }
     });
+    document.addEventListener('keydown', e => {
+        const key = (e.key || '').toLowerCase();
+        const mod = e.ctrlKey || e.metaKey;
+        if (e.key === 'F12' || (mod && e.shiftKey && ['i', 'j', 'c'].includes(key))) {
+            e.preventDefault();
+            return;
+        }
+        if (mod && ['c', 'x', 'v', 'a', 's', 'p', 'u'].includes(key)) {
+            if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+            }
+        }
+    });
 </script>
 
-@if(!empty($isWebEmergency))
+@if(!empty($isWebPortal))
 <div id="webExamOverlay" style="position:fixed;inset:0;z-index:999;background:rgba(13,33,73,0.92);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:24px;">
     <div style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:16px;max-width:420px;width:100%;padding:28px;text-align:center;color:#0F172A;box-shadow:0 24px 60px rgba(13,33,73,0.35);">
-        <div style="width:48px;height:48px;border-radius:8px;background:#DCE9FF;color:#2457E8;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+        <div style="width:48px;height:48px;border-radius:8px;background:#F1F5F9;border:1px solid #E2E8F0;color:#142C5C;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
-        <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#2457E8;margin-bottom:6px;">
-            Web Darurat &bull; ExaSatrya
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#142C5C;margin-bottom:6px;">
+            Portal Ujian Web | ExaSatrya
         </div>
-        <h3 id="webOverlayTitle" style="font-size:18px;font-weight:800;color:#142C5C;margin-bottom:8px;letter-spacing:-0.01em;overflow-wrap:anywhere;">Mode Ujian Web Darurat</h3>
+        <h3 id="webOverlayTitle" style="font-size:18px;font-weight:800;color:#142C5C;margin-bottom:8px;letter-spacing:-0.01em;overflow-wrap:anywhere;">Mode Ujian Web Terproteksi</h3>
         <p id="webOverlayMessage" style="font-size:13.5px;color:#475569;line-height:1.55;margin-bottom:22px;">
             Dilarang berpindah tab, membuka aplikasi lain, atau keluar dari layar penuh. Pelanggaran dicatat otomatis dan akan mengunci ujian Anda.
         </p>
-        <button type="button" id="webOverlayBtn" onclick="enterWebExamMode()" style="width:100%;height:42px;padding:0 18px;border-radius:8px;background:#2457E8;color:#FFFFFF;font-size:14px;font-weight:700;border:none;cursor:pointer;">
+        <button type="button" id="webOverlayBtn" onclick="enterWebExamMode()" style="width:100%;height:42px;padding:0 18px;border-radius:8px;background:#142C5C;color:#FFFFFF;font-size:14px;font-weight:700;border:none;cursor:pointer;">
             Masuk Layar Ujian
         </button>
     </div>
@@ -445,8 +482,8 @@
 
 <script>
     (function () {
-        const violationUrl = @json(route('web-exam.violation', $exam));
-        const portalUrl = @json(route('web-exam.index'));
+        const violationUrl = @json($violationUrl ?? route('portal.violation', $exam));
+        const portalUrl = @json($backPortalUrl ?? route('student.portal'));
         const csrfToken = @json(csrf_token());
         const overlay = document.getElementById('webExamOverlay');
         const overlayTitle = document.getElementById('webOverlayTitle');
@@ -479,7 +516,7 @@
         };
 
         function sendViolation(type) {
-            if (!started || isLocked || isSubmittingFinish) return;
+            if (!started || isLocked || isSubmittingFinish || window.__confirmingExamFinish) return;
             const now = Date.now();
             if (now - lastViolationAt < 2000) return;
             lastViolationAt = now;
@@ -524,7 +561,9 @@
         });
 
         window.addEventListener('blur', () => {
+            if (window.__confirmingExamFinish || isSubmittingFinish) return;
             setTimeout(() => {
+                if (window.__confirmingExamFinish || isSubmittingFinish) return;
                 if (document.activeElement && document.activeElement.id === 'examFrame') return;
                 if (!document.hasFocus()) {
                     sendViolation('WEB_TAB_SWITCH');

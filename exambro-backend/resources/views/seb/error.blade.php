@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title }} - {{ !empty($backUrl) ? 'Web Darurat' : 'Safe Exam Browser' }}</title>
+    <title>{{ $title }} - {{ !empty($backUrl) ? 'Portal Ujian Web' : 'Safe Exam Browser' }}</title>
     <link rel="icon" type="image/webp" href="{{ asset('images/logo.webp') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -71,7 +71,7 @@
     </div>
 
     @if(!empty($backUrl))
-        <a href="{{ $backUrl }}" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;padding:0 18px;border-radius:8px;background:#2457E8;color:#FFFFFF;font-size:13.5px;font-weight:700;text-decoration:none;">
+        <a href="{{ $backUrl }}" style="display:inline-flex;align-items:center;justify-content:center;gap:6px;height:40px;padding:0 18px;border-radius:8px;background:#142C5C;color:#FFFFFF;font-size:13.5px;font-weight:700;text-decoration:none;">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
             <span>Kembali ke Daftar Ujian</span>
         </a>

@@ -1,8 +1,6 @@
 # Exam SMKN 1 Tirtamulya
 
-Aplikasi Ujian Aman (Secure Exam Browser) berbasis Mobile & Web Admin Backend untuk SMKN 1 Tirtamulya.
+Sistem Ujian Berbasis Web (ExaSatrya) untuk SMKN 1 Tirtamulya.
 
 ## Struktur Project
-- `exambro-backend/` : REST API & Panel Admin (Laravel 11, Blade, MySQL)
-- `exambro_mobile/`  : Aplikasi Siswa Mobile (Flutter)
-- `PRD-Secure-Exam-Browser.md` : Dokumentasi spesifikasi sistem
+- `exambro-backend/` : Portal Ujian Web (`/portal`, `/ujian/*`), Panel Admin/PIC/Guru, dan Database (Laravel, Blade, Tailwind CSS, MySQL)

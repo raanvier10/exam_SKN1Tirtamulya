@@ -4,10 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Login Siswa - {{ $exam->title }} (Safe Exam Browser)</title>
+    <link rel="icon" type="image/webp" href="{{ asset('images/logo.webp') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #4F46E5;
-            --primary-hover: #4338CA;
+            --primary: #142C5C;
+            --primary-hover: #0D2149;
             --slate-900: #0F172A;
             --slate-700: #334155;
             --slate-500: #64748B;
@@ -18,7 +22,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
             -webkit-user-select: none;
             user-select: none;
         }
@@ -27,13 +31,12 @@
             height: 100%;
             margin: 0;
             padding: 0;
-            background-color: #0F172A;
+            background-color: #F8FAFC;
         }
         body {
-            background-color: #0F172A;
-            background: radial-gradient(circle at 50% 10%, #1E1B4B 0%, #0F172A 80%);
+            background-color: #F8FAFC;
             min-height: 100%;
-            min-height: 100vh;
+            min-height: 100dvh;
             min-height: -webkit-fill-available;
             display: flex;
             align-items: center;
@@ -44,25 +47,26 @@
         }
         .login-card {
             background: #ffffff;
-            border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
+            border: 1px solid var(--slate-200);
             max-width: 400px;
             width: 100%;
-            padding: 32px 28px;
+            padding: 28px 24px;
         }
         .header {
             text-align: center;
-            margin-bottom: 24px;
+            margin-bottom: 22px;
         }
         .badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            background: #EEF2FF;
+            background: #F1F5F9;
+            border: 1px solid var(--slate-200);
             color: var(--primary);
-            padding: 5px 14px;
-            border-radius: 9999px;
+            padding: 5px 12px;
+            border-radius: 6px;
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
@@ -94,9 +98,9 @@
         }
         .form-input {
             width: 100%;
-            padding: 13px 16px;
-            border-radius: 12px;
-            border: 1.5px solid var(--slate-200);
+            padding: 11px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--slate-200);
             background: #F8FAFC;
             font-size: 16px; /* 16px prevents iOS automatic zoom on focus */
             color: var(--slate-900);
@@ -108,20 +112,19 @@
         .form-input:focus {
             border-color: var(--primary);
             background: #ffffff;
-            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.12);
+            box-shadow: 0 0 0 3px rgba(20, 44, 92, 0.12);
         }
         .btn-submit {
             width: 100%;
-            padding: 14px;
-            border-radius: 12px;
+            padding: 12px 16px;
+            border-radius: 8px;
             background: var(--primary);
             color: white;
-            font-size: 15px;
+            font-size: 14.5px;
             font-weight: 700;
             border: none;
             cursor: pointer;
-            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.3);
-            transition: all 0.2s;
+            transition: background 0.15s;
             margin-top: 6px;
         }
         .btn-submit:hover, .btn-submit:active {

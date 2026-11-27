@@ -25,14 +25,14 @@
     <!-- Account Card -->
     <div class="card card-body">
         <div class="flex items-center gap-4 min-w-0">
-            <div class="w-12 h-12 rounded-[8px] bg-[#DCE9FF] border border-[#2457E8]/20 flex items-center justify-center text-[#142C5C] font-bold text-lg shrink-0">
+            <div class="w-12 h-12 rounded-[8px] bg-slate-100 border border-[#142C5C]/20 flex items-center justify-center text-[#142C5C] font-bold text-lg shrink-0">
                 {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
             </div>
             <div class="min-w-0">
                 <h3 class="text-base font-bold text-slate-900 leading-snug truncate">{{ auth()->user()->name }}</h3>
                 <div class="flex items-center gap-2 mt-0.5 flex-wrap">
                     <span class="text-xs text-slate-500 font-medium tabular-nums">{{ auth()->user()->username }}</span>
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-[6px] text-[11px] font-semibold {{ auth()->user()->isAdmin() ? 'bg-[#DCE9FF] text-[#142C5C]' : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' }}">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-[6px] text-[11px] font-semibold {{ auth()->user()->isAdmin() ? 'bg-slate-100 text-[#142C5C]' : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' }}">
                         {{ auth()->user()->isDepartmentPic() ? 'PIC ' . auth()->user()->departmentCode() : (auth()->user()->isAdmin() ? 'Administrator' : 'Guru Pengampu') }}
                     </span>
                 </div>
@@ -51,7 +51,7 @@
             <label class="block text-sm font-semibold text-slate-800 mb-2">Password Saat Ini <span class="text-rose-500">*</span></label>
             <div class="relative">
                 <input type="password" name="current_password" id="current_password" required
-                    class="w-full bg-white border @error('current_password') border-rose-300 ring-rose-500/10 @else border-slate-200 @enderror rounded-[8px] px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 shadow-2xs transition-all pr-11"
+                    class="w-full bg-white border @error('current_password') border-rose-300 ring-rose-500/10 @else border-slate-200 @enderror rounded-[8px] px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#142C5C] focus:ring-3 focus:ring-[#142C5C]/10 shadow-2xs transition-all pr-11"
                     placeholder="Masukkan password saat ini">
                 <button type="button" onclick="togglePassword('current_password', 'current_icon')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none transition-colors cursor-pointer" title="Lihat/Sembunyikan Password">
                     <svg id="current_icon" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -78,7 +78,7 @@
             <p class="text-xs text-slate-400 mb-2">Minimal 6 karakter, tidak boleh mengandung spasi.</p>
             <div class="relative">
                 <input type="password" name="password" id="new_password" required
-                    class="w-full bg-white border @error('password') border-rose-300 ring-rose-500/10 @else border-slate-200 @enderror rounded-[8px] px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 shadow-2xs transition-all pr-11"
+                    class="w-full bg-white border @error('password') border-rose-300 ring-rose-500/10 @else border-slate-200 @enderror rounded-[8px] px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#142C5C] focus:ring-3 focus:ring-[#142C5C]/10 shadow-2xs transition-all pr-11"
                     placeholder="Contoh: sulastri123">
                 <button type="button" onclick="togglePassword('new_password', 'new_icon')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none transition-colors cursor-pointer" title="Lihat/Sembunyikan Password">
                     <svg id="new_icon" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -102,7 +102,7 @@
             <label class="block text-sm font-semibold text-slate-800 mb-2">Konfirmasi Password Baru <span class="text-rose-500">*</span></label>
             <div class="relative">
                 <input type="password" name="password_confirmation" id="confirm_password" required
-                    class="w-full bg-white border border-slate-200 rounded-[8px] px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-indigo-500 focus:ring-3 focus:ring-indigo-500/15 shadow-2xs transition-all pr-11"
+                    class="w-full bg-white border border-slate-200 rounded-[8px] px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-[#142C5C] focus:ring-3 focus:ring-[#142C5C]/10 shadow-2xs transition-all pr-11"
                     placeholder="Ulangi password baru">
                 <button type="button" onclick="togglePassword('confirm_password', 'confirm_icon')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none transition-colors cursor-pointer" title="Lihat/Sembunyikan Password">
                     <svg id="confirm_icon" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -115,7 +115,7 @@
         </div>
 
         <div class="card-footer flex items-center justify-end">
-            <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[8px] text-sm font-semibold shadow-sm shadow-indigo-500/20 hover:shadow-md hover:shadow-indigo-500/30 transition-all duration-150 active:scale-[0.98] inline-flex items-center justify-center gap-[6px] cursor-pointer">
+            <button type="submit" class="w-full sm:w-auto px-6 py-2.5 bg-[#142C5C] hover:bg-[#142C5C] text-white rounded-[8px] text-sm font-semibold shadow-sm shadow-slate-900/10 hover:shadow-md hover:shadow-slate-900/15 transition-all duration-150 active:scale-[0.98] inline-flex items-center justify-center gap-[6px] cursor-pointer">
                 <svg class="w-[15px] h-[15px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
